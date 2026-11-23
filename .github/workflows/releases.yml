@@ -13,6 +13,11 @@ on:
 permissions:
   contents: write
 
+# Una publicación detrás de otra: si coinciden dos, la segunda espera y ya ve lo publicado.
+concurrency:
+  group: releases
+  cancel-in-progress: false
+
 jobs:
   plan:
     runs-on: ubuntu-latest

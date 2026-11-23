@@ -58,6 +58,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.repisa.app.R
 import com.repisa.app.i18n.L10n
@@ -248,13 +249,23 @@ fun ScoresRow(game: Game, scale: com.repisa.app.model.RatingScale, small: Boolea
     val label = if (small) 9.sp else 10.sp
     val value = if (small) 13.sp else 15.sp
     // Altura fija y texto en una línea: los recuadros no se estiran hacia abajo aunque falte espacio.
-    val boxHeight = if (small) 40.dp else 54.dp
+    val boxHeight = if (small) 44.dp else 68.dp
     fun box(onClick: (() -> Unit)?) = Modifier.height(boxHeight)
         .background(Color(0xE6261A12), RoundedCornerShape(8.dp))
         .let { if (onClick != null) it.clickable(onClick = onClick) else it }
         .padding(horizontal = if (small) 8.dp else 10.dp, vertical = if (small) 3.dp else 5.dp)
     val loading = game.extFetchedAt == null
+    // Interlineado ajustado: Nunito trae mucho espacio y recortaba la segunda línea.
+    val tight = androidx.compose.material3.LocalTextStyle.current.copy(
+        lineHeight = 1.15.em,
+        platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false),
+        lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
+            androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
+            androidx.compose.ui.text.style.LineHeightStyle.Trim.Both,
+        ),
+    )
     // Si no caben en una fila (carátulas anchas como DS, 3DS, N64 o GBA), HowLongToBeat baja a la siguiente.
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalTextStyle provides tight) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // Mi nota
         Column(box(onRate), verticalArrangement = Arrangement.Center) {
@@ -286,12 +297,13 @@ fun ScoresRow(game: Game, scale: com.repisa.app.model.RatingScale, small: Boolea
         Column(box(if (hasHltb) game.hltbUrl?.let { url -> onOpen?.let { { it(url) } } } else null),
             verticalArrangement = Arrangement.Center) {
             Text("HowLongToBeat", color = Color(0xFF9C8A70), fontSize = label, maxLines = 1, softWrap = false)
-            if (hasHltb) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (hasHltb) Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 2.dp)) {
                 Hours(stringResource(R.string.hltb_main), game.hltbMain, value, label)
                 Hours(stringResource(R.string.hltb_extra), game.hltbExtra, value, label)
                 Hours(stringResource(R.string.hltb_complete), game.hltbComplete, value, label)
             } else Missing(loading, value)
         }
+    }
     }
 }
 
