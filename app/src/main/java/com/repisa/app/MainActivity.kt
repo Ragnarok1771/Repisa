@@ -6,7 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHost
@@ -21,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.nativeKeyCode
@@ -57,11 +60,41 @@ class MainActivity : ComponentActivity() {
     override fun onStart() { super.onStart(); secondScreen.start() }
     override fun onStop() { secondScreen.stop(); super.onStop() }
     override fun onResume() { super.onResume(); vm.onResume() }
+
+    /**
+     * Botones globales del mando. Se tratan aquí (y no en Compose) para que funcionen
+     * aunque todavía no haya ninguna caja enfocada.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val code = event.keyCode
+        val global = code == KeyEvent.KEYCODE_BUTTON_START || code == KeyEvent.KEYCODE_BUTTON_SELECT ||
+            code == KeyEvent.KEYCODE_BUTTON_L1 || code == KeyEvent.KEYCODE_BUTTON_R1
+        if (!global) return super.dispatchKeyEvent(event)
+        if (event.action != KeyEvent.ACTION_UP) return true
+        when (code) {
+            KeyEvent.KEYCODE_BUTTON_START -> {
+                vm.inSettings.value = !vm.inSettings.value
+                if (!vm.inSettings.value) secondScreen.update()
+            }
+            KeyEvent.KEYCODE_BUTTON_SELECT -> {
+                val modes = GroupMode.entries
+                vm.setGroup(modes[(modes.indexOf(vm.options.value.group) + 1) % modes.size])
+                vm.message.value = "Repisas por: ${vm.options.value.group.label}"
+            }
+            else -> {
+                val order = listOf<Source?>(null) + Source.entries
+                val i = order.indexOf(vm.options.value.source)
+                val step = if (code == KeyEvent.KEYCODE_BUTTON_R1) 1 else order.size - 1
+                vm.setSource(order[(i + step) % order.size])
+            }
+        }
+        return true
+    }
 }
 
 @Composable
 private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit) {
-    var inSettings by rememberSaveable { mutableStateOf(false) }
+    val inSettings by vm.inSettings.collectAsState()
     val selectedId by vm.selectedId.collectAsState()
     val games by vm.games.collectAsState()
     val selected = games.firstOrNull { it.id == selectedId }
@@ -72,31 +105,20 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit) {
         message?.let { snackbar.showSnackbar(it); vm.message.value = null }
     }
 
-    fun closeSettings() { inSettings = false; onSettingsClosed() }
+    fun closeSettings() { vm.inSettings.value = false; onSettingsClosed() }
 
     BackHandler(enabled = inSettings || selected != null) {
         if (selected != null) vm.selectedId.value = null else closeSettings()
     }
 
     Box(
-        Modifier.fillMaxSize().onPreviewKeyEvent { e ->
+        Modifier.fillMaxSize().background(Color(0xFF16100C)).safeDrawingPadding().onPreviewKeyEvent { e ->
             if (e.type != KeyEventType.KeyUp) return@onPreviewKeyEvent false
             when (e.key.nativeKeyCode) {
                 KeyEvent.KEYCODE_BUTTON_B -> when {
                     selected != null -> { vm.selectedId.value = null; true }
                     inSettings -> { closeSettings(); true }
                     else -> false
-                }
-                KeyEvent.KEYCODE_BUTTON_START -> { if (inSettings) closeSettings() else inSettings = true; true }
-                KeyEvent.KEYCODE_BUTTON_SELECT -> {
-                    val modes = GroupMode.entries
-                    vm.setGroup(modes[(modes.indexOf(vm.options.value.group) + 1) % modes.size]); true
-                }
-                KeyEvent.KEYCODE_BUTTON_L1, KeyEvent.KEYCODE_BUTTON_R1 -> {
-                    val order = listOf<Source?>(null) + Source.entries
-                    val i = order.indexOf(vm.options.value.source)
-                    val step = if (e.key.nativeKeyCode == KeyEvent.KEYCODE_BUTTON_R1) 1 else order.size - 1
-                    vm.setSource(order[(i + step) % order.size]); true
                 }
                 else -> false
             }
@@ -105,7 +127,7 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit) {
         if (inSettings) {
             SettingsScreen(vm, onBack = { closeSettings() })
         } else {
-            ShelfScreen(vm, onOpenSettings = { inSettings = true }, onOpenGame = { vm.selectedId.value = it.id })
+            ShelfScreen(vm, onOpenSettings = { vm.inSettings.value = true }, onOpenGame = { vm.selectedId.value = it.id })
             selected?.let { DetailScreen(it, vm, onClose = { vm.selectedId.value = null }) }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp))

@@ -70,6 +70,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     /** Juego resaltado (con el mando o el dedo): se muestra en la segunda pantalla. */
     val focused = MutableStateFlow<Game?>(null)
     val selectedId = MutableStateFlow<String?>(null)
+    val inSettings = MutableStateFlow(false)
 
     val shelves: StateFlow<List<ShelfGroup>> = combine(_games, _options) { g, o -> buildShelves(g, o) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())

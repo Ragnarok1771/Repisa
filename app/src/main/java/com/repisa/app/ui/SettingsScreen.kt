@@ -255,7 +255,7 @@ private fun Field(label: String, value: String, secret: Boolean = false, onChang
         value = value, onValueChange = onChange, label = { Text(label) }, singleLine = true,
         visualTransformation = if (secret) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = if (secret) KeyboardType.Password else KeyboardType.Text),
-        modifier = Modifier.fillMaxWidth().widthIn(max = 560.dp),
+        modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth(),
     )
 }
 

@@ -3,6 +3,14 @@
 Tu colección de juegos como cajas físicas sobre repisas de madera, al estilo de *Box Room*,
 pensada para la **AYN Thor** (Android, doble pantalla) y cualquier consola o móvil Android.
 
+![Repisa](docs/capturas/repisa.png)
+
+| Repisas por consola | Ficha del juego |
+|---|---|
+| ![](docs/capturas/por-consola.png) | ![](docs/capturas/ficha.png) |
+
+*(Capturas con datos de ejemplo y portadas generadas; con tus cuentas conectadas se ven las carátulas reales.)*
+
 ## Qué hace
 
 - **Cajas con su forma real**: cada sistema tiene su caja (DVD negra con franja de PS2, estuche rojo de Switch,

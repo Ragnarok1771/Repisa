@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -119,13 +121,15 @@ fun GameBox(game: Game, height: Dp, modifier: Modifier = Modifier, lifted: Boole
             }
             case.bandColor?.let { band ->
                 Box(
-                    Modifier.fillMaxWidth().height(height * 0.075f).background(Color(band)),
+                    Modifier.fillMaxWidth().height(height * 0.085f).background(Color(band)),
                     contentAlignment = Alignment.Center,
                 ) {
                     case.bandText?.let {
                         Text(
                             it, color = Color(case.bandTextColor), fontWeight = FontWeight.Bold,
-                            fontSize = with(density) { (height * 0.045f).toSp() }, maxLines = 1, letterSpacing = 1.sp,
+                            fontSize = with(density) { (height * 0.05f).toSp() }, maxLines = 1, softWrap = false,
+                            lineHeight = with(density) { (height * 0.05f).toSp() },
+                            modifier = Modifier.wrapContentHeight(unbounded = true),
                         )
                     }
                 }
@@ -172,20 +176,19 @@ fun BoxScope.CoverArt(game: Game) {
 @Composable
 fun GeneratedCover(game: Game) {
     val hue = (abs(game.title.hashCode()) % 360).toFloat()
-    val c1 = Color.hsv(hue, 0.55f, 0.55f)
-    val c2 = Color.hsv((hue + 40) % 360, 0.65f, 0.25f)
-    Box(
-        Modifier.fillMaxSize().background(Brush.linearGradient(listOf(c1, c2))).padding(6.dp),
-    ) {
-        Column(Modifier.align(Alignment.Center)) {
-            Text(
-                game.title, color = Color.White, fontWeight = FontWeight.Black, textAlign = TextAlign.Center,
-                fontSize = 13.sp, lineHeight = 14.sp, maxLines = 5, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+    val c1 = Color.hsv(hue, 0.50f, 0.72f)
+    val c2 = Color.hsv((hue + 40) % 360, 0.60f, 0.34f)
+    BoxWithConstraints(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(c1, c2))).padding(6.dp)) {
+        val density = LocalDensity.current
+        val titleSize = with(density) { (minOf(maxWidth, maxHeight * 0.8f) * 0.14f).toSp() }
+        val smallSize = with(density) { (minOf(maxWidth, maxHeight) * 0.06f).toSp() }
         Text(
-            game.console.name.uppercase(), color = Color.White.copy(alpha = 0.7f), fontSize = 7.sp,
+            game.title, color = Color.White, fontWeight = FontWeight.Black, textAlign = TextAlign.Center,
+            fontSize = titleSize, lineHeight = titleSize * 1.1f, maxLines = 5, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth().align(Alignment.Center),
+        )
+        Text(
+            game.console.name.uppercase(), color = Color.White.copy(alpha = 0.75f), fontSize = smallSize,
             fontWeight = FontWeight.Bold, letterSpacing = 1.sp, maxLines = 1,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
