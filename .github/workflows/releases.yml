@@ -48,6 +48,7 @@ jobs:
     if: needs.plan.outputs.matrix != '[]'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false  # si una versión falla, las demás se publican igual
       max-parallel: 1   # en orden, para que la última quede como «latest»
       matrix:
         include: ${{ fromJson(needs.plan.outputs.matrix) }}
@@ -87,7 +88,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp version/app/build/outputs/apk/release/app-release.apk "Repisa-${{ matrix.version }}.apk"
-          gh release create "v${{ matrix.version }}" "Repisa-${{ matrix.version }}.apk" \
+          v="${{ matrix.version }}"
+          if gh release view "v$v" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "La release v$v ya existe (la publicó otra ejecución)."; exit 0
+          fi
+          cp version/app/build/outputs/apk/release/app-release.apk "Repisa-$v.apk"
+          # Solo la versión más nueva de releases/versions.json queda como «latest».
+          newest=$(jq -r '.[-1].version' actual/releases/versions.json)
+          latest=false; [ "$v" = "$newest" ] && latest=true
+          gh release create "v$v" "Repisa-$v.apk" \
             --repo "$GITHUB_REPOSITORY" --target "${{ matrix.commit }}" \
-            --title "Repisa ${{ matrix.version }}" --notes-file notas.md
+            --title "Repisa $v" --notes-file notas.md --latest=$latest
