@@ -79,7 +79,7 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
             .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onClose),
     ) {
         BoxWithConstraints(Modifier.fillMaxSize().padding(20.dp)) {
-            val boxH = minOf(maxHeight * 0.85f, maxWidth * 0.55f / game.console.case.aspect)
+            val boxH = minOf(maxHeight * 0.85f, maxWidth * 0.55f / frontAspect(game))
             Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                 GameBox(
                     game, boxH,
@@ -195,6 +195,7 @@ private fun EditDialog(game: Game, onDismiss: () -> Unit, onSave: (Game) -> Unit
                     developer = dev.ifBlank { null },
                     releaseYear = year.toIntOrNull(),
                     coverUrl = cover.ifBlank { null },
+                    coverAspect = if (cover.ifBlank { null } == game.coverUrl) game.coverAspect else null,
                     trackedMinutes = ((hours.replace(',', '.').toDoubleOrNull() ?: 0.0) * 60).toInt(),
                     userEdited = true,
                 ))

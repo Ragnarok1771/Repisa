@@ -30,6 +30,8 @@ data class Game(
     val lastPlayed: Long? = null,
     val coverUrl: String? = null,
     val altCoverUrl: String? = null,
+    /** Proporción ancho/alto de la carátula descargada (para dar a la caja su forma exacta). */
+    val coverAspect: Float? = null,
     /** content:// del ROM (carpeta elegida con el selector de Android). */
     val romUri: String? = null,
     /** Ruta absoluta del ROM (playlists de RetroArch). */

@@ -38,9 +38,9 @@ class Metadata(private val settings: Settings) {
         if (g.source == Source.STEAM && (g.genres.isEmpty() || g.developer == null)) {
             runCatching { SteamSource.storeDetails(g) }.getOrNull()?.let { out = it }
             delay(1600) // límite de la tienda de Steam
-            // Algunos juegos recientes no tienen la portada vertical en la ruta clásica.
+            // Si no hay carátula vertical, mejor dejar que IGDB la busque que estirar la cabecera horizontal.
             if (out.coverUrl != null && !Http.exists(out.coverUrl!!)) {
-                out = out.copy(coverUrl = out.altCoverUrl.takeIf { it != null && Http.exists(it) })
+                out = out.copy(coverUrl = if (igdbEnabled) null else out.altCoverUrl)
             }
         }
         if (g.source == Source.EMULATOR && out.coverUrl == null && settings.useLibretroCovers) {
@@ -55,17 +55,28 @@ class Metadata(private val settings: Settings) {
 
     // ---------------------------------------------------------------- libretro-thumbnails
 
+    /**
+     * Carátulas escaneadas de las cajas reales, del proyecto libretro-thumbnails (repositorios en GitHub,
+     * uno por sistema: "Sony - PlayStation" → libretro-thumbnails/Sony_-_PlayStation).
+     */
     private suspend fun libretroCover(g: Game): String? {
         val system = g.console.libretro ?: return null
+        val repo = system.replace(' ', '_')
         val names = buildList {
             g.romName?.let { add(it) }
-            val clean = g.title
-            listOf("", " (USA)", " (Europe)", " (World)", " (Japan)", " (USA, Europe)", " (Spain)").forEach { add(clean + it) }
+            // Nombre No-Intro con el artículo al final: "Legend of Zelda, The - ..."
+            val clean = Regex("""^(The|A|An) (.*?)( - .*)?$""").find(g.title)
+                ?.let { m -> "${m.groupValues[2]}, ${m.groupValues[1]}${m.groupValues[3]}" } ?: g.title
+            listOf(clean, g.title).distinct().forEach { t ->
+                listOf(" (USA)", " (Europe)", " (World)", " (USA, Europe)", " (Japan, USA)", " (Spain)", " (Japan)", "")
+                    .forEach { add(t + it) }
+            }
+            g.romName?.let { add(it.replace(Regex("""\s*\((Disc|Disk|CD) \d+\)""", RegexOption.IGNORE_CASE), "") + " (Disc 1)") }
         }.distinct()
         for (n in names) {
             // libretro sustituye estos caracteres por "_" en los nombres de archivo.
             val file = n.replace(Regex("""[&*/:`<>?\\|"]"""), "_")
-            val url = "https://thumbnails.libretro.com/${enc(system)}/Named_Boxarts/${enc(file)}.png"
+            val url = "https://raw.githubusercontent.com/libretro-thumbnails/$repo/master/Named_Boxarts/${enc(file)}.png"
             if (Http.exists(url)) return url
         }
         return null

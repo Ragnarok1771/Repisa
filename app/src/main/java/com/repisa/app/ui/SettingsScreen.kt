@@ -72,6 +72,7 @@ import com.repisa.app.launch.AppInfo
 import com.repisa.app.model.Consoles
 import com.repisa.app.model.Source
 import com.repisa.app.sources.EpicSource
+import com.repisa.app.sources.SteamLogin
 import org.json.JSONObject
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -96,6 +97,7 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
     }
 
     var epicWeb by remember { mutableStateOf(false) }
+    var steamWeb by remember { mutableStateOf(false) }
     var pickEmuFor by remember { mutableStateOf<String?>(null) }
 
     Column(Modifier.fillMaxSize().roomBackground()) {
@@ -113,20 +115,32 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
             ) {
                 // ---------------------------------------------------------- Steam
                 Section("Steam") {
-                    Hint("Necesitas una clave de la Steam Web API (gratis) y tu SteamID64, tu nombre personalizado o la URL de tu perfil. " +
-                        "En Privacidad del perfil, 'Detalles de juegos' debe estar en Público.")
-                    TextButton(onClick = { vm.launcher.openUrl("https://steamcommunity.com/dev/apikey") }) { Text("Conseguir clave en steamcommunity.com/dev/apikey") }
-                    var key by remember { mutableStateOf(s.steamApiKey.orEmpty()) }
-                    var user by remember { mutableStateOf(s.steamUser.orEmpty()) }
-                    Field("Clave de API de Steam", key, secret = true) { key = it }
-                    Field("SteamID64 / perfil", user) { user = it }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = {
-                            s.steamApiKey = key; s.steamUser = user; vm.syncOne(Source.STEAM); changed()
-                        }, enabled = key.isNotBlank() && user.isNotBlank()) { Text("Guardar y sincronizar") }
-                        if (s.steamApiKey != null) OutlinedButton(onClick = {
-                            s.steamApiKey = null; s.steamUser = null; vm.removeSource(Source.STEAM); changed()
-                        }) { Text("Desconectar", color = Color.White) }
+                    val linked = s.steamLinkedId != null || s.steamApiKey != null
+                    if (linked) {
+                        Hint("Cuenta vinculada" + (s.steamLinkedName?.let { ": $it" } ?: s.steamLinkedId?.let { " (SteamID $it)" } ?: " con clave de API") + ".")
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = { vm.syncOne(Source.STEAM) }) { Text("Sincronizar Steam") }
+                            OutlinedButton(onClick = { vm.steamUnlink(); changed() }) { Text("Desvincular", color = Color.White) }
+                        }
+                    } else {
+                        Hint("Inicia sesión en la página oficial de Steam (con tu usuario o con el código QR de la app de Steam). " +
+                            "Repisa solo lee tu lista de juegos y tus horas; tu contraseña no pasa por la app.")
+                        Button(onClick = { steamWeb = true }) { Text("Vincular cuenta de Steam") }
+                        var advanced by remember { mutableStateOf(false) }
+                        TextButton(onClick = { advanced = !advanced }) {
+                            Text(if (advanced) "Ocultar opción avanzada" else "Avanzado: usar una clave de API en su lugar")
+                        }
+                        if (advanced) {
+                            Hint("Clave de la Steam Web API y tu SteamID64 o URL de perfil. 'Detalles de juegos' debe estar en Público.")
+                            TextButton(onClick = { vm.launcher.openUrl("https://steamcommunity.com/dev/apikey") }) { Text("Conseguir clave en steamcommunity.com/dev/apikey") }
+                            var key by remember { mutableStateOf(s.steamApiKey.orEmpty()) }
+                            var user by remember { mutableStateOf(s.steamUser.orEmpty()) }
+                            Field("Clave de API de Steam", key, secret = true) { key = it }
+                            Field("SteamID64 / perfil", user) { user = it }
+                            Button(onClick = {
+                                s.steamApiKey = key; s.steamUser = user; vm.syncOne(Source.STEAM); changed()
+                            }, enabled = key.isNotBlank() && user.isNotBlank()) { Text("Guardar y sincronizar") }
+                        }
                     }
                 }
 
@@ -140,7 +154,7 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
                         }
                     } else {
                         Hint("Inicia sesión con tu cuenta de Epic. Se usa el mismo método que Heroic/Legendary; Repisa solo lee tu biblioteca y tu tiempo de juego.")
-                        Button(onClick = { epicWeb = true }) { Text("Iniciar sesión en Epic") }
+                        Button(onClick = { epicWeb = true }) { Text("Vincular cuenta de Epic Games") }
                         Hint("¿La página no carga dentro de la app? Ábrela en el navegador, inicia sesión y copia el valor de \"authorizationCode\" aquí:")
                         TextButton(onClick = { vm.launcher.openUrl(EpicSource.LOGIN_URL) }) { Text("Abrir el login de Epic en el navegador") }
                         var code by remember { mutableStateOf("") }
@@ -225,7 +239,22 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
         }
     }
 
-    if (epicWeb) EpicLoginDialog(onDismiss = { epicWeb = false }) { code -> epicWeb = false; vm.epicLogin(code) }
+    if (epicWeb) {
+        LoginWebDialog("Vincular cuenta de Epic Games", EpicSource.LOGIN_URL, onDismiss = { epicWeb = false }) { view, url, done ->
+            // Al terminar, Epic muestra un JSON con "authorizationCode".
+            if (!url.contains("/id/api/redirect")) return@LoginWebDialog
+            view.evaluateJavascript("document.body.innerText") { raw ->
+                val text = runCatching { JSONObject("{\"v\":$raw}").getString("v") }.getOrDefault(raw)
+                val code = runCatching { JSONObject(text).optString("authorizationCode") }.getOrNull()
+                if (!code.isNullOrBlank()) { done(); epicWeb = false; vm.epicLogin(code) }
+            }
+        }
+    }
+    if (steamWeb) {
+        LoginWebDialog("Vincular cuenta de Steam", SteamLogin.LOGIN_URL, onDismiss = { steamWeb = false }) { _, _, done ->
+            if (SteamLogin.isLoggedInWeb()) { done(); steamWeb = false; vm.steamLinked(); changed() }
+        }
+    }
     pickEmuFor?.let { consoleId ->
         EmulatorPicker(
             title = "Emulador para ${Consoles.byId(consoleId).name}",
@@ -296,12 +325,17 @@ private fun EmulatorPicker(title: String, apps: List<AppInfo>, onDismiss: () -> 
 }
 
 /**
- * Login de Epic dentro de la app. Al terminar, Epic muestra un JSON con "authorizationCode";
- * lo leemos de la página y lo cambiamos por un token.
+ * Página oficial de inicio de sesión (Steam o Epic) dentro de la app.
+ * [onPage] se llama al terminar de cargar cada página; debe llamar a `done()` cuando detecte el login.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun EpicLoginDialog(onDismiss: () -> Unit, onCode: (String) -> Unit) {
+private fun LoginWebDialog(
+    title: String,
+    url: String,
+    onDismiss: () -> Unit,
+    onPage: (view: WebView, url: String, done: () -> Unit) -> Unit,
+) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(Modifier.fillMaxSize().padding(12.dp).background(Color.White, RoundedCornerShape(12.dp))) {
             AndroidView(
@@ -311,26 +345,21 @@ private fun EpicLoginDialog(onDismiss: () -> Unit, onCode: (String) -> Unit) {
                     WebView(ctx).apply {
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
-                        // Epic rechaza algunos WebView: nos presentamos como Chrome móvil.
+                        // Algunas webs rechazan los WebView: nos presentamos como Chrome móvil.
                         settings.userAgentString = settings.userAgentString.replace("; wv", "")
                         CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                         webViewClient = object : WebViewClient() {
-                            var done = false
+                            var finished = false
                             override fun onPageFinished(view: WebView, url: String) {
-                                if (done || !url.contains("/id/api/redirect")) return
-                                view.evaluateJavascript("document.body.innerText") { raw ->
-                                    val text = runCatching { JSONObject("{\"v\":$raw}").getString("v") }.getOrDefault(raw)
-                                    val code = runCatching { JSONObject(text).optString("authorizationCode") }.getOrNull()
-                                    if (!code.isNullOrBlank() && !done) { done = true; onCode(code) }
-                                }
+                                if (!finished) onPage(view, url) { finished = true; CookieManager.getInstance().flush() }
                             }
                         }
-                        loadUrl(EpicSource.LOGIN_URL)
+                        loadUrl(url)
                     }
                 },
             )
             Row(Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Inicia sesión en Epic Games", color = Color.Black, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f).padding(start = 12.dp))
+                Text(title, color = Color.Black, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f).padding(start = 12.dp))
                 TextButton(onClick = onDismiss) { Text("Cancelar") }
             }
         }

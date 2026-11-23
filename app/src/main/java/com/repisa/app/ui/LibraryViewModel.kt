@@ -13,6 +13,7 @@ import com.repisa.app.model.Source
 import com.repisa.app.sources.EmulatorSource
 import com.repisa.app.sources.EpicSource
 import com.repisa.app.sources.Metadata
+import com.repisa.app.sources.SteamLogin
 import com.repisa.app.sources.SteamSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -84,7 +85,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun hasAnySource() = (settings.steamApiKey != null && settings.steamUser != null) || epic.isLoggedIn ||
+    fun hasAnySource() = settings.steamConfigured || epic.isLoggedIn ||
         settings.romFolders.isNotEmpty() || settings.esdeFolder != null || settings.retroarchFolder != null
 
     // ------------------------------------------------------------------ Vista
@@ -147,7 +148,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     fun syncAll() = viewModelScope.launch {
         enrichJob?.cancel()
         val errors = mutableListOf<String>()
-        if (settings.steamApiKey != null && settings.steamUser != null) syncSource(Source.STEAM)?.let(errors::add)
+        if (settings.steamConfigured) syncSource(Source.STEAM)?.let(errors::add)
         if (epic.isLoggedIn) syncSource(Source.EPIC)?.let(errors::add)
         if (settings.romFolders.isNotEmpty() || settings.esdeFolder != null || settings.retroarchFolder != null)
             syncSource(Source.EMULATOR)?.let(errors::add)
@@ -170,7 +171,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         return try {
             val known = _games.value.associateBy { it.id }
             val fresh: List<Game> = when (source) {
-                Source.STEAM -> SteamSource(settings.steamApiKey!!, settings.steamUser!!).fetchGames()
+                Source.STEAM -> steamSource().fetchGames()
                 Source.EPIC -> epic.fetchGames(known)
                 Source.EMULATOR -> EmulatorSource(getApplication(), settings).fetchGames { status.value = it }
             }
@@ -186,6 +187,46 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             null
         } catch (e: Exception) {
             "${source.label}: ${e.message ?: e.javaClass.simpleName}"
+        }
+    }
+
+    private suspend fun steamSource(): SteamSource {
+        val key = settings.steamApiKey
+        val user = settings.steamUser
+        if (key != null && user != null) return SteamSource.withApiKey(key, user)
+        val id = settings.steamLinkedId ?: error("No hay ninguna cuenta de Steam vinculada")
+        val token = SteamLogin.fetchWebToken()
+            ?: error("la sesión de Steam ha caducado. Vuelve a vincular tu cuenta en Ajustes.")
+        return SteamSource.withToken(token, id)
+    }
+
+    /** Se llama cuando el usuario termina de iniciar sesión en la web de Steam. */
+    fun steamLinked() = viewModelScope.launch {
+        status.value = "Vinculando cuenta de Steam…"
+        try {
+            val token = SteamLogin.fetchWebToken() ?: error("Steam no confirmó la sesión")
+            val id = SteamLogin.steamIdFromToken(token) ?: error("no se pudo leer el SteamID")
+            settings.steamLinkedId = id
+            settings.steamLinkedName = SteamLogin.profileName(id)
+            message.value = "Cuenta de Steam vinculada" + (settings.steamLinkedName?.let { ": $it" } ?: "")
+            syncSource(Source.STEAM)?.let { message.value = it }
+            startEnrichment()
+        } catch (e: Exception) {
+            message.value = "Steam: no se pudo vincular la cuenta (${e.message})."
+        } finally {
+            status.value = null
+        }
+    }
+
+    fun steamUnlink() = viewModelScope.launch {
+        settings.steamLinkedId = null
+        settings.steamLinkedName = null
+        settings.steamApiKey = null
+        settings.steamUser = null
+        SteamLogin.clearSession()
+        mutex.withLock {
+            _games.update { list -> list.filter { it.source != Source.STEAM } }
+            store.save(_games.value)
         }
     }
 
@@ -213,7 +254,11 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     /** Aplica el resultado de metadatos sin pisar cambios del usuario hechos mientras tanto. */
     private fun mergeEnriched(current: Game, enriched: Game) =
         if (current.userEdited) current.copy(metaFetched = true)
-        else enriched.copy(favorite = current.favorite, trackedMinutes = current.trackedMinutes)
+        else enriched.copy(
+            favorite = current.favorite,
+            trackedMinutes = current.trackedMinutes,
+            coverAspect = if (enriched.coverUrl == current.coverUrl) current.coverAspect else null,
+        )
 
     // ------------------------------------------------------------------ Acciones
 
@@ -223,6 +268,18 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             store.save(_games.value)
         }
         if (focused.value?.id == game.id) focused.value = game
+    }
+
+    private var aspectSaveJob: Job? = null
+
+    /** La carátula ya cargó: guarda su proporción para que la caja tenga su forma exacta. */
+    fun setCoverAspect(id: String, aspect: Float) {
+        _games.update { list -> list.map { if (it.id == id) it.copy(coverAspect = aspect) else it } }
+        aspectSaveJob?.cancel()
+        aspectSaveJob = viewModelScope.launch {
+            kotlinx.coroutines.delay(3000)
+            mutex.withLock { store.save(_games.value) }
+        }
     }
 
     fun toggleFavorite(game: Game) = updateGame(game.copy(favorite = !game.favorite))

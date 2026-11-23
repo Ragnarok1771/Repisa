@@ -30,7 +30,7 @@ class LibraryStore(context: Context) {
  */
 fun mergeGame(old: Game?, new: Game): Game {
     if (old == null) return new
-    return new.copy(
+    val merged = new.copy(
         title = if (old.userEdited) old.title else new.title,
         genres = if (old.userEdited || new.genres.isEmpty()) old.genres else new.genres,
         developer = if (old.userEdited) old.developer else new.developer ?: old.developer,
@@ -51,4 +51,5 @@ fun mergeGame(old: Game?, new: Game): Game {
         metaFetched = old.metaFetched,
         userEdited = old.userEdited,
     )
+    return merged.copy(coverAspect = if (merged.coverUrl == old.coverUrl) old.coverAspect else null)
 }

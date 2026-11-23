@@ -97,7 +97,8 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
                 EmptyRoom(hasGames = all.isNotEmpty(), onOpenSettings = onOpenSettings)
             } else {
                 Shelves(shelves, boxHeight, focused?.id, onFocus = { vm.focused.value = it }, onOpen = onOpenGame,
-                    onPlay = { vm.play(it) }, onFavorite = { vm.toggleFavorite(it) })
+                    onPlay = { vm.play(it) }, onFavorite = { vm.toggleFavorite(it) },
+                    onAspect = { g, a -> vm.setCoverAspect(g.id, a) })
             }
         }
         FocusBar(focused)
@@ -179,6 +180,7 @@ private fun Shelves(
     onOpen: (Game) -> Unit,
     onPlay: (Game) -> Unit,
     onFavorite: (Game) -> Unit,
+    onAspect: (Game, Float) -> Unit,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val sidePad = 28.dp
@@ -206,7 +208,7 @@ private fun Shelves(
             items(items, key = { it.key }) { item ->
                 when (item) {
                     is ShelfItem.Header -> GroupPlaque(item.group)
-                    is ShelfItem.Row -> ShelfRow(item.games, boxHeight, sidePad, gap, focusedId, onFocus, onOpen, onPlay, onFavorite)
+                    is ShelfItem.Row -> ShelfRow(item.games, boxHeight, sidePad, gap, focusedId, onFocus, onOpen, onPlay, onFavorite, onAspect)
                 }
             }
         }
@@ -240,6 +242,7 @@ private fun ShelfRow(
     onOpen: (Game) -> Unit,
     onPlay: (Game) -> Unit,
     onFavorite: (Game) -> Unit,
+    onAspect: (Game, Float) -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().padding(top = 18.dp)) {
         Row(
@@ -252,6 +255,7 @@ private fun ShelfRow(
                 GameBox(
                     g, boxHeight,
                     lifted = isFocused,
+                    onCoverAspect = { onAspect(g, it) },
                     modifier = Modifier
                         .onFocusChanged { isFocused = it.isFocused; if (it.isFocused) onFocus(g) }
                         .onKeyEvent { e ->

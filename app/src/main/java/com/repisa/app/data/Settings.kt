@@ -15,6 +15,11 @@ class Settings(context: Context) {
     /** Lo que escribió el usuario: SteamID64, nombre personalizado o URL del perfil. */
     var steamUser: String? get() = str("steam_user"); set(v) = put("steam_user", v?.trim())
 
+    /** Cuenta vinculada iniciando sesión (sin clave de API). */
+    var steamLinkedId: String? get() = str("steam_linked_id"); set(v) = put("steam_linked_id", v)
+    var steamLinkedName: String? get() = str("steam_linked_name"); set(v) = put("steam_linked_name", v)
+    val steamConfigured: Boolean get() = steamLinkedId != null || (steamApiKey != null && steamUser != null)
+
     // --- Epic ---
     var epicAccessToken: String? get() = str("epic_access"); set(v) = put("epic_access", v)
     var epicRefreshToken: String? get() = str("epic_refresh"); set(v) = put("epic_refresh", v)

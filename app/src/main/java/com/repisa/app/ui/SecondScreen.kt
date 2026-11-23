@@ -111,7 +111,7 @@ private fun FocusPanel(vm: LibraryViewModel) {
             }
         } else {
             BoxWithConstraints(Modifier.fillMaxSize()) {
-                val h = minOf(maxHeight * 0.92f, maxWidth * 0.42f / g.console.case.aspect)
+                val h = minOf(maxHeight * 0.92f, maxWidth * 0.42f / frontAspect(g))
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
                     GameBox(g, h, lifted = false)
                     Spacer(Modifier.width(20.dp))

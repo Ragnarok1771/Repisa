@@ -45,28 +45,41 @@ import coil3.compose.AsyncImage
 import com.repisa.app.model.Game
 import kotlin.math.abs
 
+/** Proporción (ancho/alto) del frontal: la de la carátula real si ya se conoce, si no la típica del sistema. */
+fun frontAspect(game: Game): Float = game.coverAspect?.coerceIn(0.5f, 1.5f) ?: game.console.case.aspect
+
 /** Tamaño total (frontal + lateral 3D) que ocupa una caja de altura [height]. */
 fun boxSize(game: Game, height: Dp): Pair<Dp, Dp> {
-    val c = game.console.case
-    val w = height * c.aspect
-    val depth = height * c.depth * 0.55f
+    val w = height * frontAspect(game)
+    val depth = height * game.console.case.depth * 0.55f
     return (w + depth) to (height + depth * 0.45f)
 }
 
 /**
- * Una caja de juego "física": portada al frente, lateral y tapa en falsa perspectiva,
- * franja del sistema (PS2, Switch...) y brillo de plástico.
+ * Una caja de juego "física": la carátula del juego ocupa todo el frontal, como la caja que compras
+ * en la tienda; el lomo y la tapa se dibujan en falsa perspectiva con el color del estuche del sistema.
+ * Si no hay carátula, se genera una con el título y la franja típica del sistema (PS2, Switch...).
+ *
+ * [onCoverAspect] recibe la proporción real de la carátula al cargarla, para ajustar la caja a ella.
  */
 @Composable
-fun GameBox(game: Game, height: Dp, modifier: Modifier = Modifier, lifted: Boolean = false) {
+fun GameBox(
+    game: Game,
+    height: Dp,
+    modifier: Modifier = Modifier,
+    lifted: Boolean = false,
+    onCoverAspect: ((Float) -> Unit)? = null,
+) {
     val case = game.console.case
     val caseColor = Color(case.caseColor)
-    val frontW = height * case.aspect
+    val frontW = height * frontAspect(game)
     val depth = height * case.depth * 0.55f
     val rise = depth * 0.45f
     val density = LocalDensity.current
+    var hasCover by remember(game.id, game.coverUrl) { mutableStateOf(false) }
 
     val lift by animateFloatAsState(if (lifted) 1f else 0f, spring(dampingRatio = 0.6f, stiffness = 400f), label = "lift")
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(2.dp)
 
     Box(
         modifier
@@ -89,12 +102,11 @@ fun GameBox(game: Game, height: Dp, modifier: Modifier = Modifier, lifted: Boole
                     moveTo(0f, r); lineTo(d, 0f); lineTo(fw + d, 0f); lineTo(fw, r); close()
                 }
                 drawPath(top, lerp(caseColor, Color.White, 0.18f))
-                // Lateral derecho
+                // Lomo (lateral derecho)
                 val side = Path().apply {
                     moveTo(fw, r); lineTo(fw + d, 0f); lineTo(fw + d, h - r); lineTo(fw, h); close()
                 }
                 drawPath(side, Brush.verticalGradient(listOf(lerp(caseColor, Color.Black, 0.25f), lerp(caseColor, Color.Black, 0.55f))))
-                // Banda de la franja también en el lateral
                 case.bandColor?.let { band ->
                     val bh = h * 0.075f
                     val sideBand = Path().apply {
@@ -108,41 +120,42 @@ fun GameBox(game: Game, height: Dp, modifier: Modifier = Modifier, lifted: Boole
             Modifier
                 .offset(y = rise)
                 .size(frontW, height)
-                .clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
+                .clip(shape)
                 .background(caseColor)
-                .then(
-                    if (lifted) Modifier.border(2.dp, Color(0xFFFFD27A), androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
-                    else Modifier
-                ),
+                .then(if (lifted) Modifier.border(2.dp, Color(0xFFFFD27A), shape) else Modifier),
         ) {
-            val plastic = case.caseColor != 0xFF2B2420 // las cajas de cartón no tienen marco de plástico
-            Box(Modifier.fillMaxSize().padding(if (plastic) frontW * 0.035f else 0.dp)) {
-                CoverArt(game)
-            }
-            case.bandColor?.let { band ->
-                Box(
-                    Modifier.fillMaxWidth().height(height * 0.085f).background(Color(band)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    case.bandText?.let {
-                        Text(
-                            it, color = Color(case.bandTextColor), fontWeight = FontWeight.Bold,
-                            fontSize = with(density) { (height * 0.05f).toSp() }, maxLines = 1, softWrap = false,
-                            lineHeight = with(density) { (height * 0.05f).toSp() },
-                            modifier = Modifier.wrapContentHeight(unbounded = true),
-                        )
+            CoverArt(game, onLoaded = { aspect ->
+                hasCover = true
+                val known = game.coverAspect
+                if (onCoverAspect != null && (known == null || abs(known - aspect) > 0.02f)) onCoverAspect(aspect)
+            })
+            if (!hasCover) {
+                // Portada generada: se le añade la franja del sistema para que parezca su caja.
+                case.bandColor?.let { band ->
+                    Box(
+                        Modifier.fillMaxWidth().height(height * 0.085f).background(Color(band)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        case.bandText?.let {
+                            Text(
+                                it, color = Color(case.bandTextColor), fontWeight = FontWeight.Bold,
+                                fontSize = with(density) { (height * 0.05f).toSp() }, maxLines = 1, softWrap = false,
+                                lineHeight = with(density) { (height * 0.05f).toSp() },
+                                modifier = Modifier.wrapContentHeight(unbounded = true),
+                            )
+                        }
                     }
                 }
             }
-            // Bisagra del estuche (a la izquierda) y brillo del plástico
-            Box(Modifier.width(frontW * 0.03f).fillMaxSize().background(Color.Black.copy(alpha = 0.25f)))
+            // Borde del lomo y reflejo del plástico/cartón sobre la carátula
+            Box(Modifier.width(frontW * 0.02f).fillMaxSize().background(Color.Black.copy(alpha = 0.22f)))
             Box(
                 Modifier.fillMaxSize().background(
                     Brush.linearGradient(
-                        0f to Color.White.copy(alpha = 0.20f),
-                        0.35f to Color.White.copy(alpha = 0.04f),
+                        0f to Color.White.copy(alpha = 0.16f),
+                        0.3f to Color.White.copy(alpha = 0.03f),
                         0.6f to Color.Transparent,
-                        1f to Color.Black.copy(alpha = 0.22f),
+                        1f to Color.Black.copy(alpha = 0.18f),
                         start = Offset.Zero, end = Offset.Infinite,
                     )
                 )
@@ -151,9 +164,9 @@ fun GameBox(game: Game, height: Dp, modifier: Modifier = Modifier, lifted: Boole
     }
 }
 
-/** Portada con cadena de respaldo: portada → alternativa → portada generada. */
+/** Carátula con cadena de respaldo: carátula → alternativa → portada generada. */
 @Composable
-fun BoxScope.CoverArt(game: Game) {
+fun BoxScope.CoverArt(game: Game, onLoaded: (aspect: Float) -> Unit = {}) {
     var url by remember(game.id, game.coverUrl) { mutableStateOf(game.coverUrl ?: game.altCoverUrl) }
     var failed by remember(game.id, game.coverUrl) { mutableStateOf(url == null) }
     if (failed) {
@@ -164,6 +177,10 @@ fun BoxScope.CoverArt(game: Game) {
             contentDescription = game.title,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
+            onSuccess = { state ->
+                val size = state.painter.intrinsicSize
+                if (size.width > 0 && size.height > 0) onLoaded(size.width / size.height)
+            },
             onError = {
                 if (url == game.coverUrl && game.altCoverUrl != null && game.altCoverUrl != url) url = game.altCoverUrl
                 else failed = true
