@@ -67,6 +67,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.repisa.app.data.SafTree
 import com.repisa.app.launch.AppInfo
 import com.repisa.app.model.Consoles
@@ -82,6 +84,8 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     var refresh by remember { mutableIntStateOf(0) } // fuerza recomposición tras cambiar prefs
     fun changed() { refresh++ }
+    // Al volver de los ajustes de Android (p. ej. tras conceder un permiso), refrescar.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { changed() }
 
     fun persist(uri: Uri) = context.contentResolver.takePersistableUriPermission(
         uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
@@ -91,6 +95,9 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
     }
     val pickEsde = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) { persist(uri); s.esdeFolder = uri.toString(); changed() }
+    }
+    val pickCocoon = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) { persist(uri); s.cocoonFolder = uri.toString(); changed() }
     }
     val pickRetroArch = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) { persist(uri); s.retroarchFolder = uri.toString(); changed() }
@@ -182,6 +189,12 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
                     s.retroarchFolder?.let { FolderRow(SafTree.displayName(context, it)) { s.retroarchFolder = null; changed() } }
                         ?: OutlinedButton(onClick = { pickRetroArch.launch(null) }) { Text("Elegir carpeta RetroArch", color = Color.White) }
 
+                    Hint("Opcional: carpeta de datos de Cocoon. En Cocoon usa Ajustes → Library & Data → Export Metadata para que " +
+                        "genere los gamelist.xml; Repisa lee de ahí géneros, fechas, carátulas y el tiempo de juego si viene incluido. " +
+                        "Sirve también para Batocera, RetroBat u otros frontends que exporten gamelist.xml.")
+                    s.cocoonFolder?.let { FolderRow(SafTree.displayName(context, it)) { s.cocoonFolder = null; changed() } }
+                        ?: OutlinedButton(onClick = { pickCocoon.launch(null) }) { Text("Elegir carpeta de Cocoon", color = Color.White) }
+
                     Button(onClick = { vm.syncOne(Source.EMULATOR) }) { Text("Escanear emuladores") }
 
                     val consoles = vm.consolesInLibrary()
@@ -195,6 +208,23 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
                                 Text(Consoles.byId(id).name, color = Color.White, modifier = Modifier.weight(1f))
                                 Text(pkg?.let { vm.launcher.appLabel(it) } ?: "Preguntar", color = Color(0xFFFFD27A))
                             }
+                        }
+                    }
+                }
+
+                // ---------------------------------------------------------- Tiempo de juego
+                Section("Tiempo de juego") {
+                    Hint("Steam, Epic y emuladores se vuelven a leer solos al abrir Repisa o al volver a ella, así que " +
+                        "las horas que juegues en el PC, en otro frontend o en RetroArch aparecen aquí actualizadas.")
+                    val granted = vm.launcher.usage.hasPermission()
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Acceso a datos de uso: " + if (granted) "concedido ✓" else "no concedido", color = Color.White)
+                            Hint("Con este permiso de Android (el mismo que usa Cocoon), Repisa mide solo el tiempo que el emulador " +
+                                "está realmente en pantalla en los juegos que abres desde aquí: no cuenta el reposo ni otras apps.")
+                        }
+                        if (!granted) OutlinedButton(onClick = { context.startActivity(vm.launcher.usage.permissionIntent()) }) {
+                            Text("Conceder", color = Color.White)
                         }
                     }
                 }

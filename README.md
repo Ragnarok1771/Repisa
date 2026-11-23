@@ -37,6 +37,16 @@ pensada para la **AYN Thor** (Android, doble pantalla) y cualquier consola o mó
 | **libretro-thumbnails** | Carátulas escaneadas de las cajas reales para juegos de emulador | Nada (activado por defecto) |
 | **IGDB** (opcional) | Géneros, estudio, año y portada para cualquier juego | Client ID y Secret de Twitch (gratis) |
 
+### Tiempo de juego siempre al día
+
+- **Steam y Epic** se vuelven a leer solos al abrir Repisa o al volver a ella (cada 10 min como mucho): si juegas
+  en el PC, las horas nuevas aparecen aquí y Repisa te avisa de qué juegos cambiaron.
+- **Emuladores**: se combinan RetroArch (.lrtl), los `gamelist.xml` de ES-DE / Cocoon (Export Metadata) / Batocera
+  (`<playtime>`, `<gametime>`…) y lo que mide la propia Repisa. Si dos fuentes registran el mismo juego se toma
+  la mayor, para no contar dos veces las mismas partidas.
+- Con el permiso **Acceso a datos de uso** (el mismo que usa Cocoon), Repisa mide solo el tiempo que el emulador
+  está realmente en pantalla en los juegos que abres desde aquí, sin contar el reposo ni otras apps.
+
 Además, Repisa **mide el tiempo** de los juegos de emulador que abres desde la app
 (eliges el emulador de cada sistema en Ajustes; Dolphin, DuckStation, NetherSX2/AetherSX2, PPSSPP,
 Flycast y RetroArch tienen arranque directo, el resto se abre con "Abrir con…").

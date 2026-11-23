@@ -10,6 +10,7 @@ import com.repisa.app.launch.Launcher
 import com.repisa.app.model.Consoles
 import com.repisa.app.model.Game
 import com.repisa.app.model.Source
+import com.repisa.app.model.formatPlaytime
 import com.repisa.app.sources.EmulatorSource
 import com.repisa.app.sources.EpicSource
 import com.repisa.app.sources.Metadata
@@ -77,16 +78,19 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private var enrichJob: Job? = null
+    private var loaded = false
+    private var syncJob: Job? = null
 
     init {
         viewModelScope.launch {
             _games.value = store.load()
-            if (_games.value.isEmpty() && hasAnySource()) syncAll() else startEnrichment()
+            loaded = true
+            if (!autoSync()) startEnrichment()
         }
     }
 
     fun hasAnySource() = settings.steamConfigured || epic.isLoggedIn ||
-        settings.romFolders.isNotEmpty() || settings.esdeFolder != null || settings.retroarchFolder != null
+        settings.hasEmulatorSources
 
     // ------------------------------------------------------------------ Vista
 
@@ -145,17 +149,42 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     // ------------------------------------------------------------------ Sincronización
 
-    fun syncAll() = viewModelScope.launch {
-        enrichJob?.cancel()
-        val errors = mutableListOf<String>()
-        if (settings.steamConfigured) syncSource(Source.STEAM)?.let(errors::add)
-        if (epic.isLoggedIn) syncSource(Source.EPIC)?.let(errors::add)
-        if (settings.romFolders.isNotEmpty() || settings.esdeFolder != null || settings.retroarchFolder != null)
-            syncSource(Source.EMULATOR)?.let(errors::add)
-        if (errors.isNotEmpty()) message.value = errors.joinToString("\n")
-        else if (!hasAnySource()) message.value = "Conecta Steam, Epic o tus carpetas de emuladores en Ajustes."
-        status.value = null
-        startEnrichment()
+    fun syncAll(quiet: Boolean = false) {
+        if (syncJob?.isActive == true) return
+        syncJob = viewModelScope.launch {
+            enrichJob?.cancel()
+            settings.lastAutoSync = System.currentTimeMillis()
+            val before = _games.value.associate { it.id to it.totalMinutes }
+            val errors = mutableListOf<String>()
+            if (settings.steamConfigured) syncSource(Source.STEAM, quiet)?.let(errors::add)
+            if (epic.isLoggedIn) syncSource(Source.EPIC, quiet)?.let(errors::add)
+            if (settings.hasEmulatorSources) syncSource(Source.EMULATOR, quiet)?.let(errors::add)
+            if (errors.isNotEmpty()) message.value = errors.joinToString("\n")
+            else if (!hasAnySource()) message.value = "Conecta Steam, Epic o tus carpetas de emuladores en Ajustes."
+            else if (quiet) {
+                // Resumen de lo que cambió desde la última vez (p. ej. horas jugadas en Steam desde el PC).
+                val changed = _games.value.filter { g -> before[g.id]?.let { g.totalMinutes > it } == true }
+                if (changed.isNotEmpty()) {
+                    val mins = changed.sumOf { it.totalMinutes - (before[it.id] ?: 0) }
+                    message.value = "Tiempo actualizado: " + changed.take(3).joinToString(", ") { it.title } +
+                        (if (changed.size > 3) " y ${changed.size - 3} más" else "") + " (+${formatPlaytime(mins)})"
+                }
+            }
+            status.value = null
+            startEnrichment()
+        }
+    }
+
+    /**
+     * Sincroniza solo si hace un rato que no se hace (al abrir la app o volver a ella),
+     * para que las horas de Steam, Epic y emuladores estén siempre al día.
+     * Devuelve true si lanzó una sincronización.
+     */
+    fun autoSync(): Boolean {
+        if (!loaded || !hasAnySource()) return false
+        if (System.currentTimeMillis() - settings.lastAutoSync < 10 * 60_000L && _games.value.isNotEmpty()) return false
+        syncAll(quiet = true)
+        return true
     }
 
     fun syncOne(source: Source) = viewModelScope.launch {
@@ -166,7 +195,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Devuelve un mensaje de error o null. */
-    private suspend fun syncSource(source: Source): String? {
+    private suspend fun syncSource(source: Source, quiet: Boolean = false): String? {
         status.value = "Sincronizando ${source.label}…"
         return try {
             val known = _games.value.associateBy { it.id }
@@ -183,7 +212,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 _games.value = _games.value.filter { it.source != source && it.id !in freshIds } + merged
                 store.save(_games.value)
             }
-            message.value = "${source.label}: ${fresh.size} juegos"
+            if (!quiet) message.value = "${source.label}: ${fresh.size} juegos"
             null
         } catch (e: Exception) {
             "${source.label}: ${e.message ?: e.javaClass.simpleName}"
@@ -289,10 +318,12 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun onResume() {
-        val (id, minutes) = launcher.consumeSession() ?: return
-        val g = _games.value.firstOrNull { it.id == id } ?: return
-        updateGame(g.copy(trackedMinutes = g.trackedMinutes + minutes, lastPlayed = System.currentTimeMillis()))
-        message.value = "${g.title}: +$minutes min de juego"
+        launcher.consumeSession()?.let { s ->
+            val g = _games.value.firstOrNull { it.id == s.gameId } ?: return@let
+            updateGame(g.copy(trackedMinutes = g.trackedMinutes + s.minutes, lastPlayed = System.currentTimeMillis()))
+            message.value = "${g.title}: +${formatPlaytime(s.minutes)} de juego" + if (s.measured) "" else " (aprox.)"
+        }
+        autoSync()
     }
 
     fun epicLogin(code: String) = viewModelScope.launch {

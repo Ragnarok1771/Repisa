@@ -48,9 +48,10 @@ class Launcher(private val context: Context, private val settings: Settings) {
             else -> return "No sé dónde está el archivo de este juego. Añade su carpeta de ROMs en Ajustes."
         }
         return try {
+            settings.pendingSessionStart = System.currentTimeMillis()
             context.startActivity(intent)
             settings.pendingSessionGame = g.id
-            settings.pendingSessionStart = System.currentTimeMillis()
+            settings.pendingSessionPackage = intent.component?.packageName ?: intent.`package`
             null
         } catch (_: ActivityNotFoundException) {
             "No se encontró el emulador. Elige uno para ${g.console.name} en Ajustes."
@@ -125,14 +126,22 @@ class Launcher(private val context: Context, private val settings: Settings) {
             .any { t.contains(it) }
     }
 
+    val usage = UsageTracker(context)
+
+    data class Session(val gameId: String, val minutes: Int, val measured: Boolean)
+
     /**
-     * Si al volver a la app había una partida en curso, devuelve (idDelJuego, minutos jugados).
-     * Se ignoran sesiones de menos de 1 minuto y se limitan a 12 h por si la app se quedó abierta.
+     * Si al volver a la app había una partida en curso, devuelve cuánto se jugó.
+     * Con "Acceso a datos de uso" se cuenta solo el tiempo con el emulador en pantalla;
+     * sin él, el tiempo transcurrido hasta volver a Repisa (máx. 12 h).
      */
-    fun consumeSession(): Pair<String, Int>? {
+    fun consumeSession(): Session? {
         val id = settings.pendingSessionGame ?: return null
-        val minutes = ((System.currentTimeMillis() - settings.pendingSessionStart) / 60_000).toInt()
+        val start = settings.pendingSessionStart
+        val now = System.currentTimeMillis()
         settings.pendingSessionGame = null
-        return if (minutes in 1..720) id to minutes else null
+        val measured = runCatching { usage.sessionMinutes(start, now, settings.pendingSessionPackage) }.getOrNull()
+        val minutes = measured ?: ((now - start) / 60_000).toInt()
+        return if (minutes in 1..720) Session(id, minutes, measured != null) else null
     }
 }

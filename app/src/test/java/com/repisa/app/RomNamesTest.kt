@@ -33,4 +33,12 @@ class RomNamesTest {
         assertEquals(listOf("Acción", "Plataformas"), Genres.normalize(listOf("Action / Platform", "Plataformas")))
         assertEquals(listOf("Rol (RPG)"), Genres.normalize(listOf("Role-playing (RPG)", "Rol")))
     }
+
+    @Test
+    fun playtimeFormats() {
+        assertEquals(630, EmulatorSource.parsePlaytime("37800"))      // segundos (Batocera)
+        assertEquals(630, EmulatorSource.parsePlaytime("10:30:00"))
+        assertEquals(630, EmulatorSource.parsePlaytime("10h 30m"))
+        assertEquals(null, EmulatorSource.parsePlaytime("nunca"))
+    }
 }

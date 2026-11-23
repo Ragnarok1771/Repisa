@@ -39,6 +39,10 @@ class Settings(context: Context) {
         set(v) = prefs.edit { putStringSet("rom_folders", v) }
     var esdeFolder: String? get() = str("esde_folder"); set(v) = put("esde_folder", v)
     var retroarchFolder: String? get() = str("ra_folder"); set(v) = put("ra_folder", v)
+    /** Carpeta de datos de Cocoon (o cualquier carpeta con gamelist.xml exportados). */
+    var cocoonFolder: String? get() = str("cocoon_folder"); set(v) = put("cocoon_folder", v)
+    val hasEmulatorSources: Boolean
+        get() = romFolders.isNotEmpty() || esdeFolder != null || retroarchFolder != null || cocoonFolder != null
 
     /** Emulador elegido por consola: "consoleId" -> nombre de paquete. */
     fun emulatorFor(consoleId: String): String? = str("emu_$consoleId")
@@ -59,12 +63,18 @@ class Settings(context: Context) {
         get() = prefs.getInt("shelf_height", 130)
         set(v) = prefs.edit { putInt("shelf_height", v) }
 
+    /** Última sincronización automática (epoch ms). */
+    var lastAutoSync: Long
+        get() = prefs.getLong("last_auto_sync", 0)
+        set(v) = prefs.edit { putLong("last_auto_sync", v) }
+
     // --- Vista ---
     var sortMode: String get() = str("sort") ?: "ALPHA"; set(v) = put("sort", v)
     var groupMode: String get() = str("group") ?: "NONE"; set(v) = put("group", v)
 
     // --- Sesión de juego en curso (para medir tiempo) ---
     var pendingSessionGame: String? get() = str("session_game"); set(v) = put("session_game", v)
+    var pendingSessionPackage: String? get() = str("session_pkg"); set(v) = put("session_pkg", v)
     var pendingSessionStart: Long
         get() = prefs.getLong("session_start", 0)
         set(v) = prefs.edit { putLong("session_start", v) }
