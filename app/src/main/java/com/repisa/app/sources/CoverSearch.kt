@@ -37,17 +37,23 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
 
     // ------------------------------------------------------------------ Búsqueda manual
 
-    suspend fun search(game: Game, query: String): List<CoverResult> = coroutineScope {
+    /** Resultado de una búsqueda: carátulas y servidores que no respondieron. */
+    data class Outcome(val results: List<CoverResult>, val failed: List<String>)
+
+    suspend fun search(game: Game, query: String): Outcome = coroutineScope {
         val q = query.trim().ifEmpty { game.title }
+        val failed = java.util.Collections.synchronizedList(mutableListOf<String>())
+        suspend fun safe(name: String, block: suspend () -> List<CoverResult>) =
+            try { block() } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { failed += name; emptyList() }
         val jobs = listOf(
-            async { runCatching { libretro(game, q, 12) }.getOrDefault(emptyList()) },
-            async { runCatching { steamGridDb(q, 12) }.getOrDefault(emptyList()) },
-            async { runCatching { steamStore(q, 6) }.getOrDefault(emptyList()) },
-            async { runCatching { igdb(q, 6) }.getOrDefault(emptyList()) },
+            async { safe("libretro") { libretro(game, q, 12) } },
+            async { safe("SteamGridDB") { steamGridDb(q, 12) } },
+            async { safe("Steam") { steamStore(q, 6) } },
+            async { safe("IGDB") { igdb(q, 6) } },
         )
-        // libretro primero solo si es un juego de consola; en PC, Steam/SteamGridDB primero.
+        // libretro primero si es un juego de consola; en PC, Steam/SteamGridDB primero.
         val (lr, sg, st, ig) = jobs.awaitAll()
-        if (game.consoleId == "pc") sg + st + ig + lr else lr + sg + ig + st
+        Outcome(if (game.consoleId == "pc") sg + st + ig + lr else lr + sg + ig + st, failed.toList())
     }
 
     val hasSteamGridDb get() = settings.steamGridDbKey != null

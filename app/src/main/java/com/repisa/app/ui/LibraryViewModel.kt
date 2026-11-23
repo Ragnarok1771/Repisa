@@ -387,7 +387,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                epicLink.value = EpicLink.Failed(e.message ?: e.javaClass.simpleName)
+                val msg = if (e is java.io.IOException && e !is com.repisa.app.data.HttpException)
+                    "no se pudo conectar con Epic Games. Revisa la conexión a internet."
+                else e.message ?: e.javaClass.simpleName
+                epicLink.value = EpicLink.Failed(msg)
             }
         }
     }

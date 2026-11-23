@@ -62,13 +62,16 @@ fun CoverSearchDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
     val initial = remember(game.id) { EmulatorSource.cleanTitle(game.title) }
     var query by remember { mutableStateOf(initial) }
     var results by remember { mutableStateOf<List<CoverResult>?>(null) }
+    var failed by remember { mutableStateOf<List<String>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     fun search() {
         loading = true
         scope.launch {
-            results = runCatching { vm.coverSearch.search(game, query) }.getOrDefault(emptyList())
+            val out = runCatching { vm.coverSearch.search(game, query) }.getOrNull()
+            results = out?.results.orEmpty()
+            failed = out?.failed ?: listOf("todos")
             loading = false
         }
     }
@@ -107,7 +110,8 @@ fun CoverSearchDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
                     loading -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color(0xFFFFB74D))
                     r == null -> Unit
                     r.isEmpty() -> Text(
-                        "No se encontró nada. Prueba con menos palabras (p. ej. solo \"Bravely Default\") o con el nombre en inglés.",
+                        if (failed.isNotEmpty()) "No se pudo conectar con: ${failed.joinToString(", ")}. Revisa la conexión a internet."
+                        else "No se encontró nada. Prueba con menos palabras (p. ej. solo \"Bravely Default\") o con el nombre en inglés.",
                         color = Color(0xFFBFA98A), modifier = Modifier.align(Alignment.Center).padding(24.dp),
                     )
                     else -> LazyVerticalGrid(
