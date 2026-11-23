@@ -51,6 +51,8 @@ class Settings(context: Context) {
     // --- Metadatos ---
     var igdbClientId: String? get() = str("igdb_id"); set(v) = put("igdb_id", v?.trim())
     var igdbClientSecret: String? get() = str("igdb_secret"); set(v) = put("igdb_secret", v?.trim())
+    /** Clave gratuita de https://www.steamgriddb.com/profile/preferences/api (buscador de carátulas). */
+    var steamGridDbKey: String? get() = str("sgdb_key"); set(v) = put("sgdb_key", v?.trim())
     var useLibretroCovers: Boolean
         get() = prefs.getBoolean("libretro_covers", true)
         set(v) = prefs.edit { putBoolean("libretro_covers", v) }
@@ -60,7 +62,7 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("second_screen", true)
         set(v) = prefs.edit { putBoolean("second_screen", v) }
     var shelfHeightDp: Int
-        get() = prefs.getInt("shelf_height", 130)
+        get() = prefs.getInt("shelf_height", 140)
         set(v) = prefs.edit { putInt("shelf_height", v) }
 
     /** Última sincronización automática (epoch ms). */

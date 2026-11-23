@@ -349,9 +349,34 @@ class EmulatorSource(private val context: Context, private val settings: Setting
         private fun discNumber(name: String): Int =
             Regex("""(disc|disk|cd)\s*(\d+)""", RegexOption.IGNORE_CASE).find(name)?.groupValues?.get(2)?.toIntOrNull() ?: 0
 
-        /** "Legend of Zelda, The - A Link to the Past (USA) [!]" → "The Legend of Zelda - A Link to the Past" */
+        /** Palabras de relleno que suelen ir al final del nombre de archivo y no forman parte del título. */
+        private val junk = setOf(
+            "nsp", "xci", "nsz", "xcz", "cia", "3ds", "nds", "iso", "rvz", "wbfs", "eshop", "update", "upd", "dlc",
+            "base", "decrypted", "dec", "trimmed", "switch", "nsw", "usa", "eur", "jpn", "pal", "ntsc", "esp",
+            "spanish", "english", "multi", "en", "es", "fr", "de", "it", "jp", "us", "eu", "rom", "final", "fixed",
+        )
+        private val junkPattern = Regex("""(?i)^(v\d+(\.\d+)*|rev\s?\d*|multi\d+|0100[0-9a-f]{12}|[0-9a-f]{16})$""")
+
+        /**
+         * Convierte un nombre de archivo en un título legible:
+         *  "Legend of Zelda, The - A Link to the Past (USA) [!]" → "The Legend of Zelda - A Link to the Past"
+         *  "4262 - Kingdom Hearts 358-2 Days (Europe)"            → "Kingdom Hearts 358-2 Days"
+         *  "Bravely_Default_II_[0100B6801137E000][v0].nsp"        → "Bravely Default II"
+         */
         fun cleanTitle(romName: String): String {
-            var t = romName.replace(Regex("""\s*[(\[][^)\]]*[)\]]"""), "").replace('_', ' ').trim()
+            var t = romName.replace(Regex("""\s*[(\[{][^)\]}]*[)\]}]"""), " ")
+            // Nombres con "_" o "." en lugar de espacios.
+            if (!t.contains(' ') || t.count { it == '_' } >= 2) t = t.replace('_', ' ')
+            if (!t.contains(' ') && t.count { it == '.' } >= 2) t = t.replace('.', ' ')
+            // Número de lista de lanzamientos al principio ("4262 - ", "0123 ").
+            t = t.replace(Regex("""^\s*#?\d{4}\s*[-–_.]\s+(?=\S)"""), "")
+            // Relleno al final: extensiones, versiones, idiomas, "eShop", "Update"...
+            val words = t.trim().split(Regex("""\s+""")).toMutableList()
+            while (words.size > 1) {
+                val w = words.last().trim('-', '–', '+', ',').lowercase()
+                if (w.isEmpty() || w in junk || junkPattern.matches(w)) words.removeAt(words.lastIndex) else break
+            }
+            t = words.joinToString(" ").trim().trimEnd('-', '–', ',').trim()
             Regex("""^(.*?), (The|A|An|El|La|Los|Las|Le|Les|Die|Der|Das)( - .*)?$""").find(t)?.let { m ->
                 t = "${m.groupValues[2]} ${m.groupValues[1]}${m.groupValues[3]}"
             }

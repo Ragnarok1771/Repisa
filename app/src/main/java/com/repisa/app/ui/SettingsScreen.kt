@@ -36,6 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +47,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -160,13 +162,20 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
                             OutlinedButton(onClick = { vm.epicLogout(); changed() }) { Text("Cerrar sesión", color = Color.White) }
                         }
                     } else {
-                        Hint("Inicia sesión con tu cuenta de Epic. Se usa el mismo método que Heroic/Legendary; Repisa solo lee tu biblioteca y tu tiempo de juego.")
-                        Button(onClick = { epicWeb = true }) { Text("Vincular cuenta de Epic Games") }
-                        Hint("¿La página no carga dentro de la app? Ábrela en el navegador, inicia sesión y copia el valor de \"authorizationCode\" aquí:")
-                        TextButton(onClick = { vm.launcher.openUrl(EpicSource.LOGIN_URL) }) { Text("Abrir el login de Epic en el navegador") }
-                        var code by remember { mutableStateOf("") }
-                        Field("Código de autorización", code) { code = it }
-                        Button(onClick = { vm.epicLogin(code); code = "" }, enabled = code.isNotBlank()) { Text("Usar código") }
+                        Hint("Pulsa el botón: Repisa te dará un código. Ábrelo en epicgames.com/activate desde cualquier navegador " +
+                            "(o escanea el QR con el móvil), inicia sesión como siempre —también con Google, Xbox, PlayStation o Steam— " +
+                            "y acepta. Repisa solo lee tu biblioteca y tu tiempo de juego.")
+                        Button(onClick = { vm.epicStartLink() }) { Text("Vincular cuenta de Epic Games") }
+                        var other by remember { mutableStateOf(false) }
+                        TextButton(onClick = { other = !other }) { Text(if (other) "Ocultar otros métodos" else "Otros métodos de inicio de sesión") }
+                        if (other) {
+                            OutlinedButton(onClick = { epicWeb = true }) { Text("Iniciar sesión dentro de la app", color = Color.White) }
+                            Hint("O ábrelo en el navegador, inicia sesión y copia aquí el valor de \"authorizationCode\":")
+                            TextButton(onClick = { vm.launcher.openUrl(EpicSource.LOGIN_URL) }) { Text("Abrir el login de Epic en el navegador") }
+                            var code by remember { mutableStateOf("") }
+                            Field("Código de autorización", code) { code = it }
+                            Button(onClick = { vm.epicLogin(code); code = "" }, enabled = code.isNotBlank()) { Text("Usar código") }
+                        }
                     }
                 }
 
@@ -231,6 +240,18 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
 
                 // ---------------------------------------------------------- Metadatos
                 Section("Portadas y datos") {
+                    Hint("Carátulas: cada juego tiene un botón \"Buscar carátula\" en su ficha. Con este botón se buscan " +
+                        "automáticamente las de todos los juegos que no tienen, por palabras clave del nombre.")
+                    Button(onClick = { vm.findMissingCovers(); onBack() }) { Text("Buscar carátulas que faltan") }
+                    Hint("Recomendado: SteamGridDB, la base de carátulas que usa Cocoon (gratis). Crea una cuenta, ve a " +
+                        "Preferencias → API y pega aquí tu clave.")
+                    TextButton(onClick = { vm.launcher.openUrl("https://www.steamgriddb.com/profile/preferences/api") }) {
+                        Text("Conseguir clave de SteamGridDB")
+                    }
+                    var sgdb by remember { mutableStateOf(s.steamGridDbKey.orEmpty()) }
+                    Field("Clave de SteamGridDB", sgdb, secret = true) { sgdb = it }
+                    OutlinedButton(onClick = { s.steamGridDbKey = sgdb.ifBlank { null }; changed() }) { Text("Guardar clave", color = Color.White) }
+                    HorizontalDivider(color = Color(0x33FFFFFF))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Portadas de libretro-thumbnails para emuladores", color = Color.White, modifier = Modifier.weight(1f))
                         Switch(checked = s.useLibretroCovers, onCheckedChange = { s.useLibretroCovers = it; changed() })
@@ -259,7 +280,7 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
                         }
                         Switch(checked = s.secondScreen, onCheckedChange = { s.secondScreen = it; changed() })
                     }
-                    Text("Tamaño de las cajas: ${s.shelfHeightDp} dp", color = Color.White)
+                    Text("Tamaño de las cajas: ${s.shelfHeightDp} dp (altura de una caja de DVD; el resto, a escala real)", color = Color.White)
                     var h by remember { mutableStateOf(s.shelfHeightDp.toFloat()) }
                     Slider(value = h, onValueChange = { h = it }, onValueChangeFinished = { s.shelfHeightDp = h.toInt(); changed() },
                         valueRange = 90f..240f, modifier = Modifier.widthIn(max = 480.dp))
@@ -279,6 +300,11 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
                 if (!code.isNullOrBlank()) { done(); epicWeb = false; vm.epicLogin(code) }
             }
         }
+    }
+    val epicLink by vm.epicLink.collectAsState()
+    epicLink?.let { state ->
+        EpicLinkDialog(state, onOpen = { vm.launcher.openUrl(it) }, onRetry = { vm.epicStartLink() },
+            onDismiss = { vm.epicCancelLink(); changed() })
     }
     if (steamWeb) {
         LoginWebDialog("Vincular cuenta de Steam", SteamLogin.LOGIN_URL, onDismiss = { steamWeb = false }) { _, _, done ->
@@ -376,7 +402,11 @@ private fun LoginWebDialog(
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
                         // Algunas webs rechazan los WebView: nos presentamos como Chrome móvil.
-                        settings.userAgentString = settings.userAgentString.replace("; wv", "")
+                        // Muchas webs de login rechazan los WebView: nos presentamos como Chrome para Android normal
+                        // (se quitan las marcas "; wv" y "Version/4.0" que delatan al WebView).
+                        settings.userAgentString = settings.userAgentString
+                            .replace("; wv", "").replace(Regex("""Version/\d+\.\d+\s*"""), "")
+                        settings.javaScriptCanOpenWindowsAutomatically = true
                         CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                         webViewClient = object : WebViewClient() {
                             var finished = false
@@ -394,4 +424,65 @@ private fun LoginWebDialog(
             }
         }
     }
+}
+
+/** Diálogo de "vincular con código": muestra el código, un QR y espera a que el usuario acepte. */
+@Composable
+private fun EpicLinkDialog(
+    state: LibraryViewModel.EpicLink,
+    onOpen: (String) -> Unit,
+    onRetry: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Vincular cuenta de Epic Games") },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                when (state) {
+                    LibraryViewModel.EpicLink.Starting -> { CircularProgressIndicator(); Text("Pidiendo un código a Epic…") }
+                    is LibraryViewModel.EpicLink.Waiting -> {
+                        Text("1. Abre epicgames.com/activate (o escanea el QR con el móvil)")
+                        Text("2. Inicia sesión y escribe este código:")
+                        Text(state.code.userCode, fontSize = 34.sp, fontWeight = FontWeight.Black, letterSpacing = 4.sp,
+                            fontFamily = FontFamily.Monospace)
+                        QrCode(state.code.verificationUrl, Modifier.size(170.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                            Text("  Esperando a que aceptes en la web…", fontSize = 12.sp)
+                        }
+                    }
+                    is LibraryViewModel.EpicLink.Failed -> {
+                        Text("No se pudo vincular: ${state.message}")
+                        Text("Si se repite, prueba con \"Otros métodos de inicio de sesión\".", fontSize = 12.sp)
+                    }
+                    LibraryViewModel.EpicLink.Done -> Text("¡Cuenta vinculada! Cargando tu biblioteca…")
+                }
+            }
+        },
+        confirmButton = {
+            when (state) {
+                is LibraryViewModel.EpicLink.Waiting -> TextButton(onClick = { onOpen(state.code.verificationUrl) }) { Text("Abrir aquí") }
+                is LibraryViewModel.EpicLink.Failed -> TextButton(onClick = onRetry) { Text("Pedir otro código") }
+                LibraryViewModel.EpicLink.Done -> TextButton(onClick = onDismiss) { Text("Listo") }
+                else -> Unit
+            }
+        },
+        dismissButton = { if (state !is LibraryViewModel.EpicLink.Done) TextButton(onClick = onDismiss) { Text("Cancelar") } },
+    )
+}
+
+/** Código QR dibujado con ZXing. */
+@Composable
+private fun QrCode(text: String, modifier: Modifier = Modifier) {
+    val bitmap = remember(text) {
+        val m = com.google.zxing.qrcode.QRCodeWriter().encode(text, com.google.zxing.BarcodeFormat.QR_CODE, 0, 0)
+        val bmp = android.graphics.Bitmap.createBitmap(m.width, m.height, android.graphics.Bitmap.Config.ARGB_8888)
+        for (x in 0 until m.width) for (y in 0 until m.height) {
+            bmp.setPixel(x, y, if (m.get(x, y)) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+        }
+        bmp.asImageBitmap()
+    }
+    Image(bitmap, "Código QR", modifier.background(Color.White).padding(8.dp),
+        filterQuality = androidx.compose.ui.graphics.FilterQuality.None)
 }

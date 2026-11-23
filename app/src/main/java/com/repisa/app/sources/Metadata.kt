@@ -23,14 +23,14 @@ import java.time.ZoneOffset
  *  - Emuladores: portadas de libretro-thumbnails (gratis, sin cuenta).
  *  - Todos (opcional): IGDB, si el usuario añadió sus credenciales de Twitch.
  */
-class Metadata(private val settings: Settings) {
+class Metadata(private val settings: Settings, private val covers: CoverSearch) {
 
     private var igdbToken: String? = null
     private var igdbTokenExpiry = 0L
 
     private val igdbEnabled get() = settings.igdbClientId != null && settings.igdbClientSecret != null
 
-    fun needsWork(g: Game): Boolean = !g.metaFetched && !g.userEdited &&
+    fun needsWork(g: Game): Boolean = !g.metaFetched && !g.userEdited && !g.customCover &&
         (g.coverUrl == null || g.genres.isEmpty() || g.developer == null)
 
     suspend fun enrich(g: Game): Game {
@@ -49,6 +49,10 @@ class Metadata(private val settings: Settings) {
         if (igdbEnabled && (out.coverUrl == null || out.genres.isEmpty() || out.developer == null)) {
             runCatching { igdb(out) }.getOrNull()?.let { out = it }
             delay(300) // IGDB permite 4 peticiones por segundo
+        }
+        // Último recurso: buscador de carátulas (libretro por parecido, SteamGridDB, tienda de Steam).
+        if (out.coverUrl == null) {
+            runCatching { covers.auto(out) }.getOrNull()?.let { out = out.copy(coverUrl = it, coverAspect = null) }
         }
         return out.copy(metaFetched = true)
     }

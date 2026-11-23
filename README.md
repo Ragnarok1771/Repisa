@@ -29,13 +29,25 @@ pensada para la **AYN Thor** (Android, doble pantalla) y cualquier consola o mó
 
 | Fuente | Qué lee | Qué necesitas |
 |---|---|---|
-| **Steam** | Juegos, horas jugadas, última partida, carátula vertical oficial, géneros y estudio | **Vincular cuenta**: iniciar sesión en la web oficial de Steam dentro de la app (usuario o QR). Opción avanzada: clave de API |
-| **Epic Games** | Juegos, horas jugadas, carátula vertical, estudio | **Vincular cuenta**: iniciar sesión en la web oficial de Epic (mismo método que Heroic/Legendary) |
+| **Steam** | Juegos propios **y del grupo familiar**, horas jugadas (también en juegos prestados), última partida, carátula vertical oficial, géneros y estudio | **Vincular cuenta**: iniciar sesión en la web oficial de Steam dentro de la app (usuario o QR). Opción avanzada: clave de API (sin grupo familiar) |
+| **Epic Games** | Juegos, horas jugadas, carátula vertical, estudio | **Vincular cuenta con código**: la app muestra un código y un QR; se acepta en epicgames.com/activate desde cualquier navegador o el móvil (funciona con cualquier método de inicio de sesión) |
 | **Carpetas de ROMs** | Un juego por ROM, agrupando discos (.m3u/.cue/.chd) | Elegir la carpeta con subcarpetas por sistema (`snes`, `psx`, `ps2`, `gba`, `switch`…) |
 | **ES-DE** | Nombre, género, estudio, año, descripción, última partida y portadas descargadas | Elegir la carpeta `ES-DE` |
 | **RetroArch** | Playlists (.lpl) y tiempo de juego (.lrtl) | Elegir la carpeta `RetroArch` y activar *Guardar registros de tiempo de juego* |
 | **libretro-thumbnails** | Carátulas escaneadas de las cajas reales para juegos de emulador | Nada (activado por defecto) |
+| **SteamGridDB** (recomendado) | Carátulas de cualquier juego y plataforma (la base que usa Cocoon) | Clave gratuita |
 | **IGDB** (opcional) | Géneros, estudio, año y portada para cualquier juego | Client ID y Secret de Twitch (gratis) |
+
+### Carátulas
+
+- Cada juego tiene un botón **Buscar carátula** en su ficha: busca en libretro-thumbnails, SteamGridDB, IGDB y la tienda
+  de Steam, y eliges la que quieras. La elegida se respeta en futuras sincronizaciones.
+- **Buscar carátulas que faltan** (Ajustes) lo hace automáticamente para toda la biblioteca.
+- La búsqueda es por **palabras clave**: limpia el nombre de archivo (números de lista como `4262 - `, IDs `[0100…]`,
+  versiones, regiones, "NSP", "eShop", "Update"…) y compara palabras, con II = 2, así que `Bravely Default 2 NSP eShop`
+  encuentra *Bravely Default II* y `4262 - Kingdom Hearts 358-2 Days` encuentra su caja.
+- Cada caja tiene su **tamaño real** a escala: Switch más baja que PS2, DS/3DS pequeñas, N64/SNES apaisadas, Neo Geo
+  y PC antiguo enormes.
 
 ### Tiempo de juego siempre al día
 

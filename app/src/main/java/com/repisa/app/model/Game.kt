@@ -42,6 +42,10 @@ data class Game(
     val romName: String? = null,
     val storeUrl: String? = null,
     val favorite: Boolean = false,
+    /** Juego de Steam prestado por el grupo familiar (no es de la cuenta del usuario). */
+    val familyShared: Boolean = false,
+    /** Carátula elegida por el usuario con el buscador: no se sustituye al sincronizar. */
+    val customCover: Boolean = false,
     /** Ya se buscaron metadatos online para este juego. */
     val metaFetched: Boolean = false,
     /** El usuario editó los datos a mano: no sobrescribir con metadatos automáticos. */

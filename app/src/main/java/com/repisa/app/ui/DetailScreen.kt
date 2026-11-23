@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -65,6 +66,7 @@ import java.util.Date
 @Composable
 fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     var editing by remember { mutableStateOf(false) }
+    var searchingCover by remember { mutableStateOf(false) }
     val spin = remember(game.id) { Animatable(-35f) }
     val rise = remember(game.id) { Animatable(0.6f) }
     LaunchedEffect(game.id) { rise.animateTo(1f, tween(350)) }
@@ -106,6 +108,7 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         Tag(game.source.label, when (game.source) {
                             Source.STEAM -> Color(0xFF1B2838); Source.EPIC -> Color(0xFF2A2A2A); Source.EMULATOR -> Color(0xFF3D2A5C)
                         })
+                        if (game.familyShared) Tag("Familia Steam", Color(0xFF2B5A7A))
                         game.genres.forEach { Tag(it, Color(0xFF2F4A3A)) }
                     }
                     Spacer(Modifier.height(14.dp))
@@ -139,6 +142,9 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                             Icon(Icons.Default.Star, null, tint = if (game.favorite) Color(0xFFFFD27A) else Color.Gray)
                             Text(if (game.favorite) " Favorito" else " Marcar favorito", color = Color.White)
                         }
+                        OutlinedButton(onClick = { searchingCover = true }) {
+                            Icon(Icons.Default.Search, null, tint = Color.White); Text(" Buscar carátula", color = Color.White)
+                        }
                         OutlinedButton(onClick = { editing = true }) {
                             Icon(Icons.Default.Edit, null, tint = Color.White); Text(" Editar datos", color = Color.White)
                         }
@@ -147,6 +153,7 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
             }
         }
     }
+    if (searchingCover) CoverSearchDialog(game, vm, onDismiss = { searchingCover = false })
     if (editing) EditDialog(game, onDismiss = { editing = false }) { vm.updateGame(it); editing = false }
 }
 

@@ -41,6 +41,11 @@ class EpicSource(private val settings: Settings) {
         const val LOGIN_URL = "https://www.epicgames.com/id/login?redirectUrl=" +
             "https%3A%2F%2Fwww.epicgames.com%2Fid%2Fapi%2Fredirect%3FclientId%3D$CLIENT_ID%26responseType%3Dcode"
 
+        // Cliente público de Epic que admite el inicio de sesión "con código" (device code), como en consolas y teles.
+        private const val DEVICE_CLIENT_ID = "98f7e42c2e3a4f86a74eb43fbb41ed39"
+        private const val DEVICE_CLIENT_SECRET = "0a2449a2-001a-451e-afec-3e812901c4d7"
+        private const val OAUTH_BASE = "https://account-public-service-prod03.ol.epicgames.com/account/api/oauth"
+
         /** Extrae el código si el usuario pega el JSON entero en lugar de solo el código. */
         fun extractCode(text: String): String {
             Regex(""""authorizationCode"\s*:\s*"([^"]+)"""").find(text)?.let { return it.groupValues[1] }
@@ -52,7 +57,68 @@ class EpicSource(private val settings: Settings) {
 
     val isLoggedIn: Boolean get() = settings.epicRefreshToken != null
 
+    // ------------------------------------------------------------------ Vincular con código
+
+    data class DeviceCode(
+        val userCode: String,
+        val verificationUrl: String,
+        val deviceCode: String,
+        val intervalSec: Int,
+        val expiresAt: Long,
+    )
+
+    private val deviceBasic = "basic " + Base64.encodeToString("$DEVICE_CLIENT_ID:$DEVICE_CLIENT_SECRET".toByteArray(), Base64.NO_WRAP)
+
+    /** Pide a Epic un código para que el usuario lo introduzca en epicgames.com/activate. */
+    suspend fun startDeviceLogin(): DeviceCode {
+        val cc = Http.getJson(Request.Builder().url("$OAUTH_BASE/token").header("Authorization", deviceBasic)
+            .post(FormBody.Builder().add("grant_type", "client_credentials").build()).build())["access_token"].str
+            ?: error("Epic no respondió")
+        val r = Http.getJson(Request.Builder().url("$OAUTH_BASE/deviceAuthorization").header("Authorization", "bearer $cc")
+            .post(FormBody.Builder().add("prompt", "login").build()).build())
+        return DeviceCode(
+            userCode = r["user_code"].str ?: error("Epic no devolvió un código"),
+            verificationUrl = r["verification_uri_complete"].str ?: "https://www.epicgames.com/activate",
+            deviceCode = r["device_code"].str!!,
+            intervalSec = (r["interval"].long ?: 5L).toInt().coerceAtLeast(3),
+            expiresAt = System.currentTimeMillis() + (r["expires_in"].long ?: 600L) * 1000,
+        )
+    }
+
+    /**
+     * Comprueba si el usuario ya aceptó en la web. Devuelve true cuando la cuenta queda vinculada,
+     * false si todavía está pendiente. Lanza una excepción si el código caducó o Epic lo rechazó.
+     */
+    suspend fun pollDeviceLogin(code: DeviceCode): Boolean {
+        val resp = try {
+            Http.getJson(Request.Builder().url("$OAUTH_BASE/token").header("Authorization", deviceBasic)
+                .post(FormBody.Builder().add("grant_type", "device_code").add("device_code", code.deviceCode).build()).build())
+        } catch (e: com.repisa.app.data.HttpException) {
+            if (e.body.contains("authorization_pending") || e.body.contains("slow_down")) return false
+            throw IllegalStateException(epicError(e.body) ?: "Epic rechazó el código (${e.code})")
+        }
+        val deviceToken = resp["access_token"].str ?: return false
+        // El token "con código" se cambia por uno del lanzador de Epic, que es el que puede leer la biblioteca.
+        val exchange = Http.getJson(Request.Builder().url("$OAUTH_BASE/exchange")
+            .header("Authorization", "bearer $deviceToken").build())["code"].str ?: error("Epic no devolvió el código de intercambio")
+        tokenRequest(FormBody.Builder()
+            .add("grant_type", "exchange_code")
+            .add("exchange_code", exchange)
+            .add("token_type", "eg1")
+            .build())
+        return true
+    }
+
+    private fun epicError(body: String): String? =
+        Regex(""""errorMessage"\s*:\s*"([^"]+)"""").find(body)?.groupValues?.get(1)
+
     suspend fun login(authorizationCode: String) {
+        try { loginInternal(authorizationCode) } catch (e: com.repisa.app.data.HttpException) {
+            throw IllegalStateException(epicError(e.body) ?: "error ${e.code}")
+        }
+    }
+
+    private suspend fun loginInternal(authorizationCode: String) {
         tokenRequest(FormBody.Builder()
             .add("grant_type", "authorization_code")
             .add("code", extractCode(authorizationCode))

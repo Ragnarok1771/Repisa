@@ -194,7 +194,7 @@ private fun Shelves(
                     var row = mutableListOf<Game>()
                     var used = 0.dp
                     group.games.forEach { g ->
-                        val w = boxSize(g, boxHeight).first + gap
+                        val w = boxSize(g, boxHeight * g.console.case.heightScale).first + gap
                         if (row.isNotEmpty() && used + w > usable) {
                             add(ShelfItem.Row(row, "r$gi:${size}")); row = mutableListOf(); used = 0.dp
                         }
@@ -212,6 +212,7 @@ private fun Shelves(
                 }
             }
         }
+        CabinetSides()
     }
 }
 
@@ -244,7 +245,14 @@ private fun ShelfRow(
     onFavorite: (Game) -> Unit,
     onAspect: (Game, Float) -> Unit,
 ) {
-    Column(Modifier.fillMaxWidth().padding(top = 18.dp)) {
+    Column(
+        Modifier.fillMaxWidth()
+            .drawBehind {
+                // Luz cálida que baja desde la tira LED de la balda de arriba.
+                drawRect(Brush.verticalGradient(listOf(Color(0x30FFC680), Color.Transparent), endY = size.height * 0.75f))
+            }
+            .padding(top = 18.dp),
+    ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = sidePad),
             horizontalArrangement = Arrangement.spacedBy(gap),
@@ -252,8 +260,9 @@ private fun ShelfRow(
         ) {
             games.forEach { g ->
                 var isFocused by remember { mutableStateOf(false) }
+                // Cada caja con su altura real: Switch más baja que PS2, 3DS más pequeña, Neo Geo enorme...
                 GameBox(
-                    g, boxHeight,
+                    g, boxHeight * g.console.case.heightScale,
                     lifted = isFocused,
                     onCoverAspect = { onAspect(g, it) },
                     modifier = Modifier
@@ -277,30 +286,39 @@ private fun ShelfRow(
     }
 }
 
-/** Balda de madera con canto, veta y sombra. */
+/** Balda de madera: superficie, canto con veta, tira de luz LED cálida debajo y su resplandor. */
 @Composable
 private fun WoodPlank() {
-    Canvas(Modifier.fillMaxWidth().height(30.dp)) {
-        val top = 10.dp.toPx()
-        val front = 14.dp.toPx()
-        // superficie (vista desde arriba, más clara)
-        drawRect(Brush.verticalGradient(listOf(Color(0xFF6B4423), Color(0xFF9A6A3C)), endY = top), size = Size(size.width, top))
-        // canto frontal
+    Canvas(Modifier.fillMaxWidth().height(34.dp)) {
+        val top = 9.dp.toPx()
+        val front = 15.dp.toPx()
+        val w = size.width
+        // Superficie (vista desde arriba)
+        drawRect(Brush.verticalGradient(listOf(Color(0xFF4A2C16), Color(0xFF8C5A30)), endY = top), size = Size(w, top))
+        // Canto frontal
         drawRect(
-            Brush.verticalGradient(listOf(Color(0xFFB98552), Color(0xFF7A4E2A), Color(0xFF5A3618)), startY = top, endY = top + front),
-            topLeft = Offset(0f, top), size = Size(size.width, front),
+            Brush.verticalGradient(listOf(Color(0xFFC08A55), Color(0xFF9A673A), Color(0xFF6E4422)), startY = top, endY = top + front),
+            topLeft = Offset(0f, top), size = Size(w, front),
         )
-        // vetas
-        val grain = Color(0x22000000)
-        for (i in 0 until 6) {
-            val y = top + front * (0.2f + i * 0.13f)
-            drawLine(grain, Offset(0f, y), Offset(size.width, y + (if (i % 2 == 0) 1.5f else -1.5f)), strokeWidth = 1f)
+        // Veta: líneas finas onduladas
+        for (i in 0 until 5) {
+            val y0 = top + front * (0.18f + i * 0.16f)
+            var x = 0f
+            val step = 40f
+            while (x < w) {
+                val dy = kotlin.math.sin((x + i * 57) / 90f) * 1.2f
+                drawLine(Color(0x1F2A1408), Offset(x, y0 + dy), Offset(x + step, y0 + kotlin.math.sin((x + step + i * 57) / 90f) * 1.2f), 1f)
+                x += step
+            }
         }
-        drawLine(Color(0x55FFFFFF), Offset(0f, top), Offset(size.width, top), strokeWidth = 1.5f)
-        // sombra bajo la balda
+        drawLine(Color(0x66FFE2B8), Offset(0f, top), Offset(w, top), strokeWidth = 1.5f)
+        // Tira LED bajo la balda y su luz cayendo sobre la pared
+        val led = top + front
+        drawRect(Color(0xFF3A2414), topLeft = Offset(0f, led), size = Size(w, 2.dp.toPx()))
+        drawLine(Color(0xCCFFD9A0), Offset(w * 0.04f, led + 1.dp.toPx()), Offset(w * 0.96f, led + 1.dp.toPx()), strokeWidth = 1.2.dp.toPx())
         drawRect(
-            Brush.verticalGradient(listOf(Color(0x99000000), Color.Transparent), startY = top + front, endY = size.height),
-            topLeft = Offset(0f, top + front), size = Size(size.width, size.height - top - front),
+            Brush.verticalGradient(listOf(Color(0x55FFC680), Color.Transparent), startY = led + 2.dp.toPx(), endY = size.height),
+            topLeft = Offset(0f, led + 2.dp.toPx()), size = Size(w, size.height - led - 2.dp.toPx()),
         )
     }
 }
@@ -342,19 +360,58 @@ private fun EmptyRoom(hasGames: Boolean, onOpenSettings: () -> Unit) {
     }
 }
 
-/** Pared de la habitación: papel pintado a rayas con luz cálida desde arriba. */
+/**
+ * Fondo de vitrina: panel trasero de tablones verticales de nogal con veta, juntas entre tablones
+ * y una luz cálida desde arriba. Se usa en todas las pantallas.
+ */
 fun Modifier.roomBackground(): Modifier = this
-    .background(Brush.verticalGradient(listOf(Color(0xFF3A2A20), Color(0xFF241812), Color(0xFF16100C))))
+    .background(Brush.verticalGradient(listOf(Color(0xFF3B2516), Color(0xFF2A1A0F), Color(0xFF1B110A))))
     .drawBehind {
-        val stripe = 22.dp.toPx()
+        val plank = 132.dp.toPx()
+        val h = size.height
         var x = 0f
         var i = 0
         while (x < size.width) {
-            if (i % 2 == 0) drawRect(Color(0x0DFFFFFF), topLeft = Offset(x, 0f), size = Size(stripe, size.height))
-            x += stripe; i++
+            // Cada tablón con un tono ligeramente distinto
+            val tint = when (i % 3) { 0 -> Color(0x0FFFFFFF); 1 -> Color(0x12000000); else -> Color(0x06FFD0A0) }
+            drawRect(tint, topLeft = Offset(x, 0f), size = Size(plank, h))
+            // Veta vertical ondulada
+            for (g in 0 until 7) {
+                val gx = x + plank * (0.1f + g * 0.13f) + ((i * 31 + g * 17) % 9)
+                var y = 0f
+                val step = 60f
+                while (y < h) {
+                    val dx1 = kotlin.math.sin((y + g * 40 + i * 70) / 140f) * 3f
+                    val dx2 = kotlin.math.sin((y + step + g * 40 + i * 70) / 140f) * 3f
+                    drawLine(Color(if (g % 2 == 0) 0x14000000 else 0x0AFFE0B0), Offset(gx + dx1, y), Offset(gx + dx2, y + step), 1.2f)
+                    y += step
+                }
+            }
+            // Junta entre tablones
+            drawLine(Color(0x66000000), Offset(x, 0f), Offset(x, h), 2.dp.toPx())
+            drawLine(Color(0x14FFFFFF), Offset(x + 2.dp.toPx(), 0f), Offset(x + 2.dp.toPx(), h), 1f)
+            x += plank; i++
         }
-        drawRect(
-            Brush.radialGradient(listOf(Color(0x30FFC67A), Color.Transparent), center = Offset(size.width / 2, 0f),
-                radius = size.width * 0.7f),
-        )
+        // Luz cálida desde arriba y viñeta en los bordes
+        drawRect(Brush.radialGradient(listOf(Color(0x33FFC67A), Color.Transparent),
+            center = Offset(size.width / 2, 0f), radius = size.width * 0.75f))
+        drawRect(Brush.horizontalGradient(
+            0f to Color(0x66000000), 0.08f to Color.Transparent, 0.92f to Color.Transparent, 1f to Color(0x66000000)))
     }
+
+/** Laterales de madera de la vitrina, fijos a los lados de la pantalla. */
+@Composable
+fun CabinetSides(modifier: Modifier = Modifier) {
+    Canvas(modifier.fillMaxSize()) {
+        val w = 14.dp.toPx()
+        val wood = Brush.horizontalGradient(listOf(Color(0xFF5A3720), Color(0xFF8C5A32), Color(0xFF5A3720)))
+        drawRect(wood, size = Size(w, size.height))
+        drawRect(Brush.horizontalGradient(listOf(Color(0x66000000), Color.Transparent), startX = w, endX = w + 10.dp.toPx()),
+            topLeft = Offset(w, 0f), size = Size(10.dp.toPx(), size.height))
+        val rx = size.width - w
+        drawRect(Brush.horizontalGradient(listOf(Color(0xFF5A3720), Color(0xFF8C5A32), Color(0xFF5A3720)), startX = rx, endX = size.width),
+            topLeft = Offset(rx, 0f), size = Size(w, size.height))
+        drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color(0x66000000)), startX = rx - 10.dp.toPx(), endX = rx),
+            topLeft = Offset(rx - 10.dp.toPx(), 0f), size = Size(10.dp.toPx(), size.height))
+    }
+}

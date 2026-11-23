@@ -51,7 +51,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     private val store = LibraryStore(app)
     val launcher = Launcher(app, settings)
     val epic = EpicSource(settings)
-    private val metadata = Metadata(settings)
+    val coverSearch = com.repisa.app.sources.CoverSearch(app, settings)
+    private val metadata = Metadata(settings, coverSearch)
     private val mutex = Mutex()
 
     private val _games = MutableStateFlow<List<Game>>(emptyList())
@@ -202,7 +203,11 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         return try {
             val known = _games.value.associateBy { it.id }
             val fresh: List<Game> = when (source) {
-                Source.STEAM -> steamSource().fetchGames()
+                Source.STEAM -> steamSource().let { src ->
+                    src.fetchGames().also {
+                        src.familyError?.let { e -> if (!quiet) message.value = "Steam: no se pudo leer el grupo familiar ($e)" }
+                    }
+                }
                 Source.EPIC -> epic.fetchGames(known)
                 Source.EMULATOR -> EmulatorSource(getApplication(), settings).fetchGames { status.value = it }
             }
@@ -288,7 +293,9 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         else enriched.copy(
             favorite = current.favorite,
             trackedMinutes = current.trackedMinutes,
-            coverAspect = if (enriched.coverUrl == current.coverUrl) current.coverAspect else null,
+            coverUrl = if (current.customCover) current.coverUrl else enriched.coverUrl,
+            customCover = current.customCover,
+            coverAspect = if (current.customCover || enriched.coverUrl == current.coverUrl) current.coverAspect else null,
         )
 
     // ------------------------------------------------------------------ Acciones
@@ -342,6 +349,85 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             message.value = "Epic: no se pudo iniciar sesión (${e.message}). El código caduca en unos minutos; vuelve a intentarlo."
         } finally {
             status.value = null
+        }
+    }
+
+    // ------------------------------------------------------------------ Epic: vincular con código
+
+    sealed interface EpicLink {
+        data object Starting : EpicLink
+        data class Waiting(val code: EpicSource.DeviceCode) : EpicLink
+        data class Failed(val message: String) : EpicLink
+        data object Done : EpicLink
+    }
+
+    val epicLink = MutableStateFlow<EpicLink?>(null)
+    private var epicLinkJob: Job? = null
+
+    /** Pide un código a Epic y espera (sin bloquear) a que el usuario lo acepte en la web. */
+    fun epicStartLink() {
+        epicLinkJob?.cancel()
+        epicLinkJob = viewModelScope.launch {
+            epicLink.value = EpicLink.Starting
+            try {
+                val code = epic.startDeviceLogin()
+                epicLink.value = EpicLink.Waiting(code)
+                while (System.currentTimeMillis() < code.expiresAt) {
+                    kotlinx.coroutines.delay(code.intervalSec * 1000L)
+                    if (epic.pollDeviceLogin(code)) {
+                        epicLink.value = EpicLink.Done
+                        message.value = "Cuenta de Epic Games vinculada"
+                        syncSource(Source.EPIC)?.let { message.value = it }
+                        status.value = null
+                        startEnrichment()
+                        return@launch
+                    }
+                }
+                epicLink.value = EpicLink.Failed("El código caducó. Pide uno nuevo.")
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                epicLink.value = EpicLink.Failed(e.message ?: e.javaClass.simpleName)
+            }
+        }
+    }
+
+    fun epicCancelLink() { epicLinkJob?.cancel(); epicLink.value = null }
+
+    // ------------------------------------------------------------------ Carátulas
+
+    /** El usuario eligió una carátula en el buscador. */
+    fun setCustomCover(game: Game, url: String) =
+        updateGame(game.copy(coverUrl = url, coverAspect = null, customCover = true))
+
+    /** Busca carátula para todos los juegos que no tienen (o cuya carátula ya no carga). */
+    fun findMissingCovers() {
+        if (enrichJob?.isActive == true) return
+        enrichJob = viewModelScope.launch {
+            status.value = "Comprobando carátulas…"
+            val candidates = _games.value.filter { !it.customCover && !it.userEdited }
+            val missing = candidates.filter { g ->
+                val url = g.coverUrl
+                url == null || (url.startsWith("http") && !com.repisa.app.data.Http.exists(url))
+            }
+            var found = 0
+            missing.forEachIndexed { i, g ->
+                status.value = "Buscando carátulas (${i + 1}/${missing.size})…"
+                val url = runCatching { coverSearch.auto(g) }.getOrNull()
+                if (url != null) found++
+                mutex.withLock {
+                    _games.update { list -> list.map {
+                        if (it.id == g.id) it.copy(coverUrl = url, coverAspect = null) else it
+                    } }
+                    if (i % 10 == 9 || i == missing.lastIndex) store.save(_games.value)
+                }
+            }
+            status.value = null
+            message.value = when {
+                missing.isEmpty() -> "Todas las cajas tienen carátula"
+                else -> "Carátulas encontradas: $found de ${missing.size}." +
+                    if (found < missing.size) " Para el resto, abre el juego y usa \"Buscar carátula\"." else ""
+            }
         }
     }
 

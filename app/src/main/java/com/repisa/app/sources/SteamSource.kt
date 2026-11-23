@@ -35,6 +35,38 @@ class SteamSource private constructor(
 
         private const val ASSETS = "https://shared.akamai.steamstatic.com/store_item_assets/"
 
+        data class StoreInfo(val cover: String?, val header: String?, val developer: String?)
+
+        /** Datos de la tienda (IStoreBrowseService, sin clave) para muchos juegos a la vez, de 50 en 50. */
+        suspend fun storeInfo(appIds: List<Long>): Map<Long, StoreInfo> {
+            val out = mutableMapOf<Long, StoreInfo>()
+            appIds.distinct().chunked(50).forEach { chunk ->
+                runCatching {
+                    val ids = chunk.joinToString(",") { """{"appid":$it}""" }
+                    val input = """{"ids":[$ids],"context":{"language":"spanish","country_code":"ES","steam_realm":1},""" +
+                        """"data_request":{"include_assets":true,"include_basic_info":true}}"""
+                    val url = "https://api.steampowered.com/IStoreBrowseService/GetItems/v1/".toHttpUrl().newBuilder()
+                        .addQueryParameter("input_json", input).build()
+                    Http.getJson(url.toString())["response"]["store_items"].arr.forEach { item ->
+                        val appId = item["appid"].long ?: item["id"].long ?: return@forEach
+                        val assets = item["assets"]
+                        val format = assets["asset_url_format"].str
+                        fun asset(name: String?) = if (format != null && name != null) ASSETS + format.replace("\${FILENAME}", name) else null
+                        out[appId] = StoreInfo(
+                            cover = asset(assets["library_capsule_2x"].str ?: assets["library_capsule"].str),
+                            header = asset(assets["header"].str),
+                            developer = item["basic_info"]["developers"][0]["name"].str,
+                        )
+                    }
+                }
+            }
+            return out
+        }
+
+        /** Carátula vertical oficial de cada appid. */
+        suspend fun libraryCovers(appIds: List<Long>): Map<Long, String> =
+            storeInfo(appIds).mapNotNull { (k, v) -> v.cover?.let { k to it } }.toMap()
+
         /**
          * Géneros, estudio y año desde la tienda de Steam (no necesita clave).
          * La tienda limita a ~200 peticiones cada 5 minutos, así que se llama con pausas.
@@ -51,7 +83,8 @@ class SteamSource private constructor(
                 publisher = game.publisher ?: d["publishers"][0].str,
                 releaseYear = year,
                 description = d["short_description"].str,
-                altCoverUrl = game.altCoverUrl ?: d["header_image"].str,
+                // La cabecera de appdetails trae la ruta exacta (con hash en juegos recientes).
+                altCoverUrl = d["header_image"].str ?: game.altCoverUrl,
             )
         }
     }
@@ -91,37 +124,78 @@ class SteamSource private constructor(
                 storeUrl = "https://store.steampowered.com/app/$appId",
             )
         }
-        return withStoreCovers(list)
+        val own = list.mapNotNull { it.id.removePrefix("steam:").toLongOrNull() }.toSet()
+        familyError = null
+        val family = runCatching { familyGames(id, own) }
+            .onFailure { familyError = it.message }
+            .getOrDefault(emptyList())
+        return withStoreCovers(list + family)
     }
 
-    /**
-     * Los juegos recientes guardan la carátula vertical en rutas con hash; la API de la tienda
-     * (IStoreBrowseService) nos da la ruta exacta, además del estudio. Se piden de 50 en 50.
-     */
+    /** Si falló la lectura de la biblioteca familiar, el motivo (para avisar sin perder el resto). */
+    var familyError: String? = null
+        private set
+
+    /** Corrige carátula, cabecera y estudio con los datos exactos de la tienda. */
     private suspend fun withStoreCovers(games: List<Game>): List<Game> {
-        val info = mutableMapOf<String, Pair<String?, String?>>() // appid -> (carátula, estudio)
-        games.chunked(50).forEach { chunk ->
-            runCatching {
-                val ids = chunk.joinToString(",") { """{"appid":${it.id.removePrefix("steam:")}}""" }
-                val input = """{"ids":[$ids],"context":{"language":"spanish","country_code":"ES","steam_realm":1},""" +
-                    """"data_request":{"include_assets":true,"include_basic_info":true}}"""
-                val url = "https://api.steampowered.com/IStoreBrowseService/GetItems/v1/".toHttpUrl().newBuilder()
-                    .addQueryParameter("input_json", input).build()
-                Http.getJson(url.toString())["response"]["store_items"].arr.forEach { item ->
-                    val appId = item["appid"].str ?: item["id"].str ?: return@forEach
-                    val assets = item["assets"]
-                    val format = assets["asset_url_format"].str
-                    val file = assets["library_capsule_2x"].str ?: assets["library_capsule"].str
-                    val cover = if (format != null && file != null) ASSETS + format.replace("\${FILENAME}", file) else null
-                    val dev = item["basic_info"]["developers"][0]["name"].str
-                    info[appId] = cover to dev
-                }
-            }
-        }
+        val info = storeInfo(games.mapNotNull { it.id.removePrefix("steam:").toLongOrNull() })
         return games.map { g ->
-            val (cover, dev) = info[g.id.removePrefix("steam:")] ?: return@map g
-            g.copy(coverUrl = cover ?: g.coverUrl, developer = dev ?: g.developer)
+            val i = info[g.id.removePrefix("steam:").toLongOrNull()] ?: return@map g
+            g.copy(coverUrl = i.cover ?: g.coverUrl, altCoverUrl = i.header ?: g.altCoverUrl, developer = i.developer ?: g.developer)
         }
+    }
+
+    // ------------------------------------------------------------------ Grupo familiar
+
+    /**
+     * Juegos compartidos por el grupo familiar de Steam (solo con cuenta vinculada, no con clave de API).
+     * Sus horas salen de ClientGetLastPlayedTimes, que incluye también lo jugado en juegos prestados.
+     */
+    private suspend fun familyGames(myId: String, own: Set<Long>): List<Game> {
+        if (accessToken == null) return emptyList()
+        fun url(method: String) = "https://api.steampowered.com/$method/".toHttpUrl().newBuilder()
+            .addQueryParameter("access_token", accessToken)
+        val groupId = Http.getJson(url("IFamilyGroupsService/GetFamilyGroupForUser/v1")
+            .addQueryParameter("steamid", myId).build().toString())["response"]["family_groupid"].str
+            ?.takeIf { it != "0" } ?: return emptyList()
+        val apps = Http.getJson(url("IFamilyGroupsService/GetSharedLibraryApps/v1")
+            .addQueryParameter("family_groupid", groupId)
+            .addQueryParameter("include_own", "false")
+            .addQueryParameter("include_excluded", "false")
+            .addQueryParameter("include_free", "false")
+            .addQueryParameter("include_non_games", "false")
+            .addQueryParameter("steamid", myId)
+            .build().toString())["response"]["apps"].arr
+        val played = runCatching { lastPlayedTimes() }.getOrDefault(emptyMap())
+        return apps.mapNotNull { a ->
+            val appId = a["appid"].long ?: return@mapNotNull null
+            if (appId in own) return@mapNotNull null
+            val name = a["name"].str ?: return@mapNotNull null
+            val p = played[appId]
+            Game(
+                id = "steam:$appId",
+                source = Source.STEAM,
+                title = name,
+                consoleId = "pc",
+                playtimeMinutes = p?.first ?: 0,
+                lastPlayed = p?.second ?: a["rt_last_played"].long?.takeIf { it > 0 }?.times(1000),
+                coverUrl = "${ASSETS}steam/apps/$appId/library_600x900_2x.jpg",
+                altCoverUrl = "${ASSETS}steam/apps/$appId/header.jpg",
+                storeUrl = "https://store.steampowered.com/app/$appId",
+                familyShared = true,
+            )
+        }
+    }
+
+    /** appid → (minutos jugados, última partida en ms) de todo lo jugado en la cuenta, propio o prestado. */
+    private suspend fun lastPlayedTimes(): Map<Long, Pair<Int, Long?>> {
+        val url = "https://api.steampowered.com/IPlayerService/ClientGetLastPlayedTimes/v1/".toHttpUrl().newBuilder()
+            .addQueryParameter("access_token", accessToken)
+            .addQueryParameter("min_last_played", "0").build()
+        return Http.getJson(url.toString())["response"]["games"].arr.mapNotNull { g ->
+            val id = g["appid"].long ?: return@mapNotNull null
+            id to ((g["playtime_forever"].long ?: 0L).toInt() to g["last_playtime"].long?.takeIf { it > 0 }?.times(1000))
+        }.toMap()
     }
 
     /** Acepta un SteamID64, un nombre personalizado o la URL completa del perfil. */
