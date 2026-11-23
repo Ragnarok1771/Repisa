@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Repisa" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/wall</item>
+        <item name="android:statusBarColor">@color/wall</item>
+        <item name="android:navigationBarColor">@color/wall</item>
+    </style>
+</resources>

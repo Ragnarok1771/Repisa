@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tres cajas de juego sobre una repisa de madera. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFD6453D" android:pathData="M30,36h14v34h-14z" />
+    <path android:fillColor="#FF9E2E28" android:pathData="M44,36l3,-2v34l-3,2z" />
+    <path android:fillColor="#FF3F7FD6" android:pathData="M48,30h14v40h-14z" />
+    <path android:fillColor="#FF2B5A99" android:pathData="M62,30l3,-2v40l-3,2z" />
+    <path android:fillColor="#FFE8B33A" android:pathData="M66,40h12v30h-12z" />
+    <path android:fillColor="#FFAA8022" android:pathData="M78,40l3,-2v30l-3,2z" />
+    <path android:fillColor="#FFB07A45" android:pathData="M24,70h62v6h-62z" />
+    <path android:fillColor="#FF7A4E26" android:pathData="M24,76h62v4h-62z" />
+</vector>

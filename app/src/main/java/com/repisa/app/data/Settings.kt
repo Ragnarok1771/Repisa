@@ -1,0 +1,66 @@
+package com.repisa.app.data
+
+import android.content.Context
+import androidx.core.content.edit
+
+/** Preferencias y credenciales. Se guardan en el almacenamiento privado de la app. */
+class Settings(context: Context) {
+    private val prefs = context.getSharedPreferences("repisa", Context.MODE_PRIVATE)
+
+    private fun str(key: String) = prefs.getString(key, null)?.takeIf { it.isNotBlank() }
+    private fun put(key: String, value: String?) = prefs.edit { if (value == null) remove(key) else putString(key, value) }
+
+    // --- Steam ---
+    var steamApiKey: String? get() = str("steam_key"); set(v) = put("steam_key", v?.trim())
+    /** Lo que escribió el usuario: SteamID64, nombre personalizado o URL del perfil. */
+    var steamUser: String? get() = str("steam_user"); set(v) = put("steam_user", v?.trim())
+
+    // --- Epic ---
+    var epicAccessToken: String? get() = str("epic_access"); set(v) = put("epic_access", v)
+    var epicRefreshToken: String? get() = str("epic_refresh"); set(v) = put("epic_refresh", v)
+    var epicAccountId: String? get() = str("epic_account"); set(v) = put("epic_account", v)
+    var epicDisplayName: String? get() = str("epic_name"); set(v) = put("epic_name", v)
+    var epicExpiresAt: Long
+        get() = prefs.getLong("epic_expires", 0)
+        set(v) = prefs.edit { putLong("epic_expires", v) }
+
+    fun clearEpic() {
+        epicAccessToken = null; epicRefreshToken = null; epicAccountId = null; epicDisplayName = null; epicExpiresAt = 0
+    }
+
+    // --- Emuladores (URIs de carpetas concedidas con el selector de Android) ---
+    var romFolders: Set<String>
+        get() = prefs.getStringSet("rom_folders", emptySet()) ?: emptySet()
+        set(v) = prefs.edit { putStringSet("rom_folders", v) }
+    var esdeFolder: String? get() = str("esde_folder"); set(v) = put("esde_folder", v)
+    var retroarchFolder: String? get() = str("ra_folder"); set(v) = put("ra_folder", v)
+
+    /** Emulador elegido por consola: "consoleId" -> nombre de paquete. */
+    fun emulatorFor(consoleId: String): String? = str("emu_$consoleId")
+    fun setEmulatorFor(consoleId: String, pkg: String?) = put("emu_$consoleId", pkg)
+
+    // --- Metadatos ---
+    var igdbClientId: String? get() = str("igdb_id"); set(v) = put("igdb_id", v?.trim())
+    var igdbClientSecret: String? get() = str("igdb_secret"); set(v) = put("igdb_secret", v?.trim())
+    var useLibretroCovers: Boolean
+        get() = prefs.getBoolean("libretro_covers", true)
+        set(v) = prefs.edit { putBoolean("libretro_covers", v) }
+
+    // --- Pantalla ---
+    var secondScreen: Boolean
+        get() = prefs.getBoolean("second_screen", true)
+        set(v) = prefs.edit { putBoolean("second_screen", v) }
+    var shelfHeightDp: Int
+        get() = prefs.getInt("shelf_height", 130)
+        set(v) = prefs.edit { putInt("shelf_height", v) }
+
+    // --- Vista ---
+    var sortMode: String get() = str("sort") ?: "ALPHA"; set(v) = put("sort", v)
+    var groupMode: String get() = str("group") ?: "NONE"; set(v) = put("group", v)
+
+    // --- Sesión de juego en curso (para medir tiempo) ---
+    var pendingSessionGame: String? get() = str("session_game"); set(v) = put("session_game", v)
+    var pendingSessionStart: Long
+        get() = prefs.getLong("session_start", 0)
+        set(v) = prefs.edit { putLong("session_start", v) }
+}
