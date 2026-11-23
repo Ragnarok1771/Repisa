@@ -38,7 +38,8 @@ para las consolas portátiles Android con doble pantalla.
   la web oficial de Steam (también con el QR de la app de Steam).
 - **Epic Games**: juegos y horas jugadas, iniciando sesión en la web oficial de Epic.
 - **Emuladores**: carpetas de ROMs ordenadas por sistema, **ES-DE**, **RetroArch** (playlists y tiempo de juego) y
-  **Cocoon** / Batocera (`gamelist.xml` exportados).
+  **Cocoon** / Batocera (`gamelist.xml` exportados y copias de seguridad de Cocoon, con su tiempo de juego).
+  Ajustes → Emuladores explica los pasos y muestra qué encontró Repisa.
 - **Copias unidas**: el mismo juego en varias ediciones o tiendas (GTA V normal, Enhanced y Legacy, en Steam y en
   Epic) aparece como **una sola caja** con el tiempo sumado. Tú eliges la copia preferente (por defecto, la de Steam).
 - **Sin herramientas**: editores, kits de mods, servidores dedicados o paquetes de contenido no aparecen.

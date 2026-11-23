@@ -52,6 +52,31 @@ class SafTree(private val context: Context, val treeUri: Uri) {
         context.contentResolver.openInputStream(doc.uri)?.bufferedReader()?.use { it.readText() }
     }.getOrNull()
 
+    /**
+     * Busca una carpeta por nombre dentro del árbol (por niveles, la más cercana primero), para que baste con
+     * elegir la carpeta principal: "RetroArch" encuentra "RetroArch/playlists" aunque esté más adentro.
+     */
+    fun findDir(name: String, maxDepth: Int = 5, skip: Set<String> = emptySet(), limit: Int = 3000): Doc? {
+        if (root.name.equals(name, true)) return root
+        var level = listOf(root)
+        var visited = 0
+        repeat(maxDepth) {
+            val next = mutableListOf<Doc>()
+            for (d in level) {
+                for (c in children(d)) {
+                    if (!c.isDir || c.name.startsWith(".")) continue
+                    if (c.name.equals(name, true)) return c
+                    if (c.name.lowercase() !in skip) next += c
+                }
+                if (++visited > limit) return null
+            }
+            level = next
+        }
+        return null
+    }
+
+    fun open(doc: Doc): java.io.InputStream? = runCatching { context.contentResolver.openInputStream(doc.uri) }.getOrNull()
+
     companion object {
         fun displayName(context: Context, uriString: String): String = runCatching {
             val id = DocumentsContract.getTreeDocumentId(Uri.parse(uriString))

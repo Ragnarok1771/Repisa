@@ -402,6 +402,13 @@ s("menu_display_sub", "Second screen and box size", "Segunda pantalla y tamaño 
   "Second écran et taille des boîtes", "Zweiter Bildschirm und Boxgröße", "Secondo schermo e dimensione delle scatole",
   "Segunda tela e tamanho das caixas", ptPT="Segundo ecrã e tamanho das caixas")
 s("menu_language", "Language", "Idioma", "Langue", "Sprache", "Lingua", "Idioma")
+s("folder_deep_hint",
+  "Tip: just choose the main folder (for example \"RetroArch\", \"Cocoon\" or \"ROMs\"). Repisa searches all its subfolders until it finds what it needs.",
+  "Consejo: basta con elegir la carpeta principal (por ejemplo «RetroArch», «Cocoon» o «ROMs»). Repisa busca en todas sus subcarpetas hasta encontrar lo que necesita.",
+  "Astuce : choisissez simplement le dossier principal (par ex. « RetroArch », « Cocoon » ou « ROMs »). Repisa cherche dans tous ses sous-dossiers.",
+  "Tipp: Wähle einfach den Hauptordner (z. B. „RetroArch“, „Cocoon“ oder „ROMs“). Repisa durchsucht alle Unterordner.",
+  "Consiglio: basta scegliere la cartella principale (ad es. «RetroArch», «Cocoon» o «ROMs»). Repisa cerca in tutte le sottocartelle.",
+  "Dica: basta escolher a pasta principal (por exemplo \"RetroArch\", \"Cocoon\" ou \"ROMs\"). O Repisa procura em todas as subpastas até encontrar o que precisa.")
 s("rom_hint",
   "Choose the folder where you keep your ROMs (one subfolder per system: snes, psx, ps2, gba, switch…, like ES-DE). You can add several.",
   "Elige la carpeta donde guardas los ROMs (una subcarpeta por sistema: snes, psx, ps2, gba, switch…, como ES-DE). Puedes añadir varias.",
@@ -428,13 +435,53 @@ s("ra_hint", "Optional: RetroArch folder (reads playlists and playtime). In Retr
 s("choose_ra", "Choose RetroArch folder", "Elegir carpeta RetroArch", "Choisir le dossier RetroArch",
   "RetroArch-Ordner wählen", "Scegli cartella RetroArch", "Escolher pasta do RetroArch")
 s("cocoon_hint",
-  "Optional: Cocoon data folder. In Cocoon use Settings → Library & Data → Export Metadata; Repisa reads genres, dates, covers and playtime from it. Also works with Batocera, RetroBat and other frontends that export gamelist.xml.",
-  "Opcional: carpeta de datos de Cocoon. En Cocoon usa Ajustes → Library & Data → Export Metadata; Repisa lee de ahí géneros, fechas, carátulas y tiempo de juego. Sirve también para Batocera, RetroBat y otros frontends que exporten gamelist.xml.",
-  "Facultatif : dossier de données de Cocoon. Dans Cocoon, utilisez Settings → Library & Data → Export Metadata ; Repisa y lit genres, dates, jaquettes et temps de jeu. Fonctionne aussi avec Batocera, RetroBat, etc.",
-  "Optional: Cocoon-Datenordner. In Cocoon Settings → Library & Data → Export Metadata nutzen; Repisa liest daraus Genres, Daten, Cover und Spielzeit. Funktioniert auch mit Batocera, RetroBat usw.",
-  "Facoltativo: cartella dati di Cocoon. In Cocoon usa Settings → Library & Data → Export Metadata; Repisa legge generi, date, copertine e tempo di gioco. Funziona anche con Batocera, RetroBat, ecc.",
-  "Opcional: pasta de dados do Cocoon. No Cocoon use Settings → Library & Data → Export Metadata; o Repisa lê gêneros, datas, capas e tempo de jogo. Também funciona com Batocera, RetroBat etc.",
-  ptPT="Opcional: pasta de dados do Cocoon. No Cocoon use Settings → Library & Data → Export Metadata; o Repisa lê géneros, datas, capas e tempo de jogo. Também funciona com Batocera, RetroBat, etc.")
+  "Cocoon (optional) — how to:\n1. In Cocoon: Settings → Library & Data → Export Metadata. If it asks for a folder, pick or create one (e.g. \"Cocoon export\") and remember it.\n2. Optional, for playtime: in Cocoon create a backup (Backup & Restore); it is saved in Cocoon's data folder.\n3. Here, tap \"Choose Cocoon folder\" and pick that folder (the export folder or Cocoon's data folder; Repisa looks inside subfolders).\n4. Repisa reads it right away and shows below what it found. Also works with ES-DE, Batocera and RetroBat.",
+  "Cocoon (opcional) — cómo hacerlo:\n1. En Cocoon: Ajustes → Library & Data → Export Metadata. Si te pide una carpeta, elige o crea una (p. ej. «Cocoon export») y recuérdala.\n2. Opcional, para el tiempo de juego: en Cocoon crea una copia de seguridad (Backup & Restore); se guarda en la carpeta de datos de Cocoon.\n3. Aquí, pulsa «Elegir carpeta de Cocoon» y elige esa carpeta (la de la exportación o la carpeta de datos de Cocoon; Repisa busca también dentro de las subcarpetas).\n4. Repisa la lee al momento y te muestra abajo lo que encontró. Sirve también para ES-DE, Batocera y RetroBat.",
+  "Cocoon (facultatif) — mode d’emploi :\n1. Dans Cocoon : Settings → Library & Data → Export Metadata. S’il demande un dossier, choisissez-en ou créez-en un (ex. « Cocoon export »).\n2. Facultatif, pour le temps de jeu : créez une sauvegarde dans Cocoon (Backup & Restore) ; elle est enregistrée dans le dossier de données de Cocoon.\n3. Ici, touchez « Choisir le dossier Cocoon » et choisissez ce dossier (export ou dossier de données ; Repisa cherche aussi dans les sous-dossiers).\n4. Repisa le lit aussitôt et affiche ci-dessous ce qu’il a trouvé. Fonctionne aussi avec ES-DE, Batocera et RetroBat.",
+  "Cocoon (optional) – so geht’s:\n1. In Cocoon: Settings → Library & Data → Export Metadata. Wenn ein Ordner verlangt wird, einen wählen oder anlegen (z. B. „Cocoon export“).\n2. Optional, für die Spielzeit: in Cocoon ein Backup erstellen (Backup & Restore); es liegt im Cocoon-Datenordner.\n3. Hier „Cocoon-Ordner wählen“ tippen und diesen Ordner wählen (Export- oder Datenordner; Repisa sucht auch in Unterordnern).\n4. Repisa liest ihn sofort und zeigt unten, was gefunden wurde. Funktioniert auch mit ES-DE, Batocera und RetroBat.",
+  "Cocoon (facoltativo) — come fare:\n1. In Cocoon: Settings → Library & Data → Export Metadata. Se chiede una cartella, scegline o creane una (es. «Cocoon export»).\n2. Facoltativo, per il tempo di gioco: crea un backup in Cocoon (Backup & Restore); viene salvato nella cartella dati di Cocoon.\n3. Qui, tocca «Scegli cartella Cocoon» e scegli quella cartella (export o cartella dati; Repisa cerca anche nelle sottocartelle).\n4. Repisa la legge subito e mostra qui sotto cosa ha trovato. Funziona anche con ES-DE, Batocera e RetroBat.",
+  "Cocoon (opcional) — como fazer:\n1. No Cocoon: Settings → Library & Data → Export Metadata. Se pedir uma pasta, escolha ou crie uma (ex. \"Cocoon export\").\n2. Opcional, para o tempo de jogo: crie um backup no Cocoon (Backup & Restore); ele fica na pasta de dados do Cocoon.\n3. Aqui, toque em \"Escolher pasta do Cocoon\" e escolha essa pasta (a da exportação ou a de dados; o Repisa procura também nas subpastas).\n4. O Repisa lê na hora e mostra abaixo o que encontrou. Também funciona com ES-DE, Batocera e RetroBat.",
+  es419="Cocoon (opcional) — cómo hacerlo:\n1. En Cocoon: Ajustes → Library & Data → Export Metadata. Si te pide una carpeta, elige o crea una (p. ej. «Cocoon export») y recuérdala.\n2. Opcional, para el tiempo de juego: en Cocoon crea una copia de seguridad (Backup & Restore); se guarda en la carpeta de datos de Cocoon.\n3. Aquí, toca «Elegir carpeta de Cocoon» y elige esa carpeta (la de la exportación o la carpeta de datos de Cocoon; Repisa busca también dentro de las subcarpetas).\n4. Repisa la lee al momento y te muestra abajo lo que encontró. Sirve también para ES-DE, Batocera y RetroBat.",
+  ptPT="Cocoon (opcional) — como fazer:\n1. No Cocoon: Settings → Library & Data → Export Metadata. Se pedir uma pasta, escolha ou crie uma (ex. \"Cocoon export\").\n2. Opcional, para o tempo de jogo: crie uma cópia de segurança no Cocoon (Backup & Restore); fica na pasta de dados do Cocoon.\n3. Aqui, toque em \"Escolher pasta do Cocoon\" e escolha essa pasta (a da exportação ou a de dados; o Repisa procura também nas subpastas).\n4. O Repisa lê de imediato e mostra abaixo o que encontrou. Também funciona com ES-DE, Batocera e RetroBat.")
+s("frontend_report",
+  "Last read: %1$d game lists (%2$s) · %3$d games · %4$d with genre · %5$d with playtime · %6$d matched to your library (%7$d with playtime).",
+  "Última lectura: %1$d listas de juegos (%2$s) · %3$d juegos · %4$d con género · %5$d con tiempo de juego · %6$d emparejados con tu biblioteca (%7$d con tiempo).",
+  "Dernière lecture : %1$d listes (%2$s) · %3$d jeux · %4$d avec genre · %5$d avec temps de jeu · %6$d associés à votre bibliothèque (%7$d avec temps).",
+  "Zuletzt gelesen: %1$d Spielelisten (%2$s) · %3$d Spiele · %4$d mit Genre · %5$d mit Spielzeit · %6$d deiner Bibliothek zugeordnet (%7$d mit Spielzeit).",
+  "Ultima lettura: %1$d elenchi (%2$s) · %3$d giochi · %4$d con genere · %5$d con tempo di gioco · %6$d abbinati alla tua libreria (%7$d con tempo).",
+  "Última leitura: %1$d listas de jogos (%2$s) · %3$d jogos · %4$d com gênero · %5$d com tempo de jogo · %6$d ligados à sua biblioteca (%7$d com tempo).",
+  ptPT="Última leitura: %1$d listas de jogos (%2$s) · %3$d jogos · %4$d com género · %5$d com tempo de jogo · %6$d ligados à sua biblioteca (%7$d com tempo).")
+s("frontend_report_backup",
+  "Backups: %1$d files, %2$d games with playtime.",
+  "Copias de seguridad: %1$d archivos, %2$d juegos con tiempo de juego.",
+  "Sauvegardes : %1$d fichiers, %2$d jeux avec temps de jeu.",
+  "Backups: %1$d Dateien, %2$d Spiele mit Spielzeit.",
+  "Backup: %1$d file, %2$d giochi con tempo di gioco.",
+  "Backups: %1$d arquivos, %2$d jogos com tempo de jogo.",
+  ptPT="Cópias de segurança: %1$d ficheiros, %2$d jogos com tempo de jogo.")
+s("frontend_report_empty",
+  "⚠ No gamelist.xml or backup was found in this folder. Choose the folder where Cocoon exported the metadata (or its data folder).",
+  "⚠ No se encontró ningún gamelist.xml ni copia de seguridad en esta carpeta. Elige la carpeta donde Cocoon exportó los metadatos (o su carpeta de datos).",
+  "⚠ Aucun gamelist.xml ni sauvegarde dans ce dossier. Choisissez le dossier où Cocoon a exporté les métadonnées (ou son dossier de données).",
+  "⚠ In diesem Ordner wurde keine gamelist.xml und kein Backup gefunden. Wähle den Ordner, in den Cocoon die Metadaten exportiert hat (oder seinen Datenordner).",
+  "⚠ Nessun gamelist.xml né backup in questa cartella. Scegli la cartella in cui Cocoon ha esportato i metadati (o la sua cartella dati).",
+  "⚠ Nenhum gamelist.xml nem backup nesta pasta. Escolha a pasta onde o Cocoon exportou os metadados (ou a pasta de dados dele).")
+s("frontend_report_no_time",
+  "The exported lists have no playtime (ES-DE's format has no field for it). For Cocoon's playtime, create a backup in Cocoon and choose its data folder too, or open your games from Repisa with Usage access enabled.",
+  "Las listas exportadas no traen tiempo de juego (el formato de ES-DE no tiene ese dato). Para el tiempo de Cocoon, crea una copia de seguridad en Cocoon y elige su carpeta de datos, o abre los juegos desde Repisa con el Acceso a datos de uso activado.",
+  "Les listes exportées ne contiennent pas de temps de jeu (le format ES-DE n’a pas ce champ). Pour celui de Cocoon, créez une sauvegarde et choisissez son dossier de données, ou lancez vos jeux depuis Repisa avec l’accès aux données d’utilisation.",
+  "Die exportierten Listen enthalten keine Spielzeit (das ES-DE-Format hat dafür kein Feld). Für Cocoons Spielzeit ein Backup erstellen und den Datenordner wählen oder Spiele aus Repisa mit Nutzungsdatenzugriff starten.",
+  "Gli elenchi esportati non hanno il tempo di gioco (il formato ES-DE non lo prevede). Per quello di Cocoon crea un backup e scegli la sua cartella dati, oppure avvia i giochi da Repisa con l’accesso ai dati di utilizzo.",
+  "As listas exportadas não trazem tempo de jogo (o formato do ES-DE não tem esse campo). Para o tempo do Cocoon, crie um backup e escolha a pasta de dados dele, ou abra os jogos pelo Repisa com o Acesso ao uso ativado.",
+  ptPT="As listas exportadas não trazem tempo de jogo (o formato do ES-DE não tem esse campo). Para o tempo do Cocoon, crie uma cópia de segurança e escolha a pasta de dados, ou abra os jogos pelo Repisa com o acesso a dados de utilização ativado.")
+s("frontend_report_no_match",
+  "None of these games matched your library. Make sure your ROM folders are added above.",
+  "Ninguno de estos juegos coincidió con tu biblioteca. Comprueba que tus carpetas de ROMs estén añadidas arriba.",
+  "Aucun de ces jeux ne correspond à votre bibliothèque. Vérifiez que vos dossiers de ROM sont ajoutés ci-dessus.",
+  "Keines dieser Spiele passt zu deiner Bibliothek. Prüfe, ob deine ROM-Ordner oben hinzugefügt sind.",
+  "Nessuno di questi giochi corrisponde alla tua libreria. Controlla che le cartelle ROM siano aggiunte qui sopra.",
+  "Nenhum destes jogos corresponde à sua biblioteca. Verifique se as pastas de ROMs estão adicionadas acima.")
+s("frontend_reading", "Reading…", "Leyendo…", "Lecture…", "Wird gelesen…", "Lettura…", "Lendo…", ptPT="A ler…")
 s("choose_cocoon", "Choose Cocoon folder", "Elegir carpeta de Cocoon", "Choisir le dossier Cocoon",
   "Cocoon-Ordner wählen", "Scegli cartella Cocoon", "Escolher pasta do Cocoon")
 s("scan_emulators", "Scan emulators", "Escanear emuladores", "Analyser les émulateurs", "Emulatoren scannen",
@@ -724,6 +771,7 @@ PLURALS = {"games_count": ("games_count_one", "games_count_other")}
 def esc(t: str) -> str:
     t = t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     t = t.replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
+    t = t.replace("\n", "\\n")
     if t.startswith("@") or t.startswith("?"):
         t = "\\" + t
     return t

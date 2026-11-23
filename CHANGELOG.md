@@ -2,6 +2,21 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.9.1]
+
+- **Cocoon funciona con cualquier exportación**: Repisa busca los `gamelist.xml` en todas las subcarpetas y reconoce el
+  sistema por la carpeta, el nombre del archivo, la etiqueta `<system>` o las extensiones de los juegos.
+- Los juegos se emparejan por nombre de archivo **y por título** (también parecido: «Atelier Ryza: Ever Darkness &
+  the Secret Hideout» ↔ `Atelier Ryza Ever Darkness and the Secret Hideout [0100…].nsp`), así llegan el género y el
+  tiempo de juego aunque Cocoon y tu carpeta de ROMs llamen distinto al juego.
+- Lee también las **copias de seguridad de Cocoon** (JSON, SQLite o .zip) para sacar el tiempo de juego registrado.
+- **Basta con elegir la carpeta principal** («Cocoon», «RetroArch», «ROMs»…): Repisa busca en las subcarpetas
+  las listas, las playlists, los registros de tiempo y las carpetas de cada sistema.
+- Al elegir una carpeta de emuladores, ES-DE o Cocoon, **se escanea al momento** (antes había que pulsar
+  «Escanear emuladores»).
+- Ajustes → Emuladores muestra **qué encontró** (listas, juegos, con género, con tiempo, emparejados) y explica
+  paso a paso cómo exportar desde Cocoon.
+
 ## [0.9.0]
 
 - **Ficha del juego adaptable a todas las carátulas.** Mi nota, Metacritic y HowLongToBeat tienen altura fija y texto

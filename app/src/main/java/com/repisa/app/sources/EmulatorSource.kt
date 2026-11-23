@@ -2,7 +2,6 @@ package com.repisa.app.sources
 
 import android.content.Context
 import android.net.Uri
-import android.util.Xml
 import com.repisa.app.R
 import com.repisa.app.data.Http
 import com.repisa.app.i18n.L10n
@@ -18,7 +17,6 @@ import com.repisa.app.model.Genres
 import com.repisa.app.model.Source
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.xmlpull.v1.XmlPullParser
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -30,13 +28,6 @@ import java.time.format.DateTimeFormatter
  *  - RetroArch: playlists (.lpl) y registros de tiempo de juego (.lrtl).
  */
 class EmulatorSource(private val context: Context, private val settings: Settings) {
-
-    private data class EsdeMeta(
-        val name: String?, val genre: String?, val developer: String?, val publisher: String?,
-        val year: Int?, val desc: String?, val lastPlayed: Long?, val cover: String?,
-        /** Tiempo de juego registrado por el frontend (Cocoon, Batocera...), si lo exporta. */
-        val playMinutes: Int?,
-    )
 
     private data class Runtime(val minutes: Int, val lastPlayed: Long?)
 
@@ -55,44 +46,33 @@ class EmulatorSource(private val context: Context, private val settings: Setting
             runCatching { readPlaylists(raTree) }.getOrDefault(emptyList()).forEach(::add)
         }
 
-        val esde = mutableMapOf<String, MutableMap<String, EsdeMeta>>()
-        listOfNotNull(settings.esdeFolder to "ES-DE", settings.cocoonFolder to "Cocoon").forEach { (uri, name) ->
-            if (uri == null) return@forEach
+        // ES-DE y Cocoon (o cualquier frontend): gamelist.xml y copias de seguridad.
+        val entries = mutableListOf<FrontendEntry>()
+        var report = FrontendReport()
+        listOfNotNull(settings.esdeFolder?.let { it to "ES-DE" }, settings.cocoonFolder?.let { it to "Cocoon" }).forEach { (uri, name) ->
             onProgress(L10n.s(R.string.status_reading, name))
-            runCatching { readGamelists(SafTree(context, Uri.parse(uri))) }.getOrNull()?.forEach { (console, metas) ->
-                val target = esde.getOrPut(console) { mutableMapOf() }
-                metas.forEach { (key, m) -> target[key] = target[key]?.let { combineMeta(it, m) } ?: m }
+            runCatching { FrontendReader(context, SafTree(context, Uri.parse(uri))).read() }.getOrNull()?.let { (found, r) ->
+                entries += found
+                report = report.copy(lists = report.lists + r.lists, systems = report.systems + r.systems,
+                    entries = report.entries + r.entries, withGenre = report.withGenre + r.withGenre,
+                    withTime = report.withTime + r.withTime, backupFiles = report.backupFiles + r.backupFiles,
+                    backupWithTime = report.backupWithTime + r.backupWithTime)
             }
         }
-
-        // Juegos que ES-DE conoce pero que no salieron en las carpetas escaneadas.
-        esde.forEach { (consoleId, metas) ->
-            metas.forEach { (key, m) ->
-                val id = "emu:$consoleId:$key"
-                if (id !in games) add(Game(id, Source.EMULATOR, m.name ?: key, consoleId, romName = key))
-            }
-        }
+        val index = FrontendIndex(entries)
 
         val runtimes = raTree?.let {
             onProgress(L10n.s(R.string.status_ra_time))
             runCatching { readRuntimeLogs(it) }.getOrNull()
         } ?: emptyMap()
 
-        games.values.map { g ->
+        val result = games.values.map { g ->
             var out = g
             val key = romKey(g.romName ?: g.title)
-            esde[g.consoleId]?.get(key)?.let { m ->
-                out = out.copy(
-                    title = m.name?.takeIf { it.isNotBlank() } ?: out.title,
-                    genres = Genres.normalize(listOfNotNull(m.genre)).ifEmpty { out.genres },
-                    developer = m.developer ?: out.developer,
-                    publisher = m.publisher ?: out.publisher,
-                    releaseYear = m.year ?: out.releaseYear,
-                    description = m.desc ?: out.description,
-                    lastPlayed = listOfNotNull(m.lastPlayed, out.lastPlayed).maxOrNull(),
-                    coverUrl = m.cover ?: out.coverUrl,
-                    playtimeMinutes = maxOf(out.playtimeMinutes, m.playMinutes ?: 0),
-                )
+            index.find(g.consoleId, key, g.title)?.let { m ->
+                report.matched++
+                if ((m.playMinutes ?: 0) > 0) report.matchedWithTime++
+                out = applyMeta(out, m)
             }
             // Si varias fuentes registran el mismo juego (RetroArch y el frontend), se toma la mayor
             // para no contar dos veces las mismas partidas.
@@ -103,8 +83,29 @@ class EmulatorSource(private val context: Context, private val settings: Setting
                 )
             }
             out
+        }.toMutableList()
+
+        // Juegos que el frontend conoce pero que no salieron en las carpetas escaneadas.
+        index.unused().forEach { (consoleId, fileKey, m) ->
+            val key = fileKey ?: romKey(m.name ?: return@forEach)
+            val id = "emu:$consoleId:$key"
+            if (result.none { it.id == id }) result += applyMeta(Game(id, Source.EMULATOR, m.name ?: cleanTitle(key), consoleId, romName = key), m)
         }
+        if (settings.esdeFolder != null || settings.cocoonFolder != null) settings.frontendReport = report.encode()
+        result
     }
+
+    private fun applyMeta(g: Game, m: FrontendMeta) = g.copy(
+        title = m.name?.takeIf { it.isNotBlank() } ?: g.title,
+        genres = Genres.normalize(m.genre?.split(Regex("""\s*[,/;]\s*""")).orEmpty()).ifEmpty { g.genres },
+        developer = m.developer ?: g.developer,
+        publisher = m.publisher ?: g.publisher,
+        releaseYear = m.year ?: g.releaseYear,
+        description = m.desc ?: g.description,
+        lastPlayed = listOfNotNull(m.lastPlayed, g.lastPlayed).maxOrNull(),
+        coverUrl = m.cover ?: g.coverUrl,
+        playtimeMinutes = maxOf(g.playtimeMinutes, m.playMinutes ?: 0),
+    )
 
     private fun mergeEmu(a: Game, b: Game) = a.copy(
         romUri = a.romUri ?: b.romUri,
@@ -117,13 +118,27 @@ class EmulatorSource(private val context: Context, private val settings: Setting
     private val skipDirs = setOf("media", "images", "videos", "manuals", "downloaded_media", "screenshots",
         "snaps", "boxart", "covers", "saves", "states", "bios", "system", "cheats", "textures", "imgs")
 
+    /**
+     * Basta con elegir la carpeta principal: se buscan carpetas con nombre de sistema (switch/, snes/, ps2/...)
+     * hasta 4 niveles por debajo ("Emulación/ROMs/switch").
+     */
     private fun scanRomFolder(tree: SafTree): List<Game> {
         val root = tree.root
         Consoles.byFolder(root.name)?.let { return scanConsole(tree, root, it) }
-        return tree.children(root).filter { it.isDir }.flatMap { dir ->
-            val console = Consoles.byFolder(dir.name) ?: return@flatMap emptyList()
-            scanConsole(tree, dir, console)
+        val out = mutableListOf<Game>()
+        var visited = 0
+        fun walk(dir: SafTree.Doc, depth: Int) {
+            for (c in tree.children(dir)) {
+                if (!c.isDir || c.name.startsWith(".")) continue
+                val console = Consoles.byFolder(c.name)
+                when {
+                    console != null -> out += scanConsole(tree, c, console)
+                    depth < 3 && c.name.lowercase() !in skipDirs && c.name != "Android" && ++visited < 1500 -> walk(c, depth + 1)
+                }
+            }
         }
+        walk(root, 0)
+        return out
     }
 
     private fun scanConsole(tree: SafTree, dir: SafTree.Doc, console: Console): List<Game> {
@@ -159,108 +174,10 @@ class EmulatorSource(private val context: Context, private val settings: Setting
         }
     }
 
-    // ---------------------------------------------------------------- ES-DE
-
-    private fun combineMeta(a: EsdeMeta, b: EsdeMeta) = EsdeMeta(
-        name = a.name ?: b.name, genre = a.genre ?: b.genre, developer = a.developer ?: b.developer,
-        publisher = a.publisher ?: b.publisher, year = a.year ?: b.year, desc = a.desc ?: b.desc,
-        lastPlayed = listOfNotNull(a.lastPlayed, b.lastPlayed).maxOrNull(), cover = a.cover ?: b.cover,
-        playMinutes = listOfNotNull(a.playMinutes, b.playMinutes).maxOrNull(),
-    )
-
-    /**
-     * Lee todos los gamelist.xml de una carpeta:
-     *  - Estructura ES-DE: gamelists/<sistema>/gamelist.xml + downloaded_media/<sistema>/covers/.
-     *  - Cualquier otra (exportación de Cocoon, Batocera, RetroBat...): busca gamelist.xml en subcarpetas
-     *    cuyo nombre sea un sistema, y usa las rutas de imagen que indique el propio XML.
-     */
-    private fun readGamelists(tree: SafTree): Map<String, Map<String, EsdeMeta>> {
-        val found = mutableListOf<Triple<Console, SafTree.Doc, SafTree.Doc>>() // sistema, carpeta, gamelist.xml
-        fun walk(dir: SafTree.Doc, depth: Int) {
-            val children = tree.children(dir)
-            children.firstOrNull { !it.isDir && it.name.equals("gamelist.xml", true) }?.let { xml ->
-                Consoles.byFolder(dir.name)?.let { found += Triple(it, dir, xml) }
-            }
-            if (depth < 4) children.filter { it.isDir && !it.name.startsWith(".") && it.name.lowercase() !in skipDirs }
-                .forEach { walk(it, depth + 1) }
-        }
-        walk(tree.root, 0)
-
-        val media = tree.path("downloaded_media")
-        val out = mutableMapOf<String, MutableMap<String, EsdeMeta>>()
-        for ((console, sysDir, xmlDoc) in found) {
-            val xml = tree.readText(xmlDoc) ?: continue
-            val covers: Map<String, String> = media?.let { m ->
-                val sysMedia = tree.child(m, sysDir.name) ?: return@let null
-                val coverDir = tree.child(sysMedia, "covers") ?: tree.child(sysMedia, "3dboxes") ?: return@let null
-                tree.children(coverDir).associate { romKey(it.name.substringBeforeLast('.')) to it.uri.toString() }
-            } ?: emptyMap()
-            val map = out.getOrPut(console.id) { mutableMapOf() }
-            parseGamelist(xml).forEach { fields ->
-                val path = fields["path"] ?: return@forEach
-                val key = romKey(path.substringAfterLast('/').substringBeforeLast('.'))
-                val imagePath = fields["thumbnail"] ?: fields["image"] ?: fields["cover"] ?: fields["boxart"]
-                val meta = EsdeMeta(
-                    name = fields["name"],
-                    genre = fields["genre"],
-                    developer = fields["developer"],
-                    publisher = fields["publisher"],
-                    year = fields["releasedate"]?.take(4)?.toIntOrNull()?.takeIf { it > 1950 },
-                    desc = fields["desc"],
-                    lastPlayed = fields["lastplayed"]?.let(::parseEsdeDate),
-                    cover = covers[key] ?: imagePath?.let { resolveRelative(tree, sysDir, it) },
-                    playMinutes = playtimeFields.firstNotNullOfOrNull { fields[it] }?.let(::parsePlaytime),
-                )
-                map[key] = map[key]?.let { combineMeta(it, meta) } ?: meta
-            }
-        }
-        return out
-    }
-
-    /** Resuelve "./media/covers/x.png" relativo a la carpeta del gamelist. */
-    private fun resolveRelative(tree: SafTree, base: SafTree.Doc, path: String): String? {
-        if (path.startsWith("http")) return path
-        if (path.startsWith("/")) return null
-        var cur: SafTree.Doc = base
-        for (part in path.removePrefix("./").split('/').filter { it.isNotEmpty() && it != "." }) {
-            cur = tree.child(cur, part) ?: return null
-        }
-        return cur.uri.toString()
-    }
-
-    private fun parseGamelist(xml: String): List<Map<String, String>> {
-        val parser = Xml.newPullParser()
-        parser.setInput(xml.reader())
-        val result = mutableListOf<Map<String, String>>()
-        var current: MutableMap<String, String>? = null
-        var tag: String? = null
-        while (true) {
-            when (parser.next()) {
-                XmlPullParser.START_TAG -> {
-                    if (parser.name == "game") current = mutableMapOf() else tag = parser.name
-                }
-                XmlPullParser.TEXT -> {
-                    val t = tag
-                    if (current != null && t != null && parser.text.isNotBlank()) current[t] = parser.text.trim()
-                }
-                XmlPullParser.END_TAG -> {
-                    if (parser.name == "game") { current?.let(result::add); current = null }
-                    tag = null
-                }
-                XmlPullParser.END_DOCUMENT -> return result
-            }
-        }
-    }
-
-    private fun parseEsdeDate(s: String): Long? = runCatching {
-        LocalDateTime.parse(s, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"))
-            .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-    }.getOrNull()
-
     // ---------------------------------------------------------------- RetroArch
 
     private fun readPlaylists(tree: SafTree): List<Game> {
-        val dir = tree.path("playlists") ?: return emptyList()
+        val dir = tree.findDir("playlists", skip = skipDirs) ?: return emptyList()
         return tree.children(dir).filter { it.name.endsWith(".lpl") }.flatMap { file ->
             val json = tree.readText(file)?.let { runCatching { Http.json.parseToJsonElement(it) }.getOrNull() }
                 ?: return@flatMap emptyList()
@@ -288,7 +205,7 @@ class EmulatorSource(private val context: Context, private val settings: Setting
     }
 
     private fun readRuntimeLogs(tree: SafTree): Map<String, Runtime> {
-        val logs = tree.path("playlists", "logs") ?: return emptyMap()
+        val logs = tree.findDir("playlists", skip = skipDirs)?.let { tree.child(it, "logs") } ?: return emptyMap()
         val totals = mutableMapOf<String, Runtime>()
         fun visit(d: SafTree.Doc, depth: Int) {
             for (c in tree.children(d)) {
@@ -325,9 +242,6 @@ class EmulatorSource(private val context: Context, private val settings: Setting
     }
 
     companion object {
-        /** Etiquetas de tiempo de juego que usan distintos frontends en su gamelist.xml. */
-        private val playtimeFields = listOf("playtime", "gametime", "timeplayed", "playTime", "totalplaytime")
-
         /**
          * Tiempo en segundos ("37842"), "h:mm:ss" o con unidades ("10h 30m"). Devuelve minutos.
          */

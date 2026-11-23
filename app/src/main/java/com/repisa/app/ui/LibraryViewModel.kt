@@ -222,6 +222,9 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         return true
     }
 
+    /** Resumen de la última lectura de ES-DE/Cocoon (se muestra en Ajustes → Emuladores). */
+    val frontendReport = MutableStateFlow(settings.frontendReport)
+
     fun syncOne(source: Source) = viewModelScope.launch {
         enrichJob?.cancel()
         syncSource(source)?.let { message.value = it }
@@ -242,6 +245,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 Source.EPIC -> epic.fetchGames(known)
                 Source.EMULATOR -> EmulatorSource(getApplication(), settings).fetchGames { status.value = it }
+                    .also { frontendReport.value = settings.frontendReport }
             }
             mutex.withLock {
                 val current = _games.value.associateBy { it.id }

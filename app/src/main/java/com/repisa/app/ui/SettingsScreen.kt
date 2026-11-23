@@ -264,20 +264,21 @@ private fun EmulatorsPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) 
         uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
     )
     val pickRoms = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null) { persist(uri); s.romFolders = s.romFolders + uri.toString(); changed() }
+        if (uri != null) { persist(uri); s.romFolders = s.romFolders + uri.toString(); changed(); vm.syncOne(Source.EMULATOR) }
     }
     val pickEsde = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null) { persist(uri); s.esdeFolder = uri.toString(); changed() }
+        if (uri != null) { persist(uri); s.esdeFolder = uri.toString(); changed(); vm.syncOne(Source.EMULATOR) }
     }
     val pickCocoon = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null) { persist(uri); s.cocoonFolder = uri.toString(); changed() }
+        if (uri != null) { persist(uri); s.cocoonFolder = uri.toString(); changed(); vm.syncOne(Source.EMULATOR) }
     }
     val pickRetroArch = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null) { persist(uri); s.retroarchFolder = uri.toString(); changed() }
+        if (uri != null) { persist(uri); s.retroarchFolder = uri.toString(); changed(); vm.syncOne(Source.EMULATOR) }
     }
     var pickEmuFor by remember { mutableStateOf<String?>(null) }
 
     Section(stringResource(R.string.menu_emulators)) {
+        Hint(stringResource(R.string.folder_deep_hint))
         Hint(stringResource(R.string.rom_hint))
         s.romFolders.forEach { uri -> FolderRow(SafTree.displayName(context, uri)) { s.romFolders = s.romFolders - uri; changed() } }
         OutlinedButton(onClick = { pickRoms.launch(null) }) { Text(stringResource(R.string.add_rom_folder), color = Color.White) }
@@ -291,6 +292,7 @@ private fun EmulatorsPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) 
         Hint(stringResource(R.string.cocoon_hint))
         s.cocoonFolder?.let { FolderRow(SafTree.displayName(context, it)) { s.cocoonFolder = null; changed() } }
             ?: OutlinedButton(onClick = { pickCocoon.launch(null) }) { Text(stringResource(R.string.choose_cocoon), color = Color.White) }
+        if (s.cocoonFolder != null || s.esdeFolder != null) FrontendReportText(vm.frontendReport.collectAsState().value)
         Button(onClick = { vm.syncOne(Source.EMULATOR) }) { Text(stringResource(R.string.scan_emulators)) }
     }
 
@@ -582,4 +584,24 @@ private fun QrCode(text: String, modifier: Modifier = Modifier) {
     }
     Image(bitmap, "QR", modifier.background(Color.White).padding(8.dp),
         filterQuality = androidx.compose.ui.graphics.FilterQuality.None)
+}
+
+/** Qué encontró Repisa en las carpetas de ES-DE/Cocoon, para saber si la lectura funcionó. */
+@Composable
+private fun FrontendReportText(raw: String?) {
+    val r = com.repisa.app.sources.FrontendReport.decode(raw)
+    val lines = buildList {
+        if (r == null) { add(stringResource(R.string.frontend_reading)); return@buildList }
+        if (r.lists == 0 && r.backupFiles == 0) { add(stringResource(R.string.frontend_report_empty)); return@buildList }
+        if (r.lists > 0) add(stringResource(R.string.frontend_report, r.lists,
+            r.systems.joinToString(", ") { com.repisa.app.model.Consoles.byId(it).name }.ifEmpty { "?" },
+            r.entries, r.withGenre, r.withTime, r.matched, r.matchedWithTime))
+        if (r.backupFiles > 0) add(stringResource(R.string.frontend_report_backup, r.backupFiles, r.backupWithTime))
+        if (r.entries > 0 && r.matched == 0) add(stringResource(R.string.frontend_report_no_match))
+        else if (r.withTime == 0) add(stringResource(R.string.frontend_report_no_time))
+    }
+    Column(Modifier.fillMaxWidth().background(Color(0x22FFD27A), RoundedCornerShape(8.dp)).padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        lines.forEach { Text(it, color = Color(0xFFE8D9C0), fontSize = 13.sp) }
+    }
 }

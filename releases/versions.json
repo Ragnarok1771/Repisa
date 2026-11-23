@@ -33,6 +33,10 @@
   },
   {
     "version": "0.9.0",
+    "commit": "6a18a26499dc8460a1f002b9cf0728c1c4bd7386"
+  },
+  {
+    "version": "0.9.1",
     "commit": "HEAD"
   }
 ]
