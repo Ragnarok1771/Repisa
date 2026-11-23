@@ -37,6 +37,7 @@ import com.repisa.app.model.Source
 import com.repisa.app.ui.DetailScreen
 import com.repisa.app.ui.GroupMode
 import com.repisa.app.ui.LibraryViewModel
+import com.repisa.app.ui.RatedScreen
 import com.repisa.app.ui.RepisaTheme
 import com.repisa.app.ui.SecondScreen
 import com.repisa.app.ui.SettingsScreen
@@ -95,6 +96,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit) {
     val inSettings by vm.inSettings.collectAsState()
+    var inRated by rememberSaveable { mutableStateOf(false) }
     val selectedId by vm.selectedId.collectAsState()
     val games by vm.games.collectAsState()
     val selected = games.firstOrNull { it.id == selectedId }
@@ -107,8 +109,12 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit) {
 
     fun closeSettings() { vm.inSettings.value = false; onSettingsClosed() }
 
-    BackHandler(enabled = inSettings || selected != null) {
-        if (selected != null) vm.selectedId.value = null else closeSettings()
+    BackHandler(enabled = inSettings || inRated || selected != null) {
+        when {
+            selected != null -> vm.selectedId.value = null
+            inRated -> inRated = false
+            else -> closeSettings()
+        }
     }
 
     Box(
@@ -117,6 +123,7 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit) {
             when (e.key.nativeKeyCode) {
                 KeyEvent.KEYCODE_BUTTON_B -> when {
                     selected != null -> { vm.selectedId.value = null; true }
+                    inRated -> { inRated = false; true }
                     inSettings -> { closeSettings(); true }
                     else -> false
                 }
@@ -127,7 +134,9 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit) {
         if (inSettings) {
             SettingsScreen(vm, onBack = { closeSettings() })
         } else {
-            ShelfScreen(vm, onOpenSettings = { vm.inSettings.value = true }, onOpenGame = { vm.selectedId.value = it.id })
+            if (inRated) RatedScreen(vm, onBack = { inRated = false }, onOpen = { vm.selectedId.value = it.id })
+            else ShelfScreen(vm, onOpenSettings = { vm.inSettings.value = true }, onOpenGame = { vm.selectedId.value = it.id },
+                onOpenRated = { inRated = true })
             selected?.let { DetailScreen(it, vm, onClose = { vm.selectedId.value = null }) }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp))

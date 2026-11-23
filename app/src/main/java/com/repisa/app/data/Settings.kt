@@ -25,12 +25,15 @@ class Settings(context: Context) {
     var epicRefreshToken: String? get() = str("epic_refresh"); set(v) = put("epic_refresh", v)
     var epicAccountId: String? get() = str("epic_account"); set(v) = put("epic_account", v)
     var epicDisplayName: String? get() = str("epic_name"); set(v) = put("epic_name", v)
+    /** Cliente de Epic con el que se obtuvo la sesión: "launcher" (lanzador) o "device" (vinculación con código). */
+    var epicClient: String get() = str("epic_client") ?: "launcher"; set(v) = put("epic_client", v)
     var epicExpiresAt: Long
         get() = prefs.getLong("epic_expires", 0)
         set(v) = prefs.edit { putLong("epic_expires", v) }
 
     fun clearEpic() {
         epicAccessToken = null; epicRefreshToken = null; epicAccountId = null; epicDisplayName = null; epicExpiresAt = 0
+        put("epic_client", null)
     }
 
     // --- Emuladores (URIs de carpetas concedidas con el selector de Android) ---
@@ -53,6 +56,10 @@ class Settings(context: Context) {
     var igdbClientSecret: String? get() = str("igdb_secret"); set(v) = put("igdb_secret", v?.trim())
     /** Clave gratuita de https://www.steamgriddb.com/profile/preferences/api (buscador de carátulas). */
     var steamGridDbKey: String? get() = str("sgdb_key"); set(v) = put("sgdb_key", v?.trim())
+    /** Última "pasada" automática de búsqueda de carátulas que faltan (ver LibraryViewModel.COVER_PASS). */
+    var coverPass: Int
+        get() = prefs.getInt("cover_pass", 0)
+        set(v) = prefs.edit { putInt("cover_pass", v) }
     var useLibretroCovers: Boolean
         get() = prefs.getBoolean("libretro_covers", true)
         set(v) = prefs.edit { putBoolean("libretro_covers", v) }
@@ -69,6 +76,11 @@ class Settings(context: Context) {
     var lastAutoSync: Long
         get() = prefs.getLong("last_auto_sync", 0)
         set(v) = prefs.edit { putLong("last_auto_sync", v) }
+
+    // --- Calificaciones ---
+    var ratingScale: String get() = str("rating_scale") ?: "TEN"; set(v) = put("rating_scale", v)
+    /** Plantilla de criterios (JSON) con la que empieza cada calificación nueva. */
+    var ratingTemplate: String? get() = str("rating_template"); set(v) = put("rating_template", v)
 
     // --- Vista ---
     var sortMode: String get() = str("sort") ?: "ALPHA"; set(v) = put("sort", v)

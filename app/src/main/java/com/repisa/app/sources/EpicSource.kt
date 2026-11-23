@@ -98,14 +98,18 @@ class EpicSource(private val settings: Settings) {
             throw IllegalStateException(epicError(e.body) ?: "Epic rechazó el código (${e.code})")
         }
         val deviceToken = resp["access_token"].str ?: return false
-        // El token "con código" se cambia por uno del lanzador de Epic, que es el que puede leer la biblioteca.
-        val exchange = Http.getJson(Request.Builder().url("$OAUTH_BASE/exchange")
-            .header("Authorization", "bearer $deviceToken").build())["code"].str ?: error("Epic no devolvió el código de intercambio")
-        tokenRequest(FormBody.Builder()
-            .add("grant_type", "exchange_code")
-            .add("exchange_code", exchange)
-            .add("token_type", "eg1")
-            .build())
+        // Lo ideal es cambiar el token "con código" por uno del lanzador de Epic. Si Epic no lo permite
+        // (invalid_client_credentials), nos quedamos con la sesión del propio código.
+        val launcherOk = runCatching {
+            val exchange = Http.getJson(Request.Builder().url("$OAUTH_BASE/exchange")
+                .header("Authorization", "bearer $deviceToken").build())["code"].str ?: error("sin código de intercambio")
+            tokenRequest(FormBody.Builder()
+                .add("grant_type", "exchange_code")
+                .add("exchange_code", exchange)
+                .add("token_type", "eg1")
+                .build())
+        }.isSuccess
+        if (!launcherOk) saveSession(resp, client = "device")
         return true
     }
 
@@ -126,9 +130,14 @@ class EpicSource(private val settings: Settings) {
             .build())
     }
 
-    private suspend fun tokenRequest(body: FormBody) {
-        val req = Request.Builder().url(OAUTH).header("Authorization", basic).post(body).build()
-        val r = Http.getJson(req)
+    private suspend fun tokenRequest(body: FormBody, client: String = "launcher") {
+        val req = Request.Builder().url(OAUTH).header("Authorization", if (client == "device") deviceBasic else basic)
+            .post(body).build()
+        saveSession(Http.getJson(req), client)
+    }
+
+    private fun saveSession(r: JsonElement, client: String) {
+        settings.epicClient = client
         settings.epicAccessToken = r["access_token"].str ?: error("Epic no devolvió token")
         settings.epicRefreshToken = r["refresh_token"].str
         settings.epicAccountId = r["account_id"].str
@@ -145,12 +154,18 @@ class EpicSource(private val settings: Settings) {
             .add("grant_type", "refresh_token")
             .add("refresh_token", refresh)
             .add("token_type", "eg1")
-            .build())
+            .build(), client = settings.epicClient)
         return settings.epicAccessToken!!
     }
 
-    private suspend fun authGet(url: String): JsonElement =
+    private suspend fun authGet(url: String): JsonElement = try {
         Http.getJson(Request.Builder().url(url).header("Authorization", "bearer ${ensureToken()}").build())
+    } catch (e: com.repisa.app.data.HttpException) {
+        throw IllegalStateException(
+            (epicError(e.body) ?: "error ${e.code}") +
+                if (e.code == 401 || e.code == 403) " (Epic no deja leer la biblioteca con la sesión '${settings.epicClient}')" else ""
+        )
+    }
 
     /**
      * @param known juegos que ya tenemos guardados, para no volver a pedir su ficha al catálogo.

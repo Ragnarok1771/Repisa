@@ -24,12 +24,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 enum class SortMode(val label: String) {
-    ALPHA("A – Z"), PLAYTIME("Tiempo de juego"), RECENT("Jugado recientemente"), YEAR("Año"), CONSOLE("Consola")
+    ALPHA("A – Z"), PLAYTIME("Tiempo de juego"), RECENT("Jugado recientemente"), YEAR("Año"), CONSOLE("Consola"),
+    RATING("Mi nota"), METACRITIC("Metacritic")
 }
 
 enum class GroupMode(val label: String) {
@@ -115,6 +117,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             SortMode.RECENT -> filtered.sortedWith(compareByDescending<Game> { it.lastPlayed ?: 0 }.thenBy { it.sortKey })
             SortMode.YEAR -> filtered.sortedWith(compareBy<Game> { it.releaseYear ?: 9999 }.thenBy { it.sortKey })
             SortMode.CONSOLE -> filtered.sortedWith(compareBy<Game> { it.console.year }.thenBy { it.console.name }.thenBy { it.sortKey })
+            SortMode.RATING -> filtered.sortedWith(compareByDescending<Game> { it.rating?.overall ?: -1f }.thenBy { it.sortKey })
+            SortMode.METACRITIC -> filtered.sortedWith(compareByDescending<Game> { it.metascore ?: -1 }.thenBy { it.sortKey })
         }
         fun group(title: String, games: List<Game>) =
             ShelfGroup(title, "${games.size} juego${if (games.size == 1) "" else "s"} · ${hours(games)}", games)
@@ -278,7 +282,17 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 replace(enriched, save = i % 10 == 9 || i == pending.lastIndex)
             }
             status.value = null
+            // Tras actualizar la app con buscadores de carátulas nuevos, repasar una vez los juegos que no tienen.
+            if (settings.coverPass < COVER_PASS) {
+                missingCoversPass(quiet = true)
+                settings.coverPass = COVER_PASS
+            }
         }
+    }
+
+    private companion object {
+        /** Súbelo cuando se añada una fuente de carátulas nueva para que se repasen los juegos sin carátula. */
+        const val COVER_PASS = 2
     }
 
     private suspend fun replace(game: Game, save: Boolean = true) = mutex.withLock {
@@ -295,6 +309,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             trackedMinutes = current.trackedMinutes,
             coverUrl = if (current.customCover) current.coverUrl else enriched.coverUrl,
             customCover = current.customCover,
+            rating = current.rating,
+            metascore = current.metascore, userScore = current.userScore, metacriticUrl = current.metacriticUrl,
+            hltbMain = current.hltbMain, hltbExtra = current.hltbExtra, hltbComplete = current.hltbComplete,
+            hltbUrl = current.hltbUrl, extFetchedAt = current.extFetchedAt,
             coverAspect = if (current.customCover || enriched.coverUrl == current.coverUrl) current.coverAspect else null,
         )
 
@@ -397,6 +415,49 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun epicCancelLink() { epicLinkJob?.cancel(); epicLink.value = null }
 
+    // ------------------------------------------------------------------ Metacritic / HowLongToBeat
+
+    private val extLoading = mutableSetOf<String>()
+
+    /** Al abrir la ficha: consulta Metacritic y HowLongToBeat si no se hizo en las últimas 2 semanas. */
+    fun loadExternalInfo(game: Game, force: Boolean = false) {
+        val fresh = game.extFetchedAt?.let { System.currentTimeMillis() - it < 14L * 86_400_000 } == true
+        if ((fresh && !force) || !extLoading.add(game.id)) return
+        viewModelScope.launch {
+            try {
+                val (mc, hl) = kotlinx.coroutines.coroutineScope {
+                    val a = async { runCatching { com.repisa.app.sources.GameInfo.metacritic(game) }.getOrNull() }
+                    val b = async { runCatching { com.repisa.app.sources.GameInfo.hltb(game) }.getOrNull() }
+                    a.await() to b.await()
+                }
+                mutex.withLock {
+                    _games.update { list -> list.map { g ->
+                        if (g.id != game.id) g else g.copy(
+                            metascore = mc?.metascore ?: g.metascore, userScore = mc?.userScore ?: g.userScore,
+                            metacriticUrl = mc?.url ?: g.metacriticUrl,
+                            hltbMain = hl?.main ?: g.hltbMain, hltbExtra = hl?.extra ?: g.hltbExtra,
+                            hltbComplete = hl?.complete ?: g.hltbComplete, hltbUrl = hl?.url ?: g.hltbUrl,
+                            extFetchedAt = System.currentTimeMillis(),
+                        )
+                    } }
+                    store.save(_games.value)
+                }
+            } finally {
+                extLoading.remove(game.id)
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------ Calificaciones
+
+    val ratingScale = MutableStateFlow(
+        runCatching { com.repisa.app.model.RatingScale.valueOf(settings.ratingScale) }.getOrDefault(com.repisa.app.model.RatingScale.TEN)
+    )
+
+    fun setRatingScale(s: com.repisa.app.model.RatingScale) { settings.ratingScale = s.name; ratingScale.value = s }
+
+    fun setRating(game: Game, rating: com.repisa.app.model.Rating?) = updateGame(game.copy(rating = rating))
+
     // ------------------------------------------------------------------ Carátulas
 
     /** El usuario eligió una carátula en el buscador. */
@@ -406,7 +467,11 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     /** Busca carátula para todos los juegos que no tienen (o cuya carátula ya no carga). */
     fun findMissingCovers() {
         if (enrichJob?.isActive == true) return
-        enrichJob = viewModelScope.launch {
+        enrichJob = viewModelScope.launch { missingCoversPass(quiet = false) }
+    }
+
+    private suspend fun missingCoversPass(quiet: Boolean) {
+        run {
             status.value = "Comprobando carátulas…"
             val candidates = _games.value.filter { !it.customCover && !it.userEdited }
             val missing = candidates.filter { g ->
@@ -426,6 +491,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
             status.value = null
+            if (quiet && found == 0) return
             message.value = when {
                 missing.isEmpty() -> "Todas las cajas tienen carátula"
                 else -> "Carátulas encontradas: $found de ${missing.size}." +

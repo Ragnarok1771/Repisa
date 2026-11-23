@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -76,7 +77,7 @@ private sealed interface ShelfItem {
 }
 
 @Composable
-fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (Game) -> Unit) {
+fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (Game) -> Unit, onOpenRated: () -> Unit = {}) {
     val shelves by vm.shelves.collectAsState()
     val options by vm.options.collectAsState()
     val status by vm.status.collectAsState()
@@ -85,7 +86,7 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
     val boxHeight = vm.settings.shelfHeightDp.dp
 
     Column(Modifier.fillMaxSize().roomBackground()) {
-        TopBar(vm, options, all, onOpenSettings)
+        TopBar(vm, options, all, onOpenSettings, onOpenRated)
         status?.let {
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Text(it, color = Color(0xFFE8D5B5), fontSize = 12.sp)
@@ -106,13 +107,15 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
 }
 
 @Composable
-private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, onOpenSettings: () -> Unit) {
+private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, onOpenSettings: () -> Unit, onOpenRated: () -> Unit) {
     var searching by remember { mutableStateOf(options.query.isNotEmpty()) }
     Column(Modifier.fillMaxWidth().background(Color(0xCC120C09)).padding(horizontal = 12.dp, vertical = 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Repisa", color = Color(0xFFFFD27A), fontWeight = FontWeight.Black, fontSize = 22.sp,
-                fontFamily = FontFamily.Serif)
-            Spacer(Modifier.width(12.dp))
+            Text("Repisa", color = Color(0xFFFFD27A), fontWeight = FontWeight.SemiBold, fontSize = 24.sp,
+                fontFamily = DisplayFont)
+            Text(" v${com.repisa.app.BuildConfig.VERSION_NAME}", color = Color(0xFF9C8A70), fontSize = 10.sp,
+                modifier = Modifier.padding(top = 8.dp))
+            Spacer(Modifier.width(14.dp))
             Text(
                 "${all.size} juegos · ${all.sumOf { it.totalMinutes } / 60} h jugadas",
                 color = Color(0xFFBFA98A), fontSize = 12.sp,
@@ -134,6 +137,7 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
             } else {
                 IconButton(onClick = { searching = true }) { Icon(Icons.Default.Search, "Buscar", tint = Color.White) }
             }
+            IconButton(onClick = onOpenRated) { Icon(Icons.Default.Star, "Mis calificaciones", tint = Color(0xFFFFC94D)) }
             IconButton(onClick = { vm.syncAll() }) { Icon(Icons.Default.Refresh, "Sincronizar", tint = Color.White) }
             IconButton(onClick = onOpenSettings) { Icon(Icons.Default.Settings, "Ajustes", tint = Color.White) }
         }
@@ -225,7 +229,7 @@ private fun GroupPlaque(group: ShelfGroup) {
                 .border(1.dp, Color(0xFF6E4F1E), RoundedCornerShape(4.dp))
                 .padding(horizontal = 12.dp, vertical = 3.dp),
         ) {
-            Text(group.title, color = Color(0xFF2B1A08), fontWeight = FontWeight.Bold, fontSize = 14.sp, fontFamily = FontFamily.Serif)
+            Text(group.title, color = Color(0xFF2B1A08), fontWeight = FontWeight.Bold, fontSize = 14.sp, fontFamily = DisplayFont)
         }
         Spacer(Modifier.width(10.dp))
         Text(group.subtitle, color = Color(0xFFBFA98A), fontSize = 11.sp)
@@ -348,7 +352,7 @@ private fun FocusBar(game: Game?) {
 private fun EmptyRoom(hasGames: Boolean, onOpenSettings: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(if (hasGames) "Ninguna caja coincide con el filtro" else "Tu repisa está vacía",
-            color = Color(0xFFFFD27A), fontSize = 22.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold)
+            color = Color(0xFFFFD27A), fontSize = 22.sp, fontFamily = DisplayFont, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         if (!hasGames) {
             Text("Conecta Steam, Epic Games o elige tus carpetas de ROMs, ES-DE o RetroArch para llenarla.",

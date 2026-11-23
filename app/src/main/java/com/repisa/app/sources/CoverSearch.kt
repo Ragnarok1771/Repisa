@@ -35,6 +35,8 @@ data class CoverResult(val url: String, val thumb: String, val source: String, v
  */
 class CoverSearch(private val context: Context, private val settings: Settings) {
 
+    private val gameTdb = GameTdb(context)
+
     // ------------------------------------------------------------------ Búsqueda manual
 
     /** Resultado de una búsqueda: carátulas y servidores que no respondieron. */
@@ -46,7 +48,7 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
         suspend fun safe(name: String, block: suspend () -> List<CoverResult>) =
             try { block() } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { failed += name; emptyList() }
         val jobs = listOf(
-            async { safe("libretro") { libretro(game, q, 12) } },
+            async { safe("GameTDB") { gameTdbResults(game, q, 8) } + safe("libretro") { libretro(game, q, 12) } },
             async { safe("SteamGridDB") { steamGridDb(q, 12) } },
             async { safe("Steam") { steamStore(q, 6) } },
             async { safe("IGDB") { igdb(q, 6) } },
@@ -62,17 +64,41 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
 
     /** Mejor carátula para un juego sin intervención del usuario, o null. Solo acepta coincidencias claras. */
     suspend fun auto(game: Game): String? {
+        // Nintendo (Switch, 3DS, DS, Wii, GameCube, Wii U): GameTDB, sin clave y por id exacto.
+        if (gameTdb.supports(game.consoleId)) {
+            for (name in listOfNotNull(game.title, game.romName).distinct()) {
+                val best = runCatching { gameTdb.find(game.consoleId, name, 1, minScore = 0.72) }.getOrNull()?.firstOrNull()
+                if (best != null) runCatching { gameTdb.coverUrl(game.consoleId, best.first) }.getOrNull()?.let { return it }
+            }
+        }
         if (game.consoleId != "pc") {
             runCatching { libretro(game, game.romName ?: game.title, 1, minScore = 0.72) }.getOrNull()
                 ?.firstOrNull()?.let { return it.url }
         }
-        runCatching { steamGridDb(game.title, 1, exactOnly = true) }.getOrNull()?.firstOrNull()?.let { return it.url }
-        runCatching { igdb(game.title, 1, exactOnly = true) }.getOrNull()?.firstOrNull()?.let { return it.url }
-        runCatching { steamStore(game.title, 1, exactOnly = true) }.getOrNull()?.firstOrNull()?.let { return it.url }
+        val title = EmulatorSource.cleanTitle(game.title)
+        runCatching { steamGridDb(title, 1, minSim = 0.8) }.getOrNull()?.firstOrNull()?.let { return it.url }
+        runCatching { igdb(title, 1, minSim = 0.8) }.getOrNull()?.firstOrNull()?.let { return it.url }
+        runCatching { steamStore(title, 1, minSim = 0.85) }.getOrNull()?.firstOrNull()?.let { return it.url }
         return null
     }
 
+    // ------------------------------------------------------------------ GameTDB
+
+    private suspend fun gameTdbResults(game: Game, query: String, limit: Int): List<CoverResult> {
+        if (!gameTdb.supports(game.consoleId)) return emptyList()
+        return coroutineScope {
+            gameTdb.find(game.consoleId, query, limit, minScore = 0.35).map { (e, _) ->
+                async {
+                    gameTdb.coverUrl(game.consoleId, e)?.let { CoverResult(it, it, "GameTDB", "${e.title} (${e.region})") }
+                }
+            }.awaitAll().filterNotNull()
+        }
+    }
+
     // ------------------------------------------------------------------ libretro-thumbnails
+
+    /** Si la API de GitHub falla (p. ej. límite de 60 peticiones/hora), no reintentar durante un rato. */
+    @Volatile private var githubBlockedUntil = 0L
 
     private val listMutex = Mutex()
 
@@ -83,18 +109,44 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
             if (cache.exists() && System.currentTimeMillis() - cache.lastModified() < 14L * 86_400_000) {
                 return@withContext cache.readLines()
             }
-            // 1) árbol raíz para encontrar la carpeta Named_Boxarts; 2) su contenido (sin recursión, cabe entero).
-            val api = "https://api.github.com/repos/libretro-thumbnails/$repo/git/trees"
-            val root = Http.getJson(Request.Builder().url("$api/master")
-                .header("Accept", "application/vnd.github+json").build())
-            val sha = root["tree"].arr.firstOrNull { it["path"].str == "Named_Boxarts" }?.get("sha").str
-                ?: return@withContext emptyList()
-            val names = Http.getJson(Request.Builder().url("$api/$sha").header("Accept", "application/vnd.github+json").build())["tree"]
-                .arr.mapNotNull { it["path"].str?.takeIf { p -> p.endsWith(".png") }?.removeSuffix(".png") }
-            cache.parentFile?.mkdirs()
-            cache.writeText(names.joinToString("\n"))
-            names
+            if (System.currentTimeMillis() < githubBlockedUntil) {
+                return@withContext if (cache.exists()) cache.readLines() else emptyList()
+            }
+            try {
+                runCatching { fetchLibretroNames(repo, cache) }.getOrNull()?.takeIf { it.isNotEmpty() }
+                    ?: fetchLibretroListing(repo.replace('_', ' '), cache)
+            } catch (e: Exception) {
+                githubBlockedUntil = System.currentTimeMillis() + 20 * 60_000L
+                if (cache.exists()) cache.readLines() else throw e
+            }
         }
+    }
+
+    /** Respaldo: listado HTML del servidor de libretro (no tiene límite de peticiones). */
+    private suspend fun fetchLibretroListing(system: String, cache: File): List<String> = withContext(Dispatchers.IO) {
+        val url = "https://thumbnails.libretro.com/${enc(system)}/Named_Boxarts/"
+        val html = Http.client.newCall(Request.Builder().url(url).build()).execute().use { r ->
+            if (!r.isSuccessful) error("libretro ${r.code}"); r.body?.string().orEmpty()
+        }
+        val names = Regex("""href="([^"?/][^"]*?)\.png"""").findAll(html)
+            .map { java.net.URLDecoder.decode(it.groupValues[1], "UTF-8") }.toList()
+        if (names.isEmpty()) error("listado vacío")
+        cache.parentFile?.mkdirs()
+        cache.writeText(names.joinToString("\n"))
+        names
+    }
+
+    /** 1) árbol raíz del repositorio para encontrar Named_Boxarts; 2) su contenido (sin recursión, cabe entero). */
+    private suspend fun fetchLibretroNames(repo: String, cache: File): List<String> {
+        val api = "https://api.github.com/repos/libretro-thumbnails/$repo/git/trees"
+        fun req(url: String) = Request.Builder().url(url).header("Accept", "application/vnd.github+json").build()
+        val sha = Http.getJson(req("$api/master"))["tree"].arr
+            .firstOrNull { it["path"].str == "Named_Boxarts" }?.get("sha").str ?: return emptyList()
+        val names = Http.getJson(req("$api/$sha"))["tree"].arr
+            .mapNotNull { it["path"].str?.takeIf { p -> p.endsWith(".png") }?.removeSuffix(".png") }
+        cache.parentFile?.mkdirs()
+        cache.writeText(names.joinToString("\n"))
+        return names
     }
 
     private suspend fun libretro(game: Game, query: String, limit: Int, minScore: Double = 0.35): List<CoverResult> {
@@ -116,12 +168,17 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
 
     // ------------------------------------------------------------------ SteamGridDB
 
-    private suspend fun steamGridDb(query: String, limit: Int, exactOnly: Boolean = false): List<CoverResult> {
+    /** Parecido entre lo buscado y un nombre devuelto por un servidor (para filtrar en la búsqueda automática). */
+    private fun close(query: String, name: String, minSim: Double) =
+        minSim <= 0.0 || similarity(tokens(query), tokens(name)) >= minSim
+
+    private suspend fun steamGridDb(query: String, limit: Int, minSim: Double = 0.0): List<CoverResult> {
         val key = settings.steamGridDbKey ?: return emptyList()
         fun req(url: String) = Request.Builder().url(url).header("Authorization", "Bearer $key").build()
         val base = "https://www.steamgriddb.com/api/v2"
         val games = Http.getJson(req("$base/search/autocomplete/${enc(query)}"))["data"].arr
-            .filter { !exactOnly || norm(it["name"].str.orEmpty()) == norm(query) }
+            .filter { close(query, it["name"].str.orEmpty(), minSim) }
+            .sortedByDescending { if (minSim > 0) similarity(tokens(query), tokens(it["name"].str.orEmpty())) else 0.0 }
             .take(3)
         return games.flatMap { g ->
             val id = g["id"].long ?: return@flatMap emptyList()
@@ -135,11 +192,11 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
 
     // ------------------------------------------------------------------ Tienda de Steam
 
-    private suspend fun steamStore(query: String, limit: Int, exactOnly: Boolean = false): List<CoverResult> {
+    private suspend fun steamStore(query: String, limit: Int, minSim: Double = 0.0): List<CoverResult> {
         val url = "https://store.steampowered.com/api/storesearch/".toHttpUrl().newBuilder()
             .addQueryParameter("term", query).addQueryParameter("l", "spanish").addQueryParameter("cc", "ES").build()
         val items = Http.getJson(url.toString())["items"].arr
-            .filter { !exactOnly || norm(it["name"].str.orEmpty()) == norm(query) }
+            .filter { close(query, it["name"].str.orEmpty(), minSim) }
             .take(limit)
         if (items.isEmpty()) return emptyList()
         val ids = items.mapNotNull { it["id"].long }
@@ -156,7 +213,7 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
     private var igdbToken: String? = null
     private var igdbExpiry = 0L
 
-    private suspend fun igdb(query: String, limit: Int, exactOnly: Boolean = false): List<CoverResult> {
+    private suspend fun igdb(query: String, limit: Int, minSim: Double = 0.0): List<CoverResult> {
         val id = settings.igdbClientId ?: return emptyList()
         val secret = settings.igdbClientSecret ?: return emptyList()
         if (igdbToken == null || System.currentTimeMillis() > igdbExpiry) {
@@ -171,7 +228,7 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
             .header("Client-ID", id).header("Authorization", "Bearer $igdbToken")
             .post(body.toRequestBody("text/plain".toMediaType())).build()).arr
         return results
-            .filter { !exactOnly || norm(it["name"].str.orEmpty()) == norm(query) }
+            .filter { close(query, it["name"].str.orEmpty(), minSim) }
             .mapNotNull { r ->
                 val img = r["cover"]["image_id"].str ?: return@mapNotNull null
                 val platforms = r["platforms"].arr.mapNotNull { it["abbreviation"].str }.take(3).joinToString(", ")
@@ -189,7 +246,9 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
         private val tagRegex = Regex("""[(\[][^)\]]*[)\]]""")
         private val stop = setOf("the", "a", "an", "of", "el", "la", "los", "las", "de", "del")
 
-        fun norm(s: String): String = s.lowercase()
+        fun norm(s: String): String = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
+            .replace(Regex("""\p{Mn}+"""), "") // sin acentos: Pokémon = Pokemon
+            .lowercase()
             .replace(tagRegex, " ")
             .replace("&", " and ")
             .replace(Regex("""[^\p{L}\p{N}]+"""), " ")
@@ -217,7 +276,10 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
             val inter = a.intersect(b).size
             val dice = 2.0 * inter / (a.size + b.size)
             val coverage = inter.toDouble() / b.size
-            var score = 0.5 * dice + 0.5 * coverage
+            val queryCoverage = inter.toDouble() / a.size
+            // También vale que todo lo buscado esté en el candidato aunque este tenga palabras de más
+            // ("Dragon Ball Z Kakarot" → "Dragon Ball Z: Kakarot + A New Power Awakens Set").
+            var score = maxOf(0.5 * dice + 0.5 * coverage, 0.5 * dice + 0.5 * queryCoverage - 0.1)
             val numsA = a.filter { it.all(Char::isDigit) }.toSet()
             val numsB = b.filter { it.all(Char::isDigit) }.toSet()
             if (numsA != numsB) score -= 0.3

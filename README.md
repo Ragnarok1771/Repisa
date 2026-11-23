@@ -35,6 +35,9 @@ pensada para la **AYN Thor** (Android, doble pantalla) y cualquier consola o mó
 | **ES-DE** | Nombre, género, estudio, año, descripción, última partida y portadas descargadas | Elegir la carpeta `ES-DE` |
 | **RetroArch** | Playlists (.lpl) y tiempo de juego (.lrtl) | Elegir la carpeta `RetroArch` y activar *Guardar registros de tiempo de juego* |
 | **libretro-thumbnails** | Carátulas escaneadas de las cajas reales para juegos de emulador | Nada (activado por defecto) |
+| **GameTDB** | Carátulas escaneadas de Switch, 3DS, DS, Wii, GameCube y Wii U | Nada |
+| **Metacritic** | Nota de la prensa y de los usuarios | Nada |
+| **HowLongToBeat** | Horas: historia, + extras, completista | Nada |
 | **SteamGridDB** (recomendado) | Carátulas de cualquier juego y plataforma (la base que usa Cocoon) | Clave gratuita |
 | **IGDB** (opcional) | Géneros, estudio, año y portada para cualquier juego | Client ID y Secret de Twitch (gratis) |
 
@@ -48,6 +51,15 @@ pensada para la **AYN Thor** (Android, doble pantalla) y cualquier consola o mó
   encuentra *Bravely Default II* y `4262 - Kingdom Hearts 358-2 Days` encuentra su caja.
 - Cada caja tiene su **tamaño real** a escala: Switch más baja que PS2, DS/3DS pequeñas, N64/SNES apaisadas, Neo Geo
   y PC antiguo enormes.
+
+### Calificaciones propias
+
+- En cada ficha, la **estrella junto a la X** abre el calificador: tú decides qué calificas (Historia, Música,
+  "El cielo"…), cuánto pesa cada cosa (%) y qué nota le das. La nota final es la media ponderada.
+- Escala a elegir en Ajustes (0-5, 0-10 o 0-100); las notas se convierten solas al cambiarla.
+- La nota se ve también en **estrellas que se llenan en proporción** (95/100 = 4¾ estrellas).
+- La **estrella de arriba a la derecha** abre *Mis calificaciones*, ordenadas de mayor a menor.
+- La plantilla de aspectos y pesos por defecto se edita en Ajustes → Calificaciones.
 
 ### Tiempo de juego siempre al día
 

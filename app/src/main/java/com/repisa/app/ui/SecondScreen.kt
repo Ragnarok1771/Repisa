@@ -100,7 +100,7 @@ private fun FocusPanel(vm: LibraryViewModel) {
         val g = game
         if (g == null) {
             Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Repisa", color = Color(0xFFFFD27A), fontSize = 40.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Serif)
+                Text("Repisa", color = Color(0xFFFFD27A), fontSize = 40.sp, fontWeight = FontWeight.Black, fontFamily = DisplayFont)
                 Text("${all.size} juegos · ${all.sumOf { it.totalMinutes } / 60} h jugadas", color = Color(0xFFBFA98A))
                 Spacer(Modifier.height(12.dp))
                 val top = all.sortedByDescending { it.totalMinutes }.take(3)
@@ -117,7 +117,7 @@ private fun FocusPanel(vm: LibraryViewModel) {
                     Spacer(Modifier.width(20.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(g.title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Serif, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                            fontFamily = DisplayFont, maxLines = 3, overflow = TextOverflow.Ellipsis)
                         Text("${g.console.name} · ${g.source.label}", color = Color(0xFFFFD27A), fontSize = 14.sp)
                         Spacer(Modifier.height(6.dp))
                         Line("Tiempo de juego", formatPlaytime(g.totalMinutes))

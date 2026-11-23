@@ -46,6 +46,19 @@ data class Game(
     val familyShared: Boolean = false,
     /** Carátula elegida por el usuario con el buscador: no se sustituye al sincronizar. */
     val customCover: Boolean = false,
+    /** Calificación personal del usuario. */
+    val rating: Rating? = null,
+    /** Metacritic: nota de la prensa (0-100) y de los usuarios (0-10). */
+    val metascore: Int? = null,
+    val userScore: Double? = null,
+    val metacriticUrl: String? = null,
+    /** HowLongToBeat, en horas: historia, historia + extras, completista. */
+    val hltbMain: Float? = null,
+    val hltbExtra: Float? = null,
+    val hltbComplete: Float? = null,
+    val hltbUrl: String? = null,
+    /** Cuándo se consultaron Metacritic y HowLongToBeat por última vez. */
+    val extFetchedAt: Long? = null,
     /** Ya se buscaron metadatos online para este juego. */
     val metaFetched: Boolean = false,
     /** El usuario editó los datos a mano: no sobrescribir con metadatos automáticos. */

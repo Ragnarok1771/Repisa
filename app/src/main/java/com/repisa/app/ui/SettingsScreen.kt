@@ -112,7 +112,7 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().roomBackground()) {
         Row(Modifier.fillMaxWidth().background(Color(0xCC120C09)).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White) }
-            Text("Ajustes", color = Color(0xFFFFD27A), fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
+            Text("Ajustes", color = Color(0xFFFFD27A), fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = DisplayFont)
             Spacer(Modifier.weight(1f))
             Button(onClick = { vm.syncAll(); onBack() }) { Text("Sincronizar todo") }
         }
@@ -271,6 +271,26 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
                     }
                 }
 
+                // ---------------------------------------------------------- Calificaciones
+                Section("Calificaciones") {
+                    val scale by vm.ratingScale.collectAsState()
+                    Hint("Escala con la que pones y ves las notas. Puedes cambiarla cuando quieras: las notas ya puestas se convierten solas.")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        com.repisa.app.model.RatingScale.entries.forEach { sc ->
+                            androidx.compose.material3.FilterChip(selected = scale == sc, onClick = { vm.setRatingScale(sc) },
+                                label = { Text(sc.label) })
+                        }
+                    }
+                    Hint("Plantilla: lo que se califica por defecto en cada juego nuevo y cuánto pesa cada cosa. En cada juego puedes " +
+                        "añadir, quitar o renombrar lo que quieras (\"Historia\", \"Música\", \"El cielo\"…).")
+                    val template = remember { androidx.compose.runtime.mutableStateListOf<com.repisa.app.model.Criterion>().apply { addAll(loadTemplate(s)) } }
+                    CriteriaEditor(template, scale, withScores = false)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { saveTemplate(s, template.filter { it.name.isNotBlank() }); changed() }) { Text("Guardar plantilla") }
+                        TextButton(onClick = { template.clear(); template.addAll(com.repisa.app.model.DefaultCriteria) }) { Text("Restaurar la original") }
+                    }
+                }
+
                 // ---------------------------------------------------------- Pantalla
                 Section("Pantalla") {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -326,7 +346,7 @@ private fun Section(title: String, content: @Composable () -> Unit) {
         Modifier.fillMaxWidth().background(Color(0xB3120C09), RoundedCornerShape(12.dp)).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(title, color = Color(0xFFFFD27A), fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
+        Text(title, color = Color(0xFFFFD27A), fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = DisplayFont)
         content()
     }
 }
