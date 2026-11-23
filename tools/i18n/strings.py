@@ -487,13 +487,19 @@ s("choose_cocoon", "Choose Cocoon folder", "Elegir carpeta de Cocoon", "Choisir 
 s("scan_emulators", "Scan emulators", "Escanear emuladores", "Analyser les émulateurs", "Emulatoren scannen",
   "Analizza emulatori", "Escanear emuladores", ptPT="Analisar emuladores")
 s("emu_per_system_hint",
-  "Emulator used to open each system (if none is chosen, Android will ask). Repisa measures the time you play what you open from here.",
-  "Emulador para abrir cada sistema (si no eliges ninguno, Android preguntará). Repisa mide el tiempo que juegas a lo que abres desde aquí.",
-  "Émulateur pour chaque système (sinon Android demandera). Repisa mesure le temps de jeu de ce que vous lancez d’ici.",
-  "Emulator für jedes System (sonst fragt Android). Repisa misst die Spielzeit von allem, was du hier startest.",
-  "Emulatore per ogni sistema (altrimenti Android chiederà). Repisa misura il tempo di ciò che avvii da qui.",
-  "Emulador para cada sistema (se não escolher, o Android perguntará). O Repisa mede o tempo do que você abre daqui.",
-  ptPT="Emulador para cada sistema (se não escolher, o Android pergunta). O Repisa mede o tempo do que abre daqui.")
+  "Repisa detects the emulators you have installed and opens each game directly (Eden for Switch, melonDS or DraStic for DS, Azahar for 3DS…). Tap a system to choose a different one. Repisa measures the time you play what you open from here.",
+  "Repisa detecta los emuladores que tienes instalados y abre cada juego directamente (Eden para Switch, melonDS o DraStic para DS, Azahar para 3DS…). Toca un sistema para elegir otro. Repisa mide el tiempo que juegas a lo que abres desde aquí.",
+  "Repisa détecte vos émulateurs installés et ouvre chaque jeu directement (Eden pour Switch, melonDS ou DraStic pour DS, Azahar pour 3DS…). Touchez un système pour en choisir un autre. Repisa mesure le temps de jeu de ce que vous lancez d’ici.",
+  "Repisa erkennt deine installierten Emulatoren und öffnet jedes Spiel direkt (Eden für Switch, melonDS oder DraStic für DS, Azahar für 3DS…). Tippe auf ein System, um einen anderen zu wählen. Repisa misst die Spielzeit von hier gestarteter Spiele.",
+  "Repisa rileva gli emulatori installati e apre ogni gioco direttamente (Eden per Switch, melonDS o DraStic per DS, Azahar per 3DS…). Tocca un sistema per sceglierne un altro. Repisa misura il tempo di gioco di ciò che avvii da qui.",
+  "O Repisa detecta os emuladores instalados e abre cada jogo diretamente (Eden para Switch, melonDS ou DraStic para DS, Azahar para 3DS…). Toque num sistema para escolher outro. O Repisa mede o tempo que você joga o que abre daqui.")
+s("emu_auto", "Automatic: %1$s", "Automático: %1$s", "Automatique : %1$s", "Automatisch: %1$s", "Automatico: %1$s", "Automático: %1$s")
+s("emu_not_found", "No emulator found", "Sin emulador detectado", "Aucun émulateur détecté", "Kein Emulator gefunden",
+  "Nessun emulatore rilevato", "Nenhum emulador detectado")
+s("emu_auto_option", "Automatic (use the detected emulator)", "Automático (usar el emulador detectado)",
+  "Automatique (utiliser l’émulateur détecté)", "Automatisch (erkannten Emulator verwenden)",
+  "Automatico (usa l’emulatore rilevato)", "Automático (usar o emulador detectado)")
+s("msg_emus_detected", "Emulators: %1$s", "Emuladores: %1$s", "Émulateurs : %1$s", "Emulatoren: %1$s", "Emulatori: %1$s", "Emuladores: %1$s")
 s("emulator_for", "Emulator for %1$s", "Emulador para %1$s", "Émulateur pour %1$s", "Emulator für %1$s",
   "Emulatore per %1$s", "Emulador para %1$s")
 s("ask_every_time", "Ask every time", "Preguntar cada vez", "Toujours demander", "Jedes Mal fragen",

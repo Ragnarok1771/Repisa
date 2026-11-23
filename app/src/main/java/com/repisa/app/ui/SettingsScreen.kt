@@ -304,7 +304,15 @@ private fun EmulatorsPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) 
             Row(Modifier.fillMaxWidth().clickable { pickEmuFor = id }.padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Text(Consoles.byId(id).name, color = Color.White, modifier = Modifier.weight(1f))
-                Text(pkg?.let { vm.launcher.appLabel(it) } ?: stringResource(R.string.ask), color = Color(0xFFFFD27A))
+                val auto = if (pkg == null) remember(id) { vm.launcher.autoEmulator(id) } else null
+                Text(
+                    when {
+                        pkg != null -> vm.launcher.appLabel(pkg)
+                        auto != null -> stringResource(R.string.emu_auto, vm.launcher.appLabel(auto))
+                        else -> stringResource(R.string.emu_not_found)
+                    },
+                    color = if (pkg == null && auto == null) Color(0xFF9C8A70) else Color(0xFFFFD27A),
+                )
             }
         }
     }
@@ -457,7 +465,7 @@ private fun EmulatorPicker(title: String, apps: List<AppInfo>, onDismiss: () -> 
         text = {
             LazyColumn(Modifier.heightIn(max = 420.dp)) {
                 item {
-                    Text(stringResource(R.string.ask_every_time),
+                    Text(stringResource(R.string.emu_auto_option),
                         modifier = Modifier.fillMaxWidth().clickable { onPick(null) }.padding(12.dp))
                 }
                 items(apps, key = { it.packageName }) { app ->

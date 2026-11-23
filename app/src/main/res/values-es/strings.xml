@@ -177,7 +177,11 @@
     <string name="frontend_reading">Leyendo…</string>
     <string name="choose_cocoon">Elegir carpeta de Cocoon</string>
     <string name="scan_emulators">Escanear emuladores</string>
-    <string name="emu_per_system_hint">Emulador para abrir cada sistema (si no eliges ninguno, Android preguntará). Repisa mide el tiempo que juegas a lo que abres desde aquí.</string>
+    <string name="emu_per_system_hint">Repisa detecta los emuladores que tienes instalados y abre cada juego directamente (Eden para Switch, melonDS o DraStic para DS, Azahar para 3DS…). Toca un sistema para elegir otro. Repisa mide el tiempo que juegas a lo que abres desde aquí.</string>
+    <string name="emu_auto">Automático: %1$s</string>
+    <string name="emu_not_found">Sin emulador detectado</string>
+    <string name="emu_auto_option">Automático (usar el emulador detectado)</string>
+    <string name="msg_emus_detected">Emuladores: %1$s</string>
     <string name="emulator_for">Emulador para %1$s</string>
     <string name="ask_every_time">Preguntar cada vez</string>
     <string name="covers_hint">Cada juego tiene un botón \"Buscar carátula\" en su ficha. Este botón busca carátula para todos los juegos que no tienen.</string>

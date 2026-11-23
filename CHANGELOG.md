@@ -2,6 +2,15 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.10.0]
+
+- **Jugar directo, sin preguntar**: Repisa detecta los emuladores instalados y abre cada juego con el adecuado
+  (Eden, Citron o Sudachi para Switch; Azahar, Lime3DS o Citra para 3DS; melonDS o DraStic para DS; Dolphin,
+  DuckStation, NetherSX2, PPSSPP, M64Plus FZ, Flycast, Yaba Sanshiro, los .emu de Robert Broglia…) y RetroArch
+  con su core como último recurso. Ya no aparece el selector de Android con apps que no son emuladores.
+- Ajustes → Emuladores muestra el emulador detectado para cada sistema («Automático: Eden») y deja elegir otro.
+- Al pulsar «Escanear emuladores» se indica con qué emulador se abrirá cada sistema.
+
 ## [0.9.1]
 
 - **Cocoon funciona con cualquier exportación**: Repisa busca los `gamelist.xml` en todas las subcarpetas y reconoce el

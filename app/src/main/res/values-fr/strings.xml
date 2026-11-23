@@ -177,7 +177,11 @@
     <string name="frontend_reading">Lecture…</string>
     <string name="choose_cocoon">Choisir le dossier Cocoon</string>
     <string name="scan_emulators">Analyser les émulateurs</string>
-    <string name="emu_per_system_hint">Émulateur pour chaque système (sinon Android demandera). Repisa mesure le temps de jeu de ce que vous lancez d’ici.</string>
+    <string name="emu_per_system_hint">Repisa détecte vos émulateurs installés et ouvre chaque jeu directement (Eden pour Switch, melonDS ou DraStic pour DS, Azahar pour 3DS…). Touchez un système pour en choisir un autre. Repisa mesure le temps de jeu de ce que vous lancez d’ici.</string>
+    <string name="emu_auto">Automatique : %1$s</string>
+    <string name="emu_not_found">Aucun émulateur détecté</string>
+    <string name="emu_auto_option">Automatique (utiliser l’émulateur détecté)</string>
+    <string name="msg_emus_detected">Émulateurs : %1$s</string>
     <string name="emulator_for">Émulateur pour %1$s</string>
     <string name="ask_every_time">Toujours demander</string>
     <string name="covers_hint">Chaque jeu a un bouton « Chercher une jaquette » dans sa fiche. Ce bouton en cherche pour tous les jeux qui n’en ont pas.</string>

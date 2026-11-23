@@ -222,6 +222,15 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         return true
     }
 
+    /** "Switch → Eden · DS → melonDS": emuladores con los que se abrirá cada sistema. */
+    private fun detectedEmulators(consoles: Set<String>): String? {
+        val found = launcher.detected(consoles)
+        if (found.isEmpty()) return null
+        return L10n.s(R.string.msg_emus_detected, found.entries.joinToString(" · ") { (id, pkg) ->
+            "${com.repisa.app.model.Consoles.byId(id).name} → ${launcher.appLabel(pkg)}"
+        })
+    }
+
     /** Resumen de la última lectura de ES-DE/Cocoon (se muestra en Ajustes → Emuladores). */
     val frontendReport = MutableStateFlow(settings.frontendReport)
 
@@ -255,7 +264,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 _games.value = _games.value.filter { it.source != source && it.id !in freshIds } + merged
                 store.save(_games.value)
             }
-            if (!quiet) message.value = L10n.s(R.string.msg_sync_count, source.label, fresh.size)
+            if (!quiet) message.value = L10n.s(R.string.msg_sync_count, source.label, fresh.size) +
+                if (source == Source.EMULATOR) detectedEmulators(fresh.map { it.consoleId }.toSet())?.let { "\n$it" }.orEmpty() else ""
             null
         } catch (e: Exception) {
             "${source.label}: ${e.message ?: e.javaClass.simpleName}"

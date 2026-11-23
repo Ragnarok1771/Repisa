@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.provider.DocumentsContract
 import com.repisa.app.R
 import com.repisa.app.data.Settings
 import com.repisa.app.i18n.L10n
@@ -16,44 +17,49 @@ import com.repisa.app.model.Source
 data class AppInfo(val packageName: String, val label: String, val icon: Drawable?)
 
 /**
- * Abre los juegos de emulador con la app elegida para cada consola.
- * Para algunos emuladores conocidos se usa su forma específica de arrancar un juego
- * (las mismas que usa ES-DE); para el resto, ACTION_VIEW con el archivo.
+ * Abre los juegos de emulador directamente: con el emulador elegido para cada consola o, si no hay ninguno
+ * elegido, con el primero conocido que esté instalado (ver [Emulators]).
  */
 class Launcher(private val context: Context, private val settings: Settings) {
 
-    private data class Preset(val activity: String, val extra: String? = null, val view: Boolean = false)
-
-    private val presets = mapOf(
-        "org.dolphinemu.dolphinemu" to Preset("org.dolphinemu.dolphinemu.ui.main.MainActivity", extra = "AutoStartFile"),
-        "org.dolphinemu.mmjr" to Preset("org.dolphinemu.dolphinemu.ui.main.MainActivity", extra = "AutoStartFile"),
-        "com.github.stenzek.duckstation" to Preset("com.github.stenzek.duckstation.EmulationActivity", extra = "bootPath"),
-        "xyz.aethersx2.android" to Preset("xyz.aethersx2.android.EmulationActivity", extra = "bootPath"),
-        "org.ppsspp.ppsspp" to Preset("org.ppsspp.ppsspp.PpssppActivity", view = true),
-        "org.ppsspp.ppssppgold" to Preset("org.ppsspp.ppsspp.PpssppActivity", view = true),
-        "com.flycast.emulator" to Preset("com.flycast.emulator.MainActivity", view = true),
-    )
+    private val pm get() = context.packageManager
 
     fun canLaunch(g: Game): Boolean = when (g.source) {
         Source.EMULATOR -> g.romUri != null || (g.romPath != null && g.corePath != null)
         else -> false
     }
 
-    /** Lanza el juego. Devuelve un mensaje de error o null si todo fue bien. */
+    fun isInstalled(pkg: String): Boolean = runCatching { pm.getPackageInfo(pkg, 0); true }.getOrDefault(false)
+
+    /** El primer emulador conocido instalado para un sistema (ver [Emulators]). */
+    fun autoEmulator(consoleId: String): String? =
+        Emulators.candidates(consoleId).firstOrNull { isInstalled(it.second) }?.second
+
+    /** Emulador con el que se abre un sistema: el elegido en Ajustes o, si no hay, el detectado. */
+    fun emulatorFor(consoleId: String): String? =
+        settings.emulatorFor(consoleId)?.takeIf { isInstalled(it) } ?: autoEmulator(consoleId)
+
+    /** Sistema → emulador detectado, para los sistemas indicados. */
+    fun detected(consoleIds: Collection<String>): Map<String, String> =
+        consoleIds.mapNotNull { id -> emulatorFor(id)?.let { id to it } }.toMap()
+
+    /** Lanza el juego directamente en su emulador. Devuelve un mensaje de error o null si todo fue bien. */
     fun launch(g: Game): String? {
-        val pkg = settings.emulatorFor(g.consoleId)
+        val pkg = emulatorFor(g.consoleId)
         val intent: Intent = when {
-            // Juego de una playlist de RetroArch sin emulador elegido: arrancar RetroArch con su core.
+            // Juego de una playlist de RetroArch: arrancar RetroArch con su core.
             (pkg == null || pkg.startsWith("com.retroarch")) && g.romPath != null && g.corePath != null ->
-                retroArchIntent(pkg ?: "com.retroarch", g.romPath, g.corePath)
-            g.romUri != null -> viewIntent(pkg, Uri.parse(g.romUri))
-            else -> return L10n.s(R.string.err_launch_nofile)
+                retroArchIntent(pkg ?: Emulators.candidates("snes").map { it.second }.firstOrNull { it.startsWith("com.retroarch") && isInstalled(it) } ?: "com.retroarch",
+                    g.romPath, g.corePath)
+            pkg == null -> return L10n.s(R.string.err_launch_noemu, g.console.name)
+            g.romUri == null -> return L10n.s(R.string.err_launch_nofile)
+            else -> gameIntent(pkg, g) ?: return L10n.s(R.string.err_launch_noemu, g.console.name)
         }
         return try {
             settings.pendingSessionStart = System.currentTimeMillis()
             context.startActivity(intent)
             settings.pendingSessionGame = g.id
-            settings.pendingSessionPackage = intent.component?.packageName ?: intent.`package`
+            settings.pendingSessionPackage = intent.component?.packageName ?: intent.`package` ?: pkg
             null
         } catch (_: ActivityNotFoundException) {
             L10n.s(R.string.err_launch_noemu, g.console.name)
@@ -62,28 +68,42 @@ class Launcher(private val context: Context, private val settings: Settings) {
         }
     }
 
-    private fun viewIntent(pkg: String?, uri: Uri): Intent {
-        val base = Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION or
-            Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-        if (pkg != null) {
-            val preset = presets[pkg]
-            return when {
-                preset?.extra != null -> base.setAction(Intent.ACTION_MAIN)
-                    .setComponent(ComponentName(pkg, preset.activity))
-                    .putExtra(preset.extra, uri.toString())
-                    .setDataAndType(uri, "application/octet-stream")
-                preset != null -> base.setAction(Intent.ACTION_VIEW)
-                    .setComponent(ComponentName(pkg, preset.activity))
-                    .setDataAndType(uri, "application/octet-stream")
-                else -> base.setAction(Intent.ACTION_VIEW).setPackage(pkg).setDataAndType(uri, "application/octet-stream")
-            }
+    private fun activityExists(pkg: String, cls: String) =
+        runCatching { pm.getActivityInfo(ComponentName(pkg, cls), 0); true }.getOrDefault(false)
+
+    /**
+     * Intent para abrir [g] en [pkg]: la forma propia del emulador si la conocemos, si no ACTION_VIEW dirigido
+     * a ese emulador, y si tampoco, el emulador sin juego. Nunca el selector de apps.
+     */
+    private fun gameIntent(pkg: String, g: Game): Intent? {
+        val uri = Uri.parse(g.romUri)
+        val profile = Emulators.profileFor(pkg)
+        val flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        if (profile?.openOnly == true) return pm.getLaunchIntentForPackage(pkg)?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (profile?.retroArch == true) {
+            val path = filePath(uri)
+            val core = RetroCores.corePath(pkg, g.consoleId)
+            if (path != null && core != null) return retroArchIntent(pkg, path, core)
         }
-        return Intent.createChooser(
-            Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/octet-stream")
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
-            null,
-        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        profile?.activities?.firstOrNull { activityExists(pkg, it) }?.let { act ->
+            return Intent(profile.action).setComponent(ComponentName(pkg, act))
+                .setDataAndType(uri, "application/octet-stream").addFlags(flags).apply {
+                    profile.uriExtra?.let { putExtra(it, uri.toString()) }
+                    profile.pathExtra?.let { k -> filePath(uri)?.let { putExtra(k, it) } }
+                }
+        }
+        val view = Intent(Intent.ACTION_VIEW).setPackage(pkg).setDataAndType(uri, "application/octet-stream").addFlags(flags)
+        if (pm.resolveActivity(view, 0) != null) return view
+        return pm.getLaunchIntentForPackage(pkg)?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
+
+    /** content://.../document/primary%3AROMs%2Fnds%2FKirby.nds → /storage/emulated/0/ROMs/nds/Kirby.nds */
+    private fun filePath(uri: Uri): String? = runCatching {
+        val id = DocumentsContract.getDocumentId(uri)
+        val vol = id.substringBefore(':')
+        val rel = id.substringAfter(':')
+        if (vol.equals("primary", true)) "/storage/emulated/0/$rel" else "/storage/$vol/$rel"
+    }.getOrNull()
 
     private fun retroArchIntent(pkg: String, rom: String, core: String): Intent {
         val dataDir = "/data/data/$pkg"
@@ -122,6 +142,7 @@ class Launcher(private val context: Context, private val settings: Settings) {
 
     private fun looksLikeEmulator(a: AppInfo): Boolean {
         val t = (a.packageName + " " + a.label).lowercase()
+        if (Emulators.isKnown(a.packageName)) return true
         return listOf("emu", "retroarch", "dolphin", "duckstation", "sx2", "ppsspp", "citra", "azahar", "yuzu", "eden",
             "flycast", "redream", "melonds", "drastic", "mupen", "snes", "mgba", "vita3k", "winlator", "cemu", "lemuroid",
             "citron", "sudachi", "xemu", "saturn", "yaba", "m64", "pcsx", "nether", "lime3ds", "gamenative", "pluvia")

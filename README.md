@@ -63,7 +63,7 @@ para las consolas portátiles Android con doble pantalla.
 
 - **Mi nota**, **Metacritic** (prensa y usuarios) y **HowLongToBeat** (historia, + extras y completista).
 - Tiempo de juego, última partida, estudio, año, géneros y descripción.
-- Botones para jugar (emuladores), ver en la tienda, marcar favorito, buscar carátula, ver las **copias** y editar datos.
+- Botones para jugar (emuladores: Repisa detecta los que tienes instalados y abre el juego directamente), ver en la tienda, marcar favorito, buscar carátula, ver las **copias** y editar datos.
 
 | Copias del mismo juego | Pantalla inferior de la AYN Thor |
 |---|---|
