@@ -178,6 +178,7 @@
     <string name="choose_cocoon">Scegli cartella Cocoon</string>
     <string name="scan_emulators">Analizza emulatori</string>
     <string name="emu_per_system_hint">Repisa rileva gli emulatori installati e apre ogni gioco direttamente (Eden per Switch, melonDS o DraStic per DS, Azahar per 3DS…). Tocca un sistema per sceglierne un altro. Repisa misura il tempo di gioco di ciò che avvii da qui.</string>
+    <string name="emu_section">Emulatore per ogni sistema</string>
     <string name="emu_auto">Automatico: %1$s</string>
     <string name="emu_not_found">Nessun emulatore rilevato</string>
     <string name="emu_auto_option">Automatico (usa l’emulatore rilevato)</string>

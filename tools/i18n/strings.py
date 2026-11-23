@@ -493,6 +493,8 @@ s("emu_per_system_hint",
   "Repisa erkennt deine installierten Emulatoren und öffnet jedes Spiel direkt (Eden für Switch, melonDS oder DraStic für DS, Azahar für 3DS…). Tippe auf ein System, um einen anderen zu wählen. Repisa misst die Spielzeit von hier gestarteter Spiele.",
   "Repisa rileva gli emulatori installati e apre ogni gioco direttamente (Eden per Switch, melonDS o DraStic per DS, Azahar per 3DS…). Tocca un sistema per sceglierne un altro. Repisa misura il tempo di gioco di ciò che avvii da qui.",
   "O Repisa detecta os emuladores instalados e abre cada jogo diretamente (Eden para Switch, melonDS ou DraStic para DS, Azahar para 3DS…). Toque num sistema para escolher outro. O Repisa mede o tempo que você joga o que abre daqui.")
+s("emu_section", "Emulator for each system", "Emulador de cada sistema", "Émulateur de chaque système",
+  "Emulator für jedes System", "Emulatore per ogni sistema", "Emulador de cada sistema")
 s("emu_auto", "Automatic: %1$s", "Automático: %1$s", "Automatique : %1$s", "Automatisch: %1$s", "Automatico: %1$s", "Automático: %1$s")
 s("emu_not_found", "No emulator found", "Sin emulador detectado", "Aucun émulateur détecté", "Kein Emulator gefunden",
   "Nessun emulatore rilevato", "Nenhum emulador detectado")

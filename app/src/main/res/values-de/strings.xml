@@ -178,6 +178,7 @@
     <string name="choose_cocoon">Cocoon-Ordner wählen</string>
     <string name="scan_emulators">Emulatoren scannen</string>
     <string name="emu_per_system_hint">Repisa erkennt deine installierten Emulatoren und öffnet jedes Spiel direkt (Eden für Switch, melonDS oder DraStic für DS, Azahar für 3DS…). Tippe auf ein System, um einen anderen zu wählen. Repisa misst die Spielzeit von hier gestarteter Spiele.</string>
+    <string name="emu_section">Emulator für jedes System</string>
     <string name="emu_auto">Automatisch: %1$s</string>
     <string name="emu_not_found">Kein Emulator gefunden</string>
     <string name="emu_auto_option">Automatisch (erkannten Emulator verwenden)</string>

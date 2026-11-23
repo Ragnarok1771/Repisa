@@ -297,7 +297,7 @@ private fun EmulatorsPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) 
     }
 
     val consoles = vm.consolesInLibrary()
-    if (consoles.isNotEmpty()) Section(stringResource(R.string.emulator_for, "…")) {
+    if (consoles.isNotEmpty()) Section(stringResource(R.string.emu_section)) {
         Hint(stringResource(R.string.emu_per_system_hint))
         consoles.forEach { id ->
             val pkg = s.emulatorFor(id)
