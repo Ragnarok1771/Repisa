@@ -59,13 +59,21 @@ El logo está en `docs/logo/` (PNG 1024 y 512 y SVG).
 - Cada caja tiene su **tamaño real** a escala: Switch más baja que PS2, DS/3DS pequeñas, N64/SNES apaisadas, Neo Geo
   y PC antiguo enormes.
 
+### Copias del mismo juego
+
+- Las ediciones y plataformas del mismo juego (GTA V normal, Enhanced y Legacy; el mismo juego en Steam y en Epic)
+  se muestran como **una sola caja** con el tiempo de juego sumado y el nombre común.
+- En la ficha, el botón **Copias** permite elegir la **copia preferente** (carátula, datos y tienda) o separar una copia.
+- Las herramientas que no son juegos (editores, kits de mods, servidores dedicados…) no se muestran.
+
 ### Calificaciones propias
 
 - En cada ficha, la **estrella junto a la X** abre el calificador: tú decides qué calificas (Historia, Música,
   "El cielo"…), cuánto pesa cada cosa (%) y qué nota le das. La nota final es la media ponderada.
 - Escala a elegir en Ajustes (0-5, 0-10 o 0-100); las notas se convierten solas al cambiarla.
 - La nota se ve también en **estrellas que se llenan en proporción** (95/100 = 4¾ estrellas).
-- La **estrella de arriba a la derecha** abre *Mis calificaciones*, ordenadas de mayor a menor.
+- La **estrella de arriba a la derecha** abre *Mis calificaciones*: de mayor a menor nota o al revés, y con filtros
+  por estrellas (5, 4–5, 3–4, 2–3, 1–2, 0–1).
 - La plantilla de aspectos y pesos por defecto se edita en Ajustes → Calificaciones.
 
 ### Tiempo de juego siempre al día

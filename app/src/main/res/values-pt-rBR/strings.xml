@@ -222,6 +222,15 @@
     <string name="err_launch_denied">O Android não permitiu abrir o jogo: %1$s</string>
     <string name="err_steam_no_games_key">A Steam não devolveu jogos. No perfil, Privacidade → \'Detalhes de jogos\' deve estar público.</string>
     <string name="err_steam_no_games_linked">A Steam não devolveu jogos. Tente desvincular e vincular a conta de novo.</string>
+    <string name="copies_button">Cópias (%1$d)</string>
+    <string name="copies_title">Cópia preferida</string>
+    <string name="copies_hint">Estas cópias do mesmo jogo aparecem como uma só caixa, com o tempo de jogo somado. Escolha qual a representa (capa, dados e loja).</string>
+    <string name="copy_preferred">Preferida</string>
+    <string name="copy_split">Separar</string>
+    <string name="copy_split_hint">\"Separar\" devolve a essa cópia a sua própria caixa.</string>
+    <string name="rated_sort_high">Maior primeiro</string>
+    <string name="rated_sort_low">Menor primeiro</string>
+    <string name="rated_filter_none">Não há avaliações neste intervalo.</string>
     <string name="genre_0">Ação</string>
     <string name="genre_1">Aventura</string>
     <string name="genre_2">Visual novel</string>

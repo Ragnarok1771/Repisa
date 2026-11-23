@@ -10,6 +10,7 @@ import com.repisa.app.data.Settings
 import com.repisa.app.data.mergeGame
 import com.repisa.app.launch.Launcher
 import com.repisa.app.model.Consoles
+import com.repisa.app.model.Copies
 import com.repisa.app.model.label
 import com.repisa.app.model.Game
 import com.repisa.app.model.Source
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.async
@@ -85,7 +87,12 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     val selectedId = MutableStateFlow<String?>(null)
     val inSettings = MutableStateFlow(false)
 
-    val shelves: StateFlow<List<ShelfGroup>> = combine(_games, _options) { g, o -> buildShelves(g, o) }
+    /** Biblioteca tal como se muestra: copias del mismo juego unidas en una sola caja. */
+    val displayGames: StateFlow<List<Game>> = _games.map { Copies.merge(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    // También se reconstruye al cambiar de idioma (los títulos de las repisas están traducidos).
+    val shelves: StateFlow<List<ShelfGroup>> = combine(displayGames, _options, L10n.version) { g, o, _ -> buildShelves(g, o) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private var enrichJob: Job? = null
@@ -115,14 +122,14 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     private fun buildShelves(all: List<Game>, o: ViewOptions): List<ShelfGroup> {
         val q = o.query.trim().lowercase()
         val filtered = all.filter { g ->
-            (o.source == null || g.source == o.source) &&
+            (o.source == null || g.source == o.source || o.source in g.groupSources) &&
                 (q.isEmpty() || g.title.lowercase().contains(q) || g.developer?.lowercase()?.contains(q) == true ||
                     g.genres.any { it.lowercase().contains(q) } || g.console.name.lowercase().contains(q))
         }
         val sorted = when (o.sort) {
             SortMode.ALPHA -> filtered.sortedBy { it.sortKey }
             SortMode.PLAYTIME -> filtered.sortedWith(compareByDescending<Game> { it.totalMinutes }.thenBy { it.sortKey })
-            SortMode.RECENT -> filtered.sortedWith(compareByDescending<Game> { it.lastPlayed ?: 0 }.thenBy { it.sortKey })
+            SortMode.RECENT -> filtered.sortedWith(compareByDescending<Game> { it.lastPlayedAny ?: 0 }.thenBy { it.sortKey })
             SortMode.YEAR -> filtered.sortedWith(compareBy<Game> { it.releaseYear ?: 9999 }.thenBy { it.sortKey })
             SortMode.CONSOLE -> filtered.sortedWith(compareBy<Game> { it.console.year }.thenBy { it.console.name }.thenBy { it.sortKey })
             SortMode.RATING -> filtered.sortedWith(compareByDescending<Game> { it.rating?.overall ?: -1f }.thenBy { it.sortKey })
@@ -334,7 +341,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun updateGame(game: Game) = viewModelScope.launch {
         mutex.withLock {
-            _games.update { list -> list.map { if (it.id == game.id) game else it } }
+            val clean = game.stored()
+            _games.update { list -> list.map { if (it.id == game.id) clean else it } }
             store.save(_games.value)
         }
         if (focused.value?.id == game.id) focused.value = game
@@ -353,6 +361,41 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun toggleFavorite(game: Game) = updateGame(game.copy(favorite = !game.favorite))
+
+    // ------------------------------------------------------------------ Copias del mismo juego
+
+    /** Todas las copias de la caja [game] (ella primero). */
+    fun copiesOf(game: Game): List<Game> {
+        val all = _games.value.associateBy { it.id }
+        return listOfNotNull(all[game.id]) + game.copyIds.mapNotNull { all[it] }
+    }
+
+    /** Elige qué copia representa al grupo (su carátula, datos y botón de jugar/tienda). */
+    fun setPreferredCopy(group: List<Game>, chosen: Game) = viewModelScope.launch {
+        val ids = group.map { it.id }.toSet()
+        // La nota y el favorito son del juego, no de la copia: pasan a la nueva preferente.
+        val rating = group.firstNotNullOfOrNull { it.rating }
+        val favorite = group.any { it.favorite }
+        mutex.withLock {
+            _games.update { list -> list.map {
+                when {
+                    it.id == chosen.id -> it.copy(preferredCopy = true, rating = it.rating ?: rating, favorite = favorite)
+                    it.id in ids -> it.copy(preferredCopy = false)
+                    else -> it
+                }
+            } }
+            store.save(_games.value)
+        }
+        selectedId.value = chosen.id
+    }
+
+    /** Separa una copia del grupo para que vuelva a tener su propia caja. */
+    fun splitCopy(copy: Game) = viewModelScope.launch {
+        mutex.withLock {
+            _games.update { list -> list.map { if (it.id == copy.id) it.copy(noMerge = true, preferredCopy = false) else it } }
+            store.save(_games.value)
+        }
+    }
 
     fun play(game: Game) {
         launcher.launch(game)?.let { message.value = it }

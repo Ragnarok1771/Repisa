@@ -37,7 +37,8 @@ class SteamSource private constructor(
 
         private const val ASSETS = "https://shared.akamai.steamstatic.com/store_item_assets/"
 
-        data class StoreInfo(val cover: String?, val header: String?, val developer: String?)
+        /** [isGame]: true si la tienda lo marca como juego, false si es otra cosa, null si no está en la tienda. */
+        data class StoreInfo(val cover: String?, val header: String?, val developer: String?, val isGame: Boolean?)
 
         /** Datos de la tienda (IStoreBrowseService, sin clave) para muchos juegos a la vez, de 50 en 50. */
         suspend fun storeInfo(appIds: List<Long>): Map<Long, StoreInfo> {
@@ -51,6 +52,10 @@ class SteamSource private constructor(
                         .addQueryParameter("input_json", input).build()
                     Http.getJson(url.toString())["response"]["store_items"].arr.forEach { item ->
                         val appId = item["appid"].long ?: item["id"].long ?: return@forEach
+                        if (item["success"].long != 1L) {
+                            item["id"].long?.let { out[it] = StoreInfo(null, null, null, null) }
+                            return@forEach
+                        }
                         val assets = item["assets"]
                         val format = assets["asset_url_format"].str
                         fun asset(name: String?) = if (format != null && name != null) ASSETS + format.replace("\${FILENAME}", name) else null
@@ -58,6 +63,7 @@ class SteamSource private constructor(
                             cover = asset(assets["library_capsule_2x"].str ?: assets["library_capsule"].str),
                             header = asset(assets["header"].str),
                             developer = item["basic_info"]["developers"][0]["name"].str,
+                            isGame = item["type"].long?.let { it == 0L },
                         )
                     }
                 }
@@ -140,8 +146,13 @@ class SteamSource private constructor(
     /** Corrige carátula, cabecera y estudio con los datos exactos de la tienda. */
     private suspend fun withStoreCovers(games: List<Game>): List<Game> {
         val info = storeInfo(games.mapNotNull { it.id.removePrefix("steam:").toLongOrNull() })
-        return games.map { g ->
-            val i = info[g.id.removePrefix("steam:").toLongOrNull()] ?: return@map g
+        return games.mapNotNull { g ->
+            val i = info[g.id.removePrefix("steam:").toLongOrNull()]
+            // Fuera herramientas: lo que la tienda marca como no-juego, o lo que no está en la tienda y
+            // tiene nombre de herramienta (servidores dedicados, kits de mods, editores...).
+            if (i?.isGame == false) return@mapNotNull null
+            if (i?.isGame != true && com.repisa.app.model.Tools.looksLikeTool(g.title)) return@mapNotNull null
+            if (i == null) return@mapNotNull g
             g.copy(coverUrl = i.cover ?: g.coverUrl, altCoverUrl = i.header ?: g.altCoverUrl, developer = i.developer ?: g.developer)
         }
     }

@@ -657,6 +657,32 @@ s("err_steam_no_games_linked", "Steam returned no games. Try unlinking and linki
   "A Steam não devolveu jogos. Tente desvincular e vincular a conta de novo.",
   ptPT="A Steam não devolveu jogos. Tente desassociar e associar a conta novamente.")
 
+
+# ------------------------------------------------------------------ Copias del mismo juego
+s("copies_button", "Copies (%1$d)", "Copias (%1$d)", "Copies (%1$d)", "Kopien (%1$d)", "Copie (%1$d)", "Cópias (%1$d)")
+s("copies_title", "Preferred copy", "Copia preferente", "Copie préférée", "Bevorzugte Kopie", "Copia preferita", "Cópia preferida")
+s("copies_hint",
+  "These copies of the same game are shown as a single box, with their playtime added up. Choose which one represents it (cover, details and store).",
+  "Estas copias del mismo juego se muestran como una sola caja, con el tiempo de juego sumado. Elige cuál la representa (carátula, datos y tienda).",
+  "Ces copies du même jeu sont affichées dans une seule boîte, avec le temps de jeu cumulé. Choisissez celle qui la représente (jaquette, infos et boutique).",
+  "Diese Kopien desselben Spiels werden als eine Box angezeigt, mit addierter Spielzeit. Wähle, welche sie repräsentiert (Cover, Daten und Store).",
+  "Queste copie dello stesso gioco sono mostrate come un’unica scatola, con il tempo di gioco sommato. Scegli quale la rappresenta (copertina, dati e store).",
+  "Estas cópias do mesmo jogo aparecem como uma só caixa, com o tempo de jogo somado. Escolha qual a representa (capa, dados e loja).",
+  es419="Estas copias del mismo juego se muestran como una sola caja, con el tiempo de juego sumado. Elige cuál la representa (portada, datos y tienda).")
+s("copy_preferred", "Preferred", "Preferente", "Préférée", "Bevorzugt", "Preferita", "Preferida")
+s("copy_split", "Separate", "Separar", "Séparer", "Trennen", "Separa", "Separar")
+s("copy_split_hint", "\"Separate\" gives that copy its own box again.",
+  "\"Separar\" vuelve a darle a esa copia su propia caja.", "« Séparer » redonne à cette copie sa propre boîte.",
+  "„Trennen“ gibt dieser Kopie wieder eine eigene Box.", "«Separa» ridà a quella copia la sua scatola.",
+  "\"Separar\" devolve a essa cópia a sua própria caixa.")
+
+
+# ------------------------------------------------------------------ Mis calificaciones: orden y filtros
+s("rated_sort_high", "Highest first", "Más alta primero", "Meilleure d’abord", "Höchste zuerst", "Più alto prima", "Maior primeiro")
+s("rated_sort_low", "Lowest first", "Más baja primero", "Moins bonne d’abord", "Niedrigste zuerst", "Più basso prima", "Menor primeiro")
+s("rated_filter_none", "No ratings in this range.", "No hay calificaciones en este rango.", "Aucune note dans cette plage.",
+  "Keine Bewertungen in diesem Bereich.", "Nessuna valutazione in questo intervallo.", "Não há avaliações neste intervalo.")
+
 # ------------------------------------------------------------------ Géneros (clave interna en español → texto)
 GENRES = [
     ("Acción", "Action", "Acción", "Action", "Action", "Azione", "Ação"),

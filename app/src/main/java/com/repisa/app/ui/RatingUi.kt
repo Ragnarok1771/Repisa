@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -224,9 +225,14 @@ fun RatingDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
 
 @Composable
 fun RatedScreen(vm: LibraryViewModel, onBack: () -> Unit, onOpen: (Game) -> Unit) {
-    val games by vm.games.collectAsState()
+    val games by vm.displayGames.collectAsState()
     val scale by vm.ratingScale.collectAsState()
-    val rated = games.filter { it.rating != null }.sortedByDescending { it.rating!!.overall }
+    var lowestFirst by rememberSaveable { mutableStateOf(false) }
+    var range by rememberSaveable { mutableStateOf(StarRange.ALL) }
+    val allRated = games.filter { it.rating != null }
+    val rated = allRated.filter { range.contains(it.rating!!.stars) }.let { list ->
+        if (lowestFirst) list.sortedBy { it.rating!!.overall } else list.sortedByDescending { it.rating!!.overall }
+    }
     var showSettings by remember { mutableStateOf(false) }
     if (showSettings) RatingSettingsDialog(vm, onDismiss = { showSettings = false })
     Column(Modifier.fillMaxSize().roomBackground()) {
@@ -234,15 +240,33 @@ fun RatedScreen(vm: LibraryViewModel, onBack: () -> Unit, onOpen: (Game) -> Unit
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White) }
             Text(stringResource(R.string.my_ratings), color = Color(0xFFFFD27A), fontSize = 22.sp, fontWeight = FontWeight.SemiBold, fontFamily = DisplayFont)
             Spacer(Modifier.width(12.dp))
-            Text(stringResource(R.string.rated_subtitle, L10n.games(rated.size), scale.label.lowercase()),
+            Text(stringResource(R.string.rated_subtitle, L10n.games(allRated.size), scale.label.lowercase()),
                 color = Color(0xFFBFA98A), fontSize = 12.sp, modifier = Modifier.weight(1f))
             IconButton(onClick = { showSettings = true }) {
                 Icon(Icons.Default.Settings, stringResource(R.string.rating_settings), tint = Color.White)
             }
         }
+        // Filtros por estrellas y orden (más alta o más baja primero).
+        if (allRated.isNotEmpty()) Row(
+            Modifier.fillMaxWidth().background(Color(0x99120C09)).padding(horizontal = 12.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            androidx.compose.foundation.lazy.LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                items(StarRange.entries.size) { i ->
+                    val r = StarRange.entries[i]
+                    FilterChip(selected = range == r, onClick = { range = r },
+                        label = { Text(if (r == StarRange.ALL) stringResource(R.string.filter_all) else r.label, fontSize = 12.sp) })
+                }
+            }
+            FilterChip(selected = !lowestFirst, onClick = { lowestFirst = false },
+                label = { Text("↓ " + stringResource(R.string.rated_sort_high), fontSize = 12.sp) })
+            Spacer(Modifier.width(6.dp))
+            FilterChip(selected = lowestFirst, onClick = { lowestFirst = true },
+                label = { Text("↑ " + stringResource(R.string.rated_sort_low), fontSize = 12.sp) })
+        }
         if (rated.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.rated_empty),
+                Text(stringResource(if (allRated.isEmpty()) R.string.rated_empty else R.string.rated_filter_none),
                     color = Color(0xFFBFA98A), fontSize = 15.sp)
             }
         } else {
@@ -313,4 +337,17 @@ private fun RatingSettingsDialog(vm: LibraryViewModel, onDismiss: () -> Unit) {
             }
         }
     }
+}
+
+/** Rangos de estrellas para filtrar Mis calificaciones. */
+private enum class StarRange(val label: String, private val min: Float, private val max: Float) {
+    ALL("", 0f, 5.01f),
+    FIVE("★ 5", 4.995f, 5.01f),
+    FOUR("★ 4–5", 4f, 4.995f),
+    THREE("★ 3–4", 3f, 4f),
+    TWO("★ 2–3", 2f, 3f),
+    ONE("★ 1–2", 1f, 2f),
+    ZERO("★ 0–1", 0f, 1f);
+
+    fun contains(stars: Float) = stars >= min && stars < max
 }

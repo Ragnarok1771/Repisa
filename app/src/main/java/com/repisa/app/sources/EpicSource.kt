@@ -207,6 +207,7 @@ class EpicSource(private val settings: Settings) {
                 val minutes = ((playtime[item.appName] ?: 0L) / 60).toInt()
                 val old = known[id]
                 if (old != null && old.coverUrl != null) {
+                    if (com.repisa.app.model.Tools.looksLikeTool(old.title)) return@async null
                     return@async old.copy(playtimeMinutes = minutes)
                 }
                 val info = limiter.withPermit {
@@ -218,7 +219,9 @@ class EpicSource(private val settings: Settings) {
                 // Saltar DLCs y contenidos que no son juegos.
                 if (info["mainGameItem"].let { it != null && it !is JsonNull }) return@async null
                 val categories = info["categories"].arr.mapNotNull { it["path"].str }
-                if (categories.isNotEmpty() && categories.none { it == "games" || it == "applications" }) return@async null
+                // Solo juegos: fuera aplicaciones, motores, kits de mods y herramientas.
+                if (categories.isNotEmpty() && categories.none { it == "games" }) return@async null
+                if (com.repisa.app.model.Tools.looksLikeTool(info["title"].str ?: item.appName)) return@async null
                 val images = info["keyImages"].arr.associate { (it["type"].str ?: "") to (it["url"].str ?: "") }
                 val attrs = info["customAttributes"].obj
                 val year = (info["releaseInfo"][0]["dateAdded"].str ?: info["creationDate"].str)

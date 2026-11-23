@@ -46,6 +46,19 @@ object L10n {
     var current: AppLanguage? = null
         private set
 
+    /** Cambia cada vez que se elige idioma: la interfaz se recompone con él sin reiniciar la actividad. */
+    val version = kotlinx.coroutines.flow.MutableStateFlow(0)
+
+    /** [base] (normalmente la actividad) con los textos del idioma elegido, sin perder lo demás. */
+    fun localize(base: Context): Context {
+        val lang = current ?: return base
+        val config = Configuration(base.resources.configuration).apply { setLocale(lang.locale) }
+        val res = base.createConfigurationContext(config).resources
+        return object : android.content.ContextWrapper(base) {
+            override fun getResources(): android.content.res.Resources = res
+        }
+    }
+
     private fun saved(context: Context): AppLanguage? = AppLanguage.fromTag(
         context.getSharedPreferences("repisa", Context.MODE_PRIVATE).getString("language", null)
     )
@@ -66,6 +79,7 @@ object L10n {
     fun setLanguage(app: Context, lang: AppLanguage) {
         app.getSharedPreferences("repisa", Context.MODE_PRIVATE).edit().putString("language", lang.tag).apply()
         init(app)
+        version.value++
     }
 
     fun s(@StringRes id: Int, vararg args: Any): String = ctx.getString(id, *args)

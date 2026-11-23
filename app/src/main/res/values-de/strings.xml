@@ -222,6 +222,15 @@
     <string name="err_launch_denied">Android hat das Öffnen des Spiels verhindert: %1$s</string>
     <string name="err_steam_no_games_key">Steam hat keine Spiele geliefert. Im Profil muss Privatsphäre → „Spieldetails“ öffentlich sein.</string>
     <string name="err_steam_no_games_linked">Steam hat keine Spiele geliefert. Trenne dein Konto und verknüpfe es erneut.</string>
+    <string name="copies_button">Kopien (%1$d)</string>
+    <string name="copies_title">Bevorzugte Kopie</string>
+    <string name="copies_hint">Diese Kopien desselben Spiels werden als eine Box angezeigt, mit addierter Spielzeit. Wähle, welche sie repräsentiert (Cover, Daten und Store).</string>
+    <string name="copy_preferred">Bevorzugt</string>
+    <string name="copy_split">Trennen</string>
+    <string name="copy_split_hint">„Trennen“ gibt dieser Kopie wieder eine eigene Box.</string>
+    <string name="rated_sort_high">Höchste zuerst</string>
+    <string name="rated_sort_low">Niedrigste zuerst</string>
+    <string name="rated_filter_none">Keine Bewertungen in diesem Bereich.</string>
     <string name="genre_0">Action</string>
     <string name="genre_1">Adventure</string>
     <string name="genre_2">Visual Novel</string>

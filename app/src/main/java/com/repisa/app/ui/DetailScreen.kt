@@ -36,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -74,6 +75,7 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     var editing by remember { mutableStateOf(false) }
     var searchingCover by remember { mutableStateOf(false) }
     var rating by remember { mutableStateOf(false) }
+    var showCopies by remember { mutableStateOf(false) }
     val scale by vm.ratingScale.collectAsState()
     LaunchedEffect(game.id) { vm.loadExternalInfo(game) }
     val spin = remember(game.id) { Animatable(-35f) }
@@ -161,6 +163,9 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         OutlinedButton(onClick = { searchingCover = true }) {
                             Icon(Icons.Default.Search, null, tint = Color.White); Text(" " + stringResource(R.string.search_cover), color = Color.White)
                         }
+                        if (game.copyIds.isNotEmpty()) OutlinedButton(onClick = { showCopies = true }) {
+                            Text("⧉ " + stringResource(R.string.copies_button, game.copyIds.size + 1), color = Color.White)
+                        }
                         OutlinedButton(onClick = { editing = true }) {
                             Icon(Icons.Default.Edit, null, tint = Color.White); Text(" " + stringResource(R.string.edit_data), color = Color.White)
                         }
@@ -170,6 +175,7 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
         }
     }
     if (rating) RatingDialog(game, vm, onDismiss = { rating = false })
+    if (showCopies) CopiesDialog(game, vm, onDismiss = { showCopies = false })
     if (searchingCover) CoverSearchDialog(game, vm, onDismiss = { searchingCover = false })
     if (editing) EditDialog(game, onDismiss = { editing = false }) { vm.updateGame(it); editing = false }
 }
@@ -215,6 +221,8 @@ private fun EditDialog(game: Game, onDismiss: () -> Unit, onSave: (Game) -> Unit
             TextButton(onClick = {
                 onSave(game.copy(
                     title = title.ifBlank { game.title },
+                    // Si el usuario cambió el nombre, se guarda el suyo y no el de la copia.
+                    originalTitle = if (title.isNotBlank() && title != game.title) null else game.originalTitle,
                     genres = genres.split(',').map { it.trim() }.filter { it.isNotEmpty() },
                     developer = dev.ifBlank { null },
                     releaseYear = year.toIntOrNull(),
@@ -305,4 +313,39 @@ private fun Hours(label: String, h: Float?, value: androidx.compose.ui.unit.Text
         Text(h?.let(::hoursText) ?: "–", color = Color.White, fontSize = value, fontWeight = FontWeight.Bold, maxLines = 1)
         Text(label, color = Color(0xFFD9C8AE), fontSize = small, maxLines = 1)
     }
+}
+
+/** Copias del mismo juego unidas en esta caja: elegir la preferente o separar alguna. */
+@Composable
+private fun CopiesDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
+    val copies = remember(game.id, game.copyIds) { vm.copiesOf(game) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.copies_title)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(stringResource(R.string.copies_hint), fontSize = 13.sp)
+                copies.forEach { c ->
+                    val preferred = c.id == game.id
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .background(if (preferred) Color(0xFF5B3A1E) else Color(0x22FFFFFF), RoundedCornerShape(10.dp))
+                            .clickable { vm.setPreferredCopy(copies, c); onDismiss() }
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = preferred, onClick = { vm.setPreferredCopy(copies, c); onDismiss() })
+                        Column(Modifier.weight(1f)) {
+                            Text(c.title, fontWeight = FontWeight.Bold, maxLines = 2)
+                            Text("${c.source.label} · ${formatPlaytime(c.playtimeMinutes + c.trackedMinutes)}" +
+                                if (preferred) " · " + stringResource(R.string.copy_preferred) else "", fontSize = 12.sp)
+                        }
+                        TextButton(onClick = { vm.splitCopy(c); onDismiss() }) { Text(stringResource(R.string.copy_split)) }
+                    }
+                }
+                Text(stringResource(R.string.copy_split_hint), fontSize = 11.sp)
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
+    )
 }

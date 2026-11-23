@@ -8,6 +8,7 @@ import android.os.Looper
 import android.view.Display
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -80,7 +81,7 @@ class SecondScreen(private val activity: ComponentActivity, private val vm: Libr
                     setViewTreeLifecycleOwner(activity)
                     setViewTreeViewModelStoreOwner(activity)
                     setViewTreeSavedStateRegistryOwner(activity)
-                    setContent { RepisaTheme { FocusPanel(vm) } }
+                    setContent { com.repisa.app.i18n.Localized { RepisaTheme { FocusPanel(vm) } } }
                 }
                 setContentView(view)
                 show()
@@ -99,7 +100,7 @@ class SecondScreen(private val activity: ComponentActivity, private val vm: Libr
 @Composable
 private fun FocusPanel(vm: LibraryViewModel) {
     val game by vm.focused.collectAsState()
-    val all by vm.games.collectAsState()
+    val all by vm.displayGames.collectAsState()
     Box(Modifier.fillMaxSize().roomBackground().padding(20.dp)) {
         val g = game
         if (g == null) {
@@ -117,19 +118,27 @@ private fun FocusPanel(vm: LibraryViewModel) {
         } else {
             BoxWithConstraints(Modifier.fillMaxSize()) {
                 val scale by vm.ratingScale.collectAsState()
-                // Notas en la esquina superior derecha, en pequeño, para no recargar la ficha.
-                Box(Modifier.align(Alignment.TopEnd)) { ScoresRow(g, scale, small = true) }
-                val h = minOf(maxHeight * 0.92f, maxWidth * 0.42f / frontAspect(g))
+                val shown = all.firstOrNull { it.id == g.id } ?: g // con las copias unidas
+                // Globo con Mi nota y tiempo jugado justo encima de la carátula: la caja se reduce lo
+                // necesario para que el globo quepa sin taparla ni salirse de su ancho.
+                val bubble = 30.dp
+                val gap = 8.dp
+                val h = minOf((maxHeight - bubble - gap) * 0.98f, maxWidth * 0.42f / frontAspect(shown))
+                val boxW = boxSize(shown, h).first
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
-                    GameBox(g, h, lifted = false)
+                    Column(Modifier.width(boxW), horizontalAlignment = Alignment.Start) {
+                        StatsBubble(shown, scale, Modifier.height(bubble))
+                        Spacer(Modifier.height(gap))
+                        GameBox(shown, h, lifted = false)
+                    }
                     Spacer(Modifier.width(20.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(g.title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Black,
                             fontFamily = DisplayFont, maxLines = 3, overflow = TextOverflow.Ellipsis)
                         Text("${g.console.label} · ${g.source.label}", color = Color(0xFFFFD27A), fontSize = 14.sp)
                         Spacer(Modifier.height(6.dp))
-                        Line(stringResource(R.string.stat_playtime), formatPlaytime(g.totalMinutes))
-                        Line(stringResource(R.string.stat_last_played), g.lastPlayed?.let { DateFormat.getDateInstance().format(Date(it)) } ?: "—")
+                        Line(stringResource(R.string.stat_playtime), formatPlaytime(shown.totalMinutes))
+                        Line(stringResource(R.string.stat_last_played), shown.lastPlayedAny?.let { DateFormat.getDateInstance().format(Date(it)) } ?: "—")
                         Line(stringResource(R.string.stat_genre), g.genres.joinToString(", ") { L10n.genre(it) }.ifEmpty { "—" })
                         Line(stringResource(R.string.stat_studio), g.developer ?: "—")
                         Line(stringResource(R.string.stat_year), g.releaseYear?.toString() ?: "—")
@@ -150,5 +159,25 @@ private fun Line(label: String, value: String) {
     Row {
         Text("$label: ", color = Color(0xFF9C8A70), fontSize = 14.sp)
         Text(value, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** Globo pequeño: mi nota (con estrellas) y tiempo jugado. */
+@Composable
+private fun StatsBubble(g: com.repisa.app.model.Game, scale: com.repisa.app.model.RatingScale, modifier: Modifier = Modifier) {
+    Row(
+        modifier
+            .background(Color(0xF02A1C14), androidx.compose.foundation.shape.RoundedCornerShape(50))
+            .border(1.dp, Color(0x66FFD27A), androidx.compose.foundation.shape.RoundedCornerShape(50))
+            .padding(horizontal = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        g.rating?.let { r ->
+            Text(scale.format(r.overall), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+            Stars(r.stars, 10.dp)
+            Text("·", color = Color(0xFF9C8A70), fontSize = 13.sp)
+        }
+        Text("⏱ " + formatPlaytime(g.totalMinutes), color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

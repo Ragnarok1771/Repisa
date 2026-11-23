@@ -61,14 +61,14 @@ class MainActivity : ComponentActivity() {
         }
         secondScreen = SecondScreen(this, vm)
         setContent {
-            RepisaTheme {
-                // Primera vez: elegir idioma antes de nada.
-                if (com.repisa.app.i18n.L10n.current == null) {
-                    com.repisa.app.ui.WelcomeScreen { lang ->
-                        com.repisa.app.i18n.L10n.setLanguage(application, lang); recreate()
+            com.repisa.app.i18n.Localized {
+                RepisaTheme {
+                    // Primera vez: elegir idioma antes de nada.
+                    if (com.repisa.app.i18n.L10n.current == null) {
+                        com.repisa.app.ui.WelcomeScreen { lang -> com.repisa.app.i18n.L10n.setLanguage(application, lang) }
+                    } else {
+                        App(vm, onSettingsClosed = { secondScreen.update() }, onLanguageChanged = {})
                     }
-                } else {
-                    App(vm, onSettingsClosed = { secondScreen.update() }, onLanguageChanged = { recreate() })
                 }
             }
         }
@@ -114,7 +114,7 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
     val inSettings by vm.inSettings.collectAsState()
     var inRated by rememberSaveable { mutableStateOf(false) }
     val selectedId by vm.selectedId.collectAsState()
-    val games by vm.games.collectAsState()
+    val games by vm.displayGames.collectAsState()
     val selected = games.firstOrNull { it.id == selectedId }
     val snackbar = remember { SnackbarHostState() }
     val message by vm.message.collectAsState()

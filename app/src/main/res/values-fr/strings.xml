@@ -222,6 +222,15 @@
     <string name="err_launch_denied">Android n’a pas autorisé l’ouverture du jeu : %1$s</string>
     <string name="err_steam_no_games_key">Steam n’a renvoyé aucun jeu. Dans votre profil, Confidentialité → « Détails des jeux » doit être public.</string>
     <string name="err_steam_no_games_linked">Steam n’a renvoyé aucun jeu. Essayez de délier puis de relier votre compte.</string>
+    <string name="copies_button">Copies (%1$d)</string>
+    <string name="copies_title">Copie préférée</string>
+    <string name="copies_hint">Ces copies du même jeu sont affichées dans une seule boîte, avec le temps de jeu cumulé. Choisissez celle qui la représente (jaquette, infos et boutique).</string>
+    <string name="copy_preferred">Préférée</string>
+    <string name="copy_split">Séparer</string>
+    <string name="copy_split_hint">« Séparer » redonne à cette copie sa propre boîte.</string>
+    <string name="rated_sort_high">Meilleure d’abord</string>
+    <string name="rated_sort_low">Moins bonne d’abord</string>
+    <string name="rated_filter_none">Aucune note dans cette plage.</string>
     <string name="genre_0">Action</string>
     <string name="genre_1">Aventure</string>
     <string name="genre_2">Visual novel</string>

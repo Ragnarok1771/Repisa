@@ -222,6 +222,15 @@
     <string name="err_launch_denied">Android non ha permesso di aprire il gioco: %1$s</string>
     <string name="err_steam_no_games_key">Steam non ha restituito giochi. Nel profilo, Privacy → «Dettagli dei giochi» deve essere pubblico.</string>
     <string name="err_steam_no_games_linked">Steam non ha restituito giochi. Prova a scollegare e ricollegare l’account.</string>
+    <string name="copies_button">Copie (%1$d)</string>
+    <string name="copies_title">Copia preferita</string>
+    <string name="copies_hint">Queste copie dello stesso gioco sono mostrate come un’unica scatola, con il tempo di gioco sommato. Scegli quale la rappresenta (copertina, dati e store).</string>
+    <string name="copy_preferred">Preferita</string>
+    <string name="copy_split">Separa</string>
+    <string name="copy_split_hint">«Separa» ridà a quella copia la sua scatola.</string>
+    <string name="rated_sort_high">Più alto prima</string>
+    <string name="rated_sort_low">Più basso prima</string>
+    <string name="rated_filter_none">Nessuna valutazione in questo intervallo.</string>
     <string name="genre_0">Azione</string>
     <string name="genre_1">Avventura</string>
     <string name="genre_2">Visual novel</string>

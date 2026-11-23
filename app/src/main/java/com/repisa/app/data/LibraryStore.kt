@@ -43,6 +43,7 @@ fun mergeGame(old: Game?, new: Game): Game {
         coverUrl = if ((old.userEdited || old.customCover) && old.coverUrl != null) old.coverUrl else new.coverUrl ?: old.coverUrl,
         customCover = old.customCover,
         rating = old.rating,
+        preferredCopy = old.preferredCopy, noMerge = old.noMerge,
         metascore = old.metascore, userScore = old.userScore, metacriticUrl = old.metacriticUrl,
         hltbMain = old.hltbMain, hltbExtra = old.hltbExtra, hltbComplete = old.hltbComplete, hltbUrl = old.hltbUrl,
         extFetchedAt = old.extFetchedAt,

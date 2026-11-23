@@ -222,6 +222,15 @@
     <string name="err_launch_denied">Android didn\'t allow opening the game: %1$s</string>
     <string name="err_steam_no_games_key">Steam returned no games. In your Steam profile, Privacy → \'Game details\' must be Public.</string>
     <string name="err_steam_no_games_linked">Steam returned no games. Try unlinking and linking your account again.</string>
+    <string name="copies_button">Copies (%1$d)</string>
+    <string name="copies_title">Preferred copy</string>
+    <string name="copies_hint">These copies of the same game are shown as a single box, with their playtime added up. Choose which one represents it (cover, details and store).</string>
+    <string name="copy_preferred">Preferred</string>
+    <string name="copy_split">Separate</string>
+    <string name="copy_split_hint">\"Separate\" gives that copy its own box again.</string>
+    <string name="rated_sort_high">Highest first</string>
+    <string name="rated_sort_low">Lowest first</string>
+    <string name="rated_filter_none">No ratings in this range.</string>
     <string name="genre_0">Action</string>
     <string name="genre_1">Adventure</string>
     <string name="genre_2">Visual novel</string>

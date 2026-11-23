@@ -50,6 +50,18 @@ data class Game(
     val familyShared: Boolean = false,
     /** Carátula elegida por el usuario con el buscador: no se sustituye al sincronizar. */
     val customCover: Boolean = false,
+    /** Copia elegida para representar al grupo de copias del mismo juego. */
+    val preferredCopy: Boolean = false,
+    /** El usuario separó este juego: no se agrupa con otras copias. */
+    val noMerge: Boolean = false,
+    /** Solo en memoria: ids de las otras copias unidas a esta caja. */
+    @kotlinx.serialization.Transient val copyIds: List<String> = emptyList(),
+    /** Solo en memoria: tiempo total de todas las copias. */
+    @kotlinx.serialization.Transient val groupMinutes: Int? = null,
+    @kotlinx.serialization.Transient val groupLastPlayed: Long? = null,
+    @kotlinx.serialization.Transient val groupSources: List<Source> = emptyList(),
+    /** Solo en memoria: nombre real de la copia cuando la caja muestra el nombre común del grupo. */
+    @kotlinx.serialization.Transient val originalTitle: String? = null,
     /** Calificación personal del usuario. */
     val rating: Rating? = null,
     /** Metacritic: nota de la prensa (0-100) y de los usuarios (0-10). */
@@ -68,7 +80,14 @@ data class Game(
     /** El usuario editó los datos a mano: no sobrescribir con metadatos automáticos. */
     val userEdited: Boolean = false,
 ) {
-    val totalMinutes: Int get() = playtimeMinutes + trackedMinutes
+    val totalMinutes: Int get() = groupMinutes ?: (playtimeMinutes + trackedMinutes)
+    /** Última partida (de cualquiera de las copias si están unidas). */
+    val lastPlayedAny: Long? get() = groupLastPlayed ?: lastPlayed
+    /** Quita lo que solo existe en memoria antes de guardar. */
+    fun stored(): Game = copy(
+        title = originalTitle ?: title, originalTitle = null,
+        copyIds = emptyList(), groupMinutes = null, groupLastPlayed = null, groupSources = emptyList(),
+    )
     val console: Console get() = Consoles.byId(consoleId)
     val sortKey: String
         get() = title.lowercase()

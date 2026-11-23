@@ -86,7 +86,7 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
     val options by vm.options.collectAsState()
     val status by vm.status.collectAsState()
     val focused by vm.focused.collectAsState()
-    val all by vm.games.collectAsState()
+    val all by vm.displayGames.collectAsState()
     val boxHeight = vm.settings.shelfHeightDp.dp
 
     Column(Modifier.fillMaxSize().roomBackground()) {
@@ -155,7 +155,7 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
             LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 item { SourceChip(stringResource(R.string.filter_all), options.source == null) { vm.setSource(null) } }
                 items(Source.entries) { s ->
-                    val count = all.count { it.source == s }
+                    val count = all.count { it.source == s || s in it.groupSources }
                     if (count > 0) SourceChip("${s.label} ($count)", options.source == s) { vm.setSource(s) }
                 }
             }
