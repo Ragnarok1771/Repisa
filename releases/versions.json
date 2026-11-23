@@ -1,0 +1,34 @@
+[
+  {
+    "version": "0.1.0",
+    "commit": "f7ec939ca32ccf6e26548e2c6ffb7f0bb7001f85"
+  },
+  {
+    "version": "0.2.0",
+    "commit": "9b7d8c048792b63fcd66423b84859d0b92a74a57"
+  },
+  {
+    "version": "0.3.0",
+    "commit": "ca94f218d9da94bddc99ebec74e76f5e602eca0d"
+  },
+  {
+    "version": "0.4.0",
+    "commit": "d22c7ad0fba182392d2fcdd0d268056d8b5d6a3c"
+  },
+  {
+    "version": "0.5.0",
+    "commit": "de3f8d673d9f4d53420e7923e82635520a59f8d9"
+  },
+  {
+    "version": "0.6.0",
+    "commit": "525beaab68bc40c65d09578a01424316290ac6bb"
+  },
+  {
+    "version": "0.7.0",
+    "commit": "167d30c8feb22467dfe0d918583b398b64cac9f2"
+  },
+  {
+    "version": "0.8.0",
+    "commit": "60d721dd7a2b2ffe7d7318cb396739cac08930f1"
+  }
+]

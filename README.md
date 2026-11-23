@@ -1,102 +1,177 @@
-# Repisa
+<p align="center">
+  <img src="docs/logo/repisa-logo-512-redondeado.png" width="120" alt="Logo de Repisa">
+</p>
 
-Tu colección de juegos como cajas físicas sobre repisas de madera, al estilo de *Box Room*,
-pensada para la **AYN Thor** (Android, doble pantalla) y cualquier consola o móvil Android.
+<h1 align="center">Repisa</h1>
 
-![Repisa](docs/capturas/repisa.png)
+<p align="center">
+  Tu colección de videojuegos como cajas físicas sobre una repisa de madera.<br>
+  Steam, Epic Games y emuladores en un solo lugar, con su tiempo de juego, sus notas y su carátula.
+</p>
 
-| Repisas por consola | Ficha del juego |
-|---|---|
-| ![](docs/capturas/por-consola.png) | ![](docs/capturas/ficha.png) |
+<p align="center">
+  <a href="../../releases/latest"><b>⬇ Descargar la última versión (APK)</b></a> ·
+  <a href="CHANGELOG.md">Novedades</a> ·
+  <a href="#english">English</a>
+</p>
 
-*(Capturas con datos de ejemplo y portadas generadas; con tus cuentas conectadas se ven las carátulas reales.)*
+![La repisa](docs/capturas/repisa.png)
 
-## Idiomas
+## ¿Qué es y por qué existe?
 
-Español (España y Latinoamérica), English (US y UK), Français, Deutsch, Italiano, Português (Brasil y Portugal).
-La primera vez se elige tocando la bandera; después, en Ajustes → Idioma. Los textos están en
-`tools/i18n/strings.py`: para añadir un idioma se añade su columna y se ejecuta `python3 tools/i18n/strings.py`.
+En una consola portátil Android como la **AYN Thor** conviven juegos de muchos sitios: tu biblioteca de **Steam**,
+la de **Epic Games** y cientos de juegos de **emuladores** (Switch, 3DS, PS2, GameCube, Super Nintendo…). Cada uno
+vive en su propia app, con su propia lista y su propio contador de horas.
 
-El logo está en `docs/logo/` (PNG 1024 y 512 y SVG).
+Repisa los reúne en un solo lugar y los muestra como lo que siempre fueron: **cajas en una estantería**. Cada juego
+tiene su carátula real, la caja tiene la forma y el tamaño de la de su consola (una de Switch es más baja que una de
+PS2, una de N64 es apaisada…) y puedes ordenar tu colección como quieras: por nombre, por horas, por género, por
+consola, por estudio o por la nota que tú le hayas puesto.
+
+Está inspirada en la idea de *Box Room* (ver tu biblioteca como cajas), pero pensada para el mundo de la emulación y
+para las consolas portátiles Android con doble pantalla.
 
 ## Qué hace
 
-- **Cada juego es su caja**: el frontal es la carátula real del juego (la de la caja que compras en la tienda)
-  y la caja toma exactamente la forma de esa carátula; el lomo y la tapa llevan el color del estuche de su sistema.
-  Si un juego no tiene carátula, se genera una con su título y la franja típica del sistema (PS2, Switch, DS…).
-- **Ordenar**: A–Z, tiempo de juego, jugado recientemente, año, consola.
-- **Repisas por**: género, consola, estudio, plataforma (Steam/Epic/Emuladores), década o favoritos.
-- **Búsqueda** por título, género, estudio o consola.
-- **Ficha del juego**: la caja sale de la repisa y gira; muestra tiempo de juego, última partida, géneros,
-  estudio, año y descripción. Se pueden editar los datos a mano.
-- **Segunda pantalla**: en la AYN Thor, la pantalla de abajo muestra la ficha del juego seleccionado.
-- **Mando**: cruceta para moverte, A = ficha, X = jugar, Y = favorito, B = atrás,
-  L1/R1 = filtrar por plataforma, Select = cambiar tipo de repisa, Start = ajustes.
+### Tu biblioteca, junta
+- **Steam**: juegos propios **y del grupo familiar**, horas jugadas y última partida. Se vincula iniciando sesión en
+  la web oficial de Steam (también con el QR de la app de Steam).
+- **Epic Games**: juegos y horas jugadas, iniciando sesión en la web oficial de Epic.
+- **Emuladores**: carpetas de ROMs ordenadas por sistema, **ES-DE**, **RetroArch** (playlists y tiempo de juego) y
+  **Cocoon** / Batocera (`gamelist.xml` exportados).
+- **Copias unidas**: el mismo juego en varias ediciones o tiendas (GTA V normal, Enhanced y Legacy, en Steam y en
+  Epic) aparece como **una sola caja** con el tiempo sumado. Tú eliges la copia preferente (por defecto, la de Steam).
+- **Sin herramientas**: editores, kits de mods, servidores dedicados o paquetes de contenido no aparecen.
 
-## Fuentes
-
-| Fuente | Qué lee | Qué necesitas |
-|---|---|---|
-| **Steam** | Juegos propios **y del grupo familiar**, horas jugadas (también en juegos prestados), última partida, carátula vertical oficial, géneros y estudio | **Vincular cuenta**: iniciar sesión en la web oficial de Steam dentro de la app (usuario o QR). Opción avanzada: clave de API (sin grupo familiar) |
-| **Epic Games** | Juegos, horas jugadas, carátula vertical, estudio | **Vincular cuenta con código**: la app muestra un código y un QR; se acepta en epicgames.com/activate desde cualquier navegador o el móvil (funciona con cualquier método de inicio de sesión) |
-| **Carpetas de ROMs** | Un juego por ROM, agrupando discos (.m3u/.cue/.chd) | Elegir la carpeta con subcarpetas por sistema (`snes`, `psx`, `ps2`, `gba`, `switch`…) |
-| **ES-DE** | Nombre, género, estudio, año, descripción, última partida y portadas descargadas | Elegir la carpeta `ES-DE` |
-| **RetroArch** | Playlists (.lpl) y tiempo de juego (.lrtl) | Elegir la carpeta `RetroArch` y activar *Guardar registros de tiempo de juego* |
-| **libretro-thumbnails** | Carátulas escaneadas de las cajas reales para juegos de emulador | Nada (activado por defecto) |
-| **GameTDB** | Carátulas escaneadas de Switch, 3DS, DS, Wii, GameCube y Wii U | Nada |
-| **Metacritic** | Nota de la prensa y de los usuarios | Nada |
-| **HowLongToBeat** | Horas: historia, + extras, completista | Nada |
-| **SteamGridDB** (recomendado) | Carátulas de cualquier juego y plataforma (la base que usa Cocoon) | Clave gratuita |
-
-### Carátulas
-
-- Cada juego tiene un botón **Buscar carátula** en su ficha: busca en GameTDB, libretro-thumbnails, SteamGridDB y la tienda
-  de Steam, y eliges la que quieras. La elegida se respeta en futuras sincronizaciones.
-- **Buscar carátulas que faltan** (Ajustes) lo hace automáticamente para toda la biblioteca.
-- La búsqueda es por **palabras clave**: limpia el nombre de archivo (números de lista como `4262 - `, IDs `[0100…]`,
-  versiones, regiones, "NSP", "eShop", "Update"…) y compara palabras, con II = 2, así que `Bravely Default 2 NSP eShop`
-  encuentra *Bravely Default II* y `4262 - Kingdom Hearts 358-2 Days` encuentra su caja.
-- Cada caja tiene su **tamaño real** a escala: Switch más baja que PS2, DS/3DS pequeñas, N64/SNES apaisadas, Neo Geo
-  y PC antiguo enormes.
-
-### Copias del mismo juego
-
-- Las ediciones y plataformas del mismo juego (GTA V normal, Enhanced y Legacy; el mismo juego en Steam y en Epic)
-  se muestran como **una sola caja** con el tiempo de juego sumado y el nombre común.
-- En la ficha, el botón **Copias** permite elegir la **copia preferente** (carátula, datos y tienda) o separar una copia.
-- Las herramientas que no son juegos (editores, kits de mods, servidores dedicados…) no se muestran.
-
-### Calificaciones propias
-
-- En cada ficha, la **estrella junto a la X** abre el calificador: tú decides qué calificas (Historia, Música,
-  "El cielo"…), cuánto pesa cada cosa (%) y qué nota le das. La nota final es la media ponderada.
-- Escala a elegir en Ajustes (0-5, 0-10 o 0-100); las notas se convierten solas al cambiarla.
-- La nota se ve también en **estrellas que se llenan en proporción** (95/100 = 4¾ estrellas).
-- La **estrella de arriba a la derecha** abre *Mis calificaciones*: de mayor a menor nota o al revés, y con filtros
-  por estrellas (5, 4–5, 3–4, 2–3, 1–2, 0–1).
-- La plantilla de aspectos y pesos por defecto se edita en Ajustes → Calificaciones.
+### Cajas de verdad
+- **Carátula real** en el frontal de cada caja, y la caja toma su forma exacta.
+- **Tamaño real** de cada sistema, a escala respecto a una caja de DVD.
+- **Buscador de carátulas** en cada ficha y búsqueda automática de las que faltan: **GameTDB** (Switch, 3DS, DS, Wii,
+  GameCube, Wii U), **libretro-thumbnails**, **SteamGridDB** y la tienda de Steam. Encuentra la carátula aunque el
+  archivo se llame `4262 - Kingdom Hearts 358-2 Days (Europe)` o `Bravely Default 2 NSP eShop`.
+- Fondo de **vitrina de nogal** con luz bajo cada balda.
 
 ### Tiempo de juego siempre al día
+- Steam, Epic y emuladores se vuelven a leer solos cada vez que abres Repisa.
+- Con el permiso **Acceso a datos de uso** de Android (el mismo que usa Cocoon), Repisa mide solo el tiempo que el
+  emulador está realmente en pantalla en los juegos que abres desde ella.
 
-- **Steam y Epic** se vuelven a leer solos al abrir Repisa o al volver a ella (cada 10 min como mucho): si juegas
-  en el PC, las horas nuevas aparecen aquí y Repisa te avisa de qué juegos cambiaron.
-- **Emuladores**: se combinan RetroArch (.lrtl), los `gamelist.xml` de ES-DE / Cocoon (Export Metadata) / Batocera
-  (`<playtime>`, `<gametime>`…) y lo que mide la propia Repisa. Si dos fuentes registran el mismo juego se toma
-  la mayor, para no contar dos veces las mismas partidas.
-- Con el permiso **Acceso a datos de uso** (el mismo que usa Cocoon), Repisa mide solo el tiempo que el emulador
-  está realmente en pantalla en los juegos que abres desde aquí, sin contar el reposo ni otras apps.
+### Ficha de cada juego
 
-Además, Repisa **mide el tiempo** de los juegos de emulador que abres desde la app
-(eliges el emulador de cada sistema en Ajustes; Dolphin, DuckStation, NetherSX2/AetherSX2, PPSSPP,
-Flycast y RetroArch tienen arranque directo, el resto se abre con "Abrir con…").
+![Ficha del juego](docs/capturas/ficha.png)
+
+- **Mi nota**, **Metacritic** (prensa y usuarios) y **HowLongToBeat** (historia, + extras y completista).
+- Tiempo de juego, última partida, estudio, año, géneros y descripción.
+- Botones para jugar (emuladores), ver en la tienda, marcar favorito, buscar carátula, ver las **copias** y editar datos.
+
+| Copias del mismo juego | Pantalla inferior de la AYN Thor |
+|---|---|
+| ![Copias](docs/capturas/copias.png) | ![Pantalla inferior](docs/capturas/pantalla-inferior.png) |
+
+### Tus calificaciones
+
+![Mis calificaciones](docs/capturas/calificaciones.png)
+
+- Calificas lo que tú quieras («Historia», «Música», «El cielo»…), con un **peso en %** y una **nota** cada cosa.
+- Escala de 0 a 5, de 0 a 10 o de 0 a 100, y **estrellas que se llenan en proporción** (95/100 = 4¾ estrellas).
+- *Mis calificaciones*: ordenadas de mayor a menor (o al revés) y filtrables por estrellas.
+
+### Hecha para consolas portátiles
+- **Doble pantalla**: en la AYN Thor, la pantalla de abajo muestra la ficha del juego seleccionado.
+- **Mando**: cruceta para moverte, A ficha, X jugar, Y favorito, B atrás, L1/R1 filtrar por plataforma,
+  Select cambiar el tipo de repisa, Start ajustes.
+- **9 idiomas**: español (España y Latinoamérica), English (US y UK), français, Deutsch, italiano y português
+  (Brasil y Portugal). Se elige tocando la bandera la primera vez.
+
+| Ajustes | Idiomas |
+|---|---|
+| ![Ajustes](docs/capturas/ajustes.png) | ![Idiomas](docs/capturas/idiomas.png) |
+
+## Instalación
+
+1. Descarga `Repisa-X.Y.Z.apk` de la [última versión](../../releases/latest).
+2. Ábrelo en tu consola o móvil Android 11 o superior (permite instalar apps de origen desconocido si te lo pide).
+3. Elige tu idioma y entra en **Ajustes** para vincular Steam, Epic y tus carpetas de emuladores.
+
+Las versiones nuevas se instalan encima de la anterior sin perder tu biblioteca ni tus notas.
+
+### Recomendado
+- **SteamGridDB**: crea una cuenta gratuita, copia tu clave de API (Preferences → API) y pégala en
+  Ajustes → Carátulas y datos. Da carátulas para casi cualquier juego.
+- **Acceso a datos de uso**: Ajustes → Tiempo de juego → Conceder, para medir bien las horas en emuladores.
+- **RetroArch**: activa *Ajustes → Guardado → Guardar registros de tiempo de juego*.
+
+## Fuentes de datos
+
+| Fuente | Para qué | Necesita |
+|---|---|---|
+| Steam | Juegos, grupo familiar, horas, carátulas, géneros, estudio | Iniciar sesión (o clave de API) |
+| Epic Games | Juegos, horas, carátulas, estudio | Iniciar sesión |
+| Carpetas de ROMs | Un juego por ROM, agrupando discos | Elegir la carpeta |
+| ES-DE / Cocoon / Batocera | Carátulas, géneros, estudio, año, descripción, tiempo de juego | Elegir la carpeta |
+| RetroArch | Playlists y tiempo de juego | Elegir la carpeta |
+| GameTDB | Carátulas de Nintendo | Nada |
+| libretro-thumbnails | Carátulas de consolas clásicas | Nada |
+| SteamGridDB | Carátulas de cualquier juego | Clave gratuita |
+| Metacritic | Nota de prensa y de usuarios | Nada |
+| HowLongToBeat | Duración del juego | Nada |
+
+## Privacidad
+
+- Todo se guarda **en tu dispositivo**. Repisa no tiene servidores ni cuentas propias.
+- Tus contraseñas de Steam y Epic se escriben en sus **páginas oficiales**; Repisa solo recibe el permiso para leer tu
+  biblioteca y tus horas.
+- Las claves (SteamGridDB, Steam API) se guardan en el almacenamiento privado de la app.
 
 ## Compilar
 
-Cada push compila el APK en GitHub Actions (pestaña *Actions* → artefacto `Repisa-apk`).
-En local:
+Requisitos: JDK 17+ y Android SDK 35.
 
 ```bash
-./gradlew assembleRelease   # app/build/outputs/apk/release/app-release.apk
+./gradlew assembleRelease          # app/build/outputs/apk/release/app-release.apk
+./gradlew testDebugUnitTest        # pruebas
+python3 tools/i18n/strings.py      # regenerar los textos de todos los idiomas
 ```
 
-Requisitos: JDK 17+ y Android SDK 35. El APK release se firma con la clave debug para poder instalarlo directamente.
+- Cada cambio se compila en GitHub Actions (*Compilar APK*).
+- Para publicar una versión: sube `versionName`, añade su sección a `CHANGELOG.md` y su entrada a
+  `releases/versions.json`; el workflow *Publicar versiones* la compila y crea la release con su APK.
+- Las traducciones están en `tools/i18n/strings.py` (una columna por idioma).
+
+### Estructura
+
+```
+app/src/main/java/com/repisa/app/
+  model/      juegos, consolas, géneros, calificaciones, copias
+  sources/    Steam, Epic, emuladores, carátulas (GameTDB, libretro, SteamGridDB), Metacritic, HowLongToBeat
+  data/       almacenamiento, ajustes, HTTP, carpetas (SAF)
+  launch/     abrir emuladores y medir el tiempo de juego
+  ui/         repisa, ficha, calificaciones, ajustes, segunda pantalla
+  i18n/       idiomas
+tools/i18n/   textos de todos los idiomas
+docs/         capturas y logo
+```
+
+## Créditos
+
+- [Legendary](https://github.com/derrod/legendary) y [Heroic](https://github.com/Heroic-Games-Launcher): referencia
+  para conectar con Epic Games.
+- [GameTDB](https://www.gametdb.com), [libretro-thumbnails](https://github.com/libretro-thumbnails) y
+  [SteamGridDB](https://www.steamgriddb.com): carátulas.
+- Tipografías [Fredoka](https://fonts.google.com/specimen/Fredoka) y
+  [Nunito](https://fonts.google.com/specimen/Nunito) (SIL Open Font License, ver `docs/licencias`).
+
+Repisa no está afiliada a Valve, Epic Games, Nintendo, Sony, Sega, AYN, Metacritic ni HowLongToBeat. Las carátulas y
+marcas pertenecen a sus dueños.
+
+---
+
+## English
+
+**Repisa** shows your video game collection as physical boxes on a wooden shelf. It brings together your **Steam**
+(including Family Sharing), **Epic Games** and **emulator** libraries (ROM folders, ES-DE, RetroArch, Cocoon) with real
+cover art, real box sizes per console, up-to-date playtime, Metacritic and HowLongToBeat data, and your own weighted
+ratings with stars. Built for Android handhelds such as the dual-screen **AYN Thor** (bottom screen shows the selected
+game) and fully playable with a controller. Available in 9 languages.
+
+[Download the latest APK](../../releases/latest) · [Changelog](CHANGELOG.md)

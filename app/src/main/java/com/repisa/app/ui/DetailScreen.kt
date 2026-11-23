@@ -92,7 +92,8 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
             .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onClose),
     ) {
         BoxWithConstraints(Modifier.fillMaxSize().padding(20.dp)) {
-            val boxH = minOf(maxHeight * 0.85f, maxWidth * 0.55f / frontAspect(game))
+            // La caja ocupa como mucho ~40 % del ancho (las carátulas anchas ya no dejan sin sitio a la ficha).
+            val boxH = minOf(maxHeight * 0.85f, maxWidth * 0.40f / frontAspect(game))
             Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                 GameBox(
                     game, boxH,
@@ -246,46 +247,59 @@ fun ScoresRow(game: Game, scale: com.repisa.app.model.RatingScale, small: Boolea
               onRate: (() -> Unit)? = null, onOpen: ((String) -> Unit)? = null) {
     val label = if (small) 9.sp else 10.sp
     val value = if (small) 13.sp else 15.sp
-    val pad = Modifier.padding(horizontal = if (small) 8.dp else 10.dp, vertical = if (small) 4.dp else 6.dp)
-    fun box(onClick: (() -> Unit)?) = Modifier.fillMaxHeight().background(Color(0xE6261A12), RoundedCornerShape(8.dp))
-        .let { if (onClick != null) it.clickable(onClick = onClick) else it }.then(pad)
-    // Los tres recuadros con la misma altura.
-    Row(Modifier.height(androidx.compose.foundation.layout.IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    // Altura fija y texto en una línea: los recuadros no se estiran hacia abajo aunque falte espacio.
+    val boxHeight = if (small) 40.dp else 54.dp
+    fun box(onClick: (() -> Unit)?) = Modifier.height(boxHeight)
+        .background(Color(0xE6261A12), RoundedCornerShape(8.dp))
+        .let { if (onClick != null) it.clickable(onClick = onClick) else it }
+        .padding(horizontal = if (small) 8.dp else 10.dp, vertical = if (small) 3.dp else 5.dp)
+    val loading = game.extFetchedAt == null
+    // Si no caben en una fila (carátulas anchas como DS, 3DS, N64 o GBA), HowLongToBeat baja a la siguiente.
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // Mi nota
-        Column(box(onRate)) {
-            Text(stringResource(R.string.my_score), color = Color(0xFF9C8A70), fontSize = label)
+        Column(box(onRate), verticalArrangement = Arrangement.Center) {
+            Text(stringResource(R.string.my_score), color = Color(0xFF9C8A70), fontSize = label, maxLines = 1, softWrap = false)
             val r = game.rating
-            if (r == null) Text(stringResource(R.string.rate_action), color = Color.White, fontSize = value, fontWeight = FontWeight.Bold)
+            if (r == null) Text(stringResource(R.string.rate_action), color = Color.White, fontSize = value,
+                fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
             else Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(scale.format(r.overall), color = Color.White, fontSize = value, fontWeight = FontWeight.Bold, fontFamily = DisplayFont)
+                Text(scale.format(r.overall), color = Color.White, fontSize = value, fontWeight = FontWeight.Bold,
+                    fontFamily = DisplayFont, maxLines = 1, softWrap = false)
                 Spacer(Modifier.width(4.dp))
                 Stars(r.stars, if (small) 10.dp else 12.dp)
             }
         }
-        // Metacritic
-        if (game.metascore != null || game.userScore != null) {
-            Column(box(game.metacriticUrl?.let { url -> onOpen?.let { { it(url) } } })) {
-                Text("Metacritic", color = Color(0xFF9C8A70), fontSize = label)
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ScoreBadge(game.metascore?.toString() ?: "–", game.metascore?.toFloat()?.div(100f), value)
-                    if (!small) Text(stringResource(R.string.press), color = Color(0xFFD9C8AE), fontSize = label)
-                    ScoreBadge(game.userScore?.let { L10n.decimal(it) } ?: "–", game.userScore?.toFloat()?.div(10f), value, round = true)
-                    if (!small) Text(stringResource(R.string.users), color = Color(0xFFD9C8AE), fontSize = label)
-                }
-            }
+        // Metacritic (siempre visible: con sus notas o "No disponible")
+        val hasMc = game.metascore != null || game.userScore != null
+        Column(box(if (hasMc) game.metacriticUrl?.let { url -> onOpen?.let { { it(url) } } } else null),
+            verticalArrangement = Arrangement.Center) {
+            Text("Metacritic", color = Color(0xFF9C8A70), fontSize = label, maxLines = 1, softWrap = false)
+            if (hasMc) Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                ScoreBadge(game.metascore?.toString() ?: "–", game.metascore?.toFloat()?.div(100f), value)
+                if (!small) Text(stringResource(R.string.press), color = Color(0xFFD9C8AE), fontSize = label, maxLines = 1, softWrap = false)
+                ScoreBadge(game.userScore?.let { L10n.decimal(it) } ?: "–", game.userScore?.toFloat()?.div(10f), value, round = true)
+                if (!small) Text(stringResource(R.string.users), color = Color(0xFFD9C8AE), fontSize = label, maxLines = 1, softWrap = false)
+            } else Missing(loading, value)
         }
-        // HowLongToBeat
-        if (game.hltbMain != null || game.hltbExtra != null || game.hltbComplete != null) {
-            Column(box(game.hltbUrl?.let { url -> onOpen?.let { { it(url) } } })) {
-                Text("HowLongToBeat", color = Color(0xFF9C8A70), fontSize = label)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Hours(stringResource(R.string.hltb_main), game.hltbMain, value, label)
-                    Hours(stringResource(R.string.hltb_extra), game.hltbExtra, value, label)
-                    Hours(stringResource(R.string.hltb_complete), game.hltbComplete, value, label)
-                }
-            }
+        // HowLongToBeat (siempre visible)
+        val hasHltb = game.hltbMain != null || game.hltbExtra != null || game.hltbComplete != null
+        Column(box(if (hasHltb) game.hltbUrl?.let { url -> onOpen?.let { { it(url) } } } else null),
+            verticalArrangement = Arrangement.Center) {
+            Text("HowLongToBeat", color = Color(0xFF9C8A70), fontSize = label, maxLines = 1, softWrap = false)
+            if (hasHltb) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Hours(stringResource(R.string.hltb_main), game.hltbMain, value, label)
+                Hours(stringResource(R.string.hltb_extra), game.hltbExtra, value, label)
+                Hours(stringResource(R.string.hltb_complete), game.hltbComplete, value, label)
+            } else Missing(loading, value)
         }
     }
+}
+
+/** "No disponible" (o "…" mientras se consulta). */
+@Composable
+private fun Missing(loading: Boolean, size: androidx.compose.ui.unit.TextUnit) {
+    Text(if (loading) "…" else stringResource(R.string.not_available), color = Color(0xFF9C8A70),
+        fontSize = size * 0.85f, maxLines = 1, softWrap = false)
 }
 
 @Composable
@@ -310,8 +324,8 @@ private fun hoursText(h: Float): String = when {
 @Composable
 private fun Hours(label: String, h: Float?, value: androidx.compose.ui.unit.TextUnit, small: androidx.compose.ui.unit.TextUnit) {
     Column {
-        Text(h?.let(::hoursText) ?: "–", color = Color.White, fontSize = value, fontWeight = FontWeight.Bold, maxLines = 1)
-        Text(label, color = Color(0xFFD9C8AE), fontSize = small, maxLines = 1)
+        Text(h?.let(::hoursText) ?: "–", color = Color.White, fontSize = value, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+        Text(label, color = Color(0xFFD9C8AE), fontSize = small, maxLines = 1, softWrap = false)
     }
 }
 

@@ -8,4 +8,5 @@ build/
 .externalNativeBuild
 .cxx
 *.keystore
+!signing/repisa-debug.keystore
 !debug.keystore

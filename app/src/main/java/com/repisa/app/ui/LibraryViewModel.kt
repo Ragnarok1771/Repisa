@@ -502,7 +502,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Al abrir la ficha: consulta Metacritic y HowLongToBeat si no se hizo en las últimas 2 semanas. */
     fun loadExternalInfo(game: Game, force: Boolean = false) {
-        val fresh = game.extFetchedAt?.let { System.currentTimeMillis() - it < 14L * 86_400_000 } == true
+        // Con datos: se refresca cada 2 semanas. Si faltaba algo, se reintenta a los 2 días.
+        val complete = (game.metascore != null || game.userScore != null) && game.hltbMain != null
+        val maxAge = if (complete) 14L * 86_400_000 else 2L * 86_400_000
+        val fresh = game.extFetchedAt?.let { System.currentTimeMillis() - it < maxAge } == true
         if ((fresh && !force) || !extLoading.add(game.id)) return
         viewModelScope.launch {
             try {

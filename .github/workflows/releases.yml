@@ -1,0 +1,88 @@
+name: Publicar versiones
+
+# Compila cada versión de releases/versions.json desde su commit y la publica como release con su APK
+# y sus notas de CHANGELOG.md. Las versiones ya publicadas se saltan.
+on:
+  push:
+    paths:
+      - "releases/versions.json"
+      - "CHANGELOG.md"
+      - ".github/workflows/releases.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pending="[]"
+          for row in $(jq -c '.[]' releases/versions.json); do
+            v=$(echo "$row" | jq -r .version)
+            c=$(echo "$row" | jq -r .commit)
+            [ "$c" = "HEAD" ] && c="$GITHUB_SHA"
+            if gh release view "v$v" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "v$v ya publicada"
+            else
+              pending=$(echo "$pending" | jq -c --arg v "$v" --arg c "$c" '. + [{version: $v, commit: $c}]')
+            fi
+          done
+          echo "matrix=$pending" >> "$GITHUB_OUTPUT"
+          echo "Pendientes: $pending"
+
+  release:
+    needs: plan
+    if: needs.plan.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1   # en orden, para que la última quede como «latest»
+      matrix:
+        include: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - name: Repositorio actual (notas y clave de firma)
+        uses: actions/checkout@v4
+        with:
+          path: actual
+      - name: Código de la versión ${{ matrix.version }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.commit }}
+          path: version
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Misma firma que las versiones anteriores
+        run: |
+          mkdir -p ~/.android
+          cp actual/signing/repisa-debug.keystore ~/.android/debug.keystore
+      - name: Compilar
+        working-directory: version
+        run: ./gradlew --no-daemon assembleRelease
+      - name: Notas de la versión
+        run: |
+          awk -v v="${{ matrix.version }}" '
+            $0 ~ "^## \\[" v "\\]" {on=1; next}
+            on && /^## \[/ {exit}
+            on {print}
+          ' actual/CHANGELOG.md > notas.md
+          printf '\n---\nInstala `Repisa-%s.apk` en tu consola o móvil Android (se actualiza encima de la anterior sin perder datos).\n' "${{ matrix.version }}" >> notas.md
+          cat notas.md
+      - name: Publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp version/app/build/outputs/apk/release/app-release.apk "Repisa-${{ matrix.version }}.apk"
+          gh release create "v${{ matrix.version }}" "Repisa-${{ matrix.version }}.apk" \
+            --repo "$GITHUB_REPOSITORY" --target "${{ matrix.commit }}" \
+            --title "Repisa ${{ matrix.version }}" --notes-file notas.md

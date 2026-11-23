@@ -78,6 +78,7 @@
     <string name="field_cover_url">URL de la jaquette</string>
     <string name="my_score">Ma note</string>
     <string name="rate_action">Noter ★</string>
+    <string name="not_available">Indisponible</string>
     <string name="press">presse</string>
     <string name="users">joueurs</string>
     <string name="hltb_main">Histoire</string>

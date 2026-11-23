@@ -164,6 +164,7 @@ s("field_cover_url", "Cover URL", "URL de la carátula", "URL de la jaquette", "
   "URL da capa", es419="URL de la portada")
 s("my_score", "My rating", "Mi nota", "Ma note", "Meine Wertung", "Il mio voto", "Minha nota", ptPT="A minha nota")
 s("rate_action", "Rate ★", "Calificar ★", "Noter ★", "Bewerten ★", "Valuta ★", "Avaliar ★")
+s("not_available", "Not available", "No disponible", "Indisponible", "Nicht verfügbar", "Non disponibile", "Não disponível")
 s("press", "critics", "prensa", "presse", "Presse", "stampa", "crítica")
 s("users", "users", "usuarios", "joueurs", "Nutzer", "utenti", "usuários", ptPT="utilizadores")
 s("hltb_main", "Story", "Historia", "Histoire", "Story", "Storia", "História")

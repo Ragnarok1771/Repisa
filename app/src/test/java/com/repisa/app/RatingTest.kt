@@ -41,4 +41,13 @@ class RatingTest {
         assertEquals("pokemon-legends-arceus", GameInfo.slug("Pokémon Legends: Arceus"))
         assertEquals("luigis-mansion-3", GameInfo.slug("Luigi's Mansion 3"))
     }
+
+    @Test
+    fun alternativeTitles() {
+        val c = GameInfo.candidates("Shin Megami Tensei: Persona 2 - Eternal Punishment (USA)")
+        assert("Persona 2 - Eternal Punishment" in c) { c.toString() }
+        val p = GameInfo.candidates("Persona 2: Eternal Punishment")
+        assertEquals("Persona 2: Eternal Punishment", p.first())
+        assert("Eternal Punishment" in p)
+    }
 }

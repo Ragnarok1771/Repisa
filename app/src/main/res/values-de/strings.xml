@@ -78,6 +78,7 @@
     <string name="field_cover_url">Cover-URL</string>
     <string name="my_score">Meine Wertung</string>
     <string name="rate_action">Bewerten ★</string>
+    <string name="not_available">Nicht verfügbar</string>
     <string name="press">Presse</string>
     <string name="users">Nutzer</string>
     <string name="hltb_main">Story</string>

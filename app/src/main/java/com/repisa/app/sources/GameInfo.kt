@@ -45,8 +45,32 @@ object GameInfo {
         .replace(Regex("""[^a-z0-9]+"""), "-")
         .trim('-')
 
+    /**
+     * Nombres a probar, del más exacto al más flexible: el título completo, lo que va tras ":" o " - ",
+     * lo que va antes, y sin el nombre de una saga larga delante ("Shin Megami Tensei: Persona 2..." → "Persona 2...").
+     */
+    fun candidates(rawTitle: String): List<String> {
+        val t = EmulatorSource.cleanTitle(rawTitle).trim()
+        val out = mutableListOf(t)
+        Regex("""^(.*?)\s*[:\-–]\s+(.+)$""").find(t)?.let { m ->
+            out += m.groupValues[2]          // subtítulo / juego tras la saga
+            out += m.groupValues[1]          // nombre principal
+        }
+        out += t.replace(Regex("""^(Shin Megami Tensei|Megami Tensei|The Legend of|Tom Clancy'?s|Sid Meier'?s)\s*:?\s*""", RegexOption.IGNORE_CASE), "")
+        return out.map { it.trim() }.filter { it.length >= 3 }.distinct()
+    }
+
     suspend fun metacritic(game: Game): Metacritic? {
-        val title = EmulatorSource.cleanTitle(game.title)
+        for (c in candidates(game.title)) metacriticFor(c)?.let { return it }
+        return null
+    }
+
+    suspend fun hltb(game: Game): Hltb? {
+        for (c in candidates(game.title)) runCatching { hltbFor(c) }.getOrNull()?.let { return it }
+        return null
+    }
+
+    private suspend fun metacriticFor(title: String): Metacritic? {
         var url = "https://www.metacritic.com/game/${slug(title)}/"
         var (code, html) = get(url)
         if (code != 200 || !html.contains("Metascore")) {
@@ -77,8 +101,7 @@ object GameInfo {
         return runCatching { Http.json.parseToJsonElement(body)["token"].str }.getOrNull().also { hltbToken = it }
     }
 
-    suspend fun hltb(game: Game): Hltb? {
-        val title = EmulatorSource.cleanTitle(game.title)
+    private suspend fun hltbFor(title: String): Hltb? {
         val terms = title.replace(Regex("""[:™®©]"""), " ").split(Regex("""\s+""")).filter { it.isNotBlank() }
         val empty = JsonObject(mapOf("mode" to JsonPrimitive("include"), "values" to JsonArray(emptyList())))
         val body = JsonObject(mapOf(
