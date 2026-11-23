@@ -61,12 +61,16 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.repisa.app.R
+import com.repisa.app.i18n.L10n
 import com.repisa.app.model.Game
+import com.repisa.app.model.label
 import com.repisa.app.model.Source
 import com.repisa.app.model.formatPlaytime
 
@@ -110,46 +114,53 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
 private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, onOpenSettings: () -> Unit, onOpenRated: () -> Unit) {
     var searching by remember { mutableStateOf(options.query.isNotEmpty()) }
     Column(Modifier.fillMaxWidth().background(Color(0xCC120C09)).padding(horizontal = 12.dp, vertical = 6.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Repisa", color = Color(0xFFFFD27A), fontWeight = FontWeight.SemiBold, fontSize = 24.sp,
-                fontFamily = DisplayFont)
-            Text(" v${com.repisa.app.BuildConfig.VERSION_NAME}", color = Color(0xFF9C8A70), fontSize = 10.sp,
-                modifier = Modifier.padding(top = 8.dp))
-            Spacer(Modifier.width(14.dp))
-            Text(
-                "${all.size} juegos · ${all.sumOf { it.totalMinutes } / 60} h jugadas",
-                color = Color(0xFFBFA98A), fontSize = 12.sp,
+        // Fila 1: nombre y versión a la izquierda, juegos y horas en el centro, botones a la derecha.
+        Box(Modifier.fillMaxWidth()) {
+            Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
+                Text("Repisa", color = Color(0xFFFFD27A), fontWeight = FontWeight.SemiBold, fontSize = 24.sp,
+                    fontFamily = DisplayFont)
+                Text(" v${com.repisa.app.BuildConfig.VERSION_NAME}", color = Color(0xFF9C8A70), fontSize = 10.sp,
+                    modifier = Modifier.padding(top = 8.dp))
+            }
+            if (!searching) Text(
+                L10n.games(all.size) + " · " + stringResource(R.string.hours_played, all.sumOf { it.totalMinutes } / 60),
+                color = Color(0xFFBFA98A), fontSize = 13.sp, modifier = Modifier.align(Alignment.Center),
             )
-            Spacer(Modifier.weight(1f))
-            if (searching) {
-                BasicTextField(
-                    value = options.query, onValueChange = vm::setQuery, singleLine = true,
-                    textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
-                    cursorBrush = SolidColor(Color(0xFFFFD27A)),
-                    decorationBox = { inner ->
-                        Box(Modifier.width(200.dp).background(Color(0x33FFFFFF), RoundedCornerShape(8.dp)).padding(8.dp)) {
-                            if (options.query.isEmpty()) Text("Buscar título, género, estudio…", color = Color(0x88FFFFFF), fontSize = 14.sp)
-                            inner()
-                        }
-                    },
-                )
-                IconButton(onClick = { vm.setQuery(""); searching = false }) { Icon(Icons.Default.Clear, "Cerrar búsqueda", tint = Color.White) }
-            } else {
-                IconButton(onClick = { searching = true }) { Icon(Icons.Default.Search, "Buscar", tint = Color.White) }
+            Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
+                if (searching) {
+                    BasicTextField(
+                        value = options.query, onValueChange = vm::setQuery, singleLine = true,
+                        textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
+                        cursorBrush = SolidColor(Color(0xFFFFD27A)),
+                        decorationBox = { inner ->
+                            Box(Modifier.width(260.dp).background(Color(0x33FFFFFF), RoundedCornerShape(8.dp)).padding(8.dp)) {
+                                if (options.query.isEmpty()) Text(stringResource(R.string.search_hint), color = Color(0x88FFFFFF), fontSize = 14.sp)
+                                inner()
+                            }
+                        },
+                    )
+                    IconButton(onClick = { vm.setQuery(""); searching = false }) {
+                        Icon(Icons.Default.Clear, stringResource(R.string.close_search), tint = Color.White)
+                    }
+                } else {
+                    IconButton(onClick = { searching = true }) { Icon(Icons.Default.Search, stringResource(R.string.search), tint = Color.White) }
+                }
+                IconButton(onClick = onOpenRated) { Icon(Icons.Default.Star, stringResource(R.string.my_ratings), tint = Color(0xFFFFC94D)) }
+                IconButton(onClick = { vm.syncAll() }) { Icon(Icons.Default.Refresh, stringResource(R.string.sync), tint = Color.White) }
+                IconButton(onClick = onOpenSettings) { Icon(Icons.Default.Settings, stringResource(R.string.settings), tint = Color.White) }
             }
-            IconButton(onClick = onOpenRated) { Icon(Icons.Default.Star, "Mis calificaciones", tint = Color(0xFFFFC94D)) }
-            IconButton(onClick = { vm.syncAll() }) { Icon(Icons.Default.Refresh, "Sincronizar", tint = Color.White) }
-            IconButton(onClick = onOpenSettings) { Icon(Icons.Default.Settings, "Ajustes", tint = Color.White) }
         }
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            item { SourceChip("Todo", options.source == null) { vm.setSource(null) } }
-            items(Source.entries) { s ->
-                val count = all.count { it.source == s }
-                if (count > 0) SourceChip("${s.label} ($count)", options.source == s) { vm.setSource(s) }
+        // Fila 2: filtros a la izquierda; ordenar y repisas al fondo a la derecha.
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                item { SourceChip(stringResource(R.string.filter_all), options.source == null) { vm.setSource(null) } }
+                items(Source.entries) { s ->
+                    val count = all.count { it.source == s }
+                    if (count > 0) SourceChip("${s.label} ($count)", options.source == s) { vm.setSource(s) }
+                }
             }
-            item { Spacer(Modifier.width(8.dp)) }
-            item { Picker("Ordenar", options.sort.label, SortMode.entries.map { it.label }) { vm.setSort(SortMode.entries[it]) } }
-            item { Picker("Repisas por", options.group.label, GroupMode.entries.map { it.label }) { vm.setGroup(GroupMode.entries[it]) } }
+            Picker(stringResource(R.string.sort_label), options.sort.label, SortMode.entries.map { it.label }) { vm.setSort(SortMode.entries[it]) }
+            Picker(stringResource(R.string.group_label), options.group.label, GroupMode.entries.map { it.label }) { vm.setGroup(GroupMode.entries[it]) }
         }
     }
 }
@@ -194,7 +205,7 @@ private fun Shelves(
         val items = remember(shelves, usable, boxHeight) {
             buildList<ShelfItem> {
                 shelves.forEachIndexed { gi, group ->
-                    if (shelves.size > 1 || group.title != "Mi colección") add(ShelfItem.Header(group, "h$gi:${group.title}"))
+                    if (shelves.size > 1 || group.title != L10n.s(R.string.shelf_my_collection)) add(ShelfItem.Header(group, "h$gi:${group.title}"))
                     var row = mutableListOf<Game>()
                     var used = 0.dp
                     group.games.forEach { g ->
@@ -334,14 +345,14 @@ private fun FocusBar(game: Game?) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (game == null) {
-            Text("Toca una caja o muévete con el mando · A: ver · X: jugar · Y: favorito · Select: cambiar repisas",
+            Text(stringResource(R.string.hint_controls),
                 color = Color(0xFF9C8A70), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         } else {
             Text((if (game.favorite) "★ " else "") + game.title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
             Text(
-                "   ${game.console.name} · ${formatPlaytime(game.totalMinutes)}" +
-                    (game.genres.firstOrNull()?.let { " · $it" } ?: "") + (game.developer?.let { " · $it" } ?: ""),
+                "   ${game.console.label} · ${formatPlaytime(game.totalMinutes)}" +
+                    (game.genres.firstOrNull()?.let { " · " + L10n.genre(it) } ?: "") + (game.developer?.let { " · $it" } ?: ""),
                 color = Color(0xFFBFA98A), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
@@ -351,14 +362,14 @@ private fun FocusBar(game: Game?) {
 @Composable
 private fun EmptyRoom(hasGames: Boolean, onOpenSettings: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(if (hasGames) "Ninguna caja coincide con el filtro" else "Tu repisa está vacía",
+        Text(stringResource(if (hasGames) R.string.empty_filtered else R.string.empty_title),
             color = Color(0xFFFFD27A), fontSize = 22.sp, fontFamily = DisplayFont, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         if (!hasGames) {
-            Text("Conecta Steam, Epic Games o elige tus carpetas de ROMs, ES-DE o RetroArch para llenarla.",
+            Text(stringResource(R.string.empty_body),
                 color = Color(0xFFBFA98A), style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(16.dp))
-            TextButton(onClick = onOpenSettings) { Text("Abrir ajustes", color = Color.White) }
+            TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.open_settings), color = Color.White) }
         }
         WoodPlank()
     }

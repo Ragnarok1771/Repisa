@@ -10,11 +10,14 @@ import org.junit.Test
 class RatingTest {
     @Test
     fun weightedAverage() {
+        java.util.Locale.setDefault(java.util.Locale.forLanguageTag("es-ES")) // coma decimal
         // 30 % con un 9/10 y 70 % con un 6/10 → 6,9
         val r = Rating(listOf(Criterion("Historia", 30f, 0.9f), Criterion("Jugabilidad", 70f, 0.6f)))
         assertEquals(0.69f, r.overall, 0.0001f)
         assertEquals("6,9", RatingScale.TEN.format(r.overall))
         assertEquals("69", RatingScale.HUNDRED.format(r.overall))
+        java.util.Locale.setDefault(java.util.Locale.US)
+        assertEquals("6.9", RatingScale.TEN.format(r.overall)) // punto decimal en inglés
         assertEquals(3.45f, r.stars, 0.0001f)
     }
 

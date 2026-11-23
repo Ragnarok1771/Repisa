@@ -34,6 +34,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.repisa.app.model.Source
+import com.repisa.app.R
 import com.repisa.app.ui.DetailScreen
 import com.repisa.app.ui.GroupMode
 import com.repisa.app.ui.LibraryViewModel
@@ -47,6 +48,10 @@ class MainActivity : ComponentActivity() {
     private val vm: LibraryViewModel by viewModels()
     private lateinit var secondScreen: SecondScreen
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(com.repisa.app.i18n.L10n.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -55,7 +60,18 @@ class MainActivity : ComponentActivity() {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         secondScreen = SecondScreen(this, vm)
-        setContent { RepisaTheme { App(vm, onSettingsClosed = { secondScreen.update() }) } }
+        setContent {
+            RepisaTheme {
+                // Primera vez: elegir idioma antes de nada.
+                if (com.repisa.app.i18n.L10n.current == null) {
+                    com.repisa.app.ui.WelcomeScreen { lang ->
+                        com.repisa.app.i18n.L10n.setLanguage(application, lang); recreate()
+                    }
+                } else {
+                    App(vm, onSettingsClosed = { secondScreen.update() }, onLanguageChanged = { recreate() })
+                }
+            }
+        }
     }
 
     override fun onStart() { super.onStart(); secondScreen.start() }
@@ -80,7 +96,7 @@ class MainActivity : ComponentActivity() {
             KeyEvent.KEYCODE_BUTTON_SELECT -> {
                 val modes = GroupMode.entries
                 vm.setGroup(modes[(modes.indexOf(vm.options.value.group) + 1) % modes.size])
-                vm.message.value = "Repisas por: ${vm.options.value.group.label}"
+                vm.message.value = com.repisa.app.i18n.L10n.s(R.string.msg_group_changed, vm.options.value.group.label)
             }
             else -> {
                 val order = listOf<Source?>(null) + Source.entries
@@ -94,7 +110,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit) {
+private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageChanged: () -> Unit) {
     val inSettings by vm.inSettings.collectAsState()
     var inRated by rememberSaveable { mutableStateOf(false) }
     val selectedId by vm.selectedId.collectAsState()
@@ -132,7 +148,7 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit) {
         },
     ) {
         if (inSettings) {
-            SettingsScreen(vm, onBack = { closeSettings() })
+            SettingsScreen(vm, onBack = { closeSettings() }, onLanguageChanged = onLanguageChanged)
         } else {
             if (inRated) RatedScreen(vm, onBack = { inRated = false }, onOpen = { vm.selectedId.value = it.id })
             else ShelfScreen(vm, onOpenSettings = { vm.inSettings.value = true }, onOpenGame = { vm.selectedId.value = it.id },

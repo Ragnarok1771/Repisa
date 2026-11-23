@@ -1,12 +1,16 @@
 package com.repisa.app.model
 
+import com.repisa.app.R
+import com.repisa.app.i18n.L10n
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class Source(val label: String) {
-    STEAM("Steam"),
-    EPIC("Epic Games"),
-    EMULATOR("Emuladores"),
+enum class Source(val labelRes: Int) {
+    STEAM(R.string.source_steam),
+    EPIC(R.string.source_epic),
+    EMULATOR(R.string.source_emulators);
+
+    val label: String get() = L10n.s(labelRes)
 }
 
 @Serializable
@@ -73,8 +77,8 @@ data class Game(
 }
 
 fun formatPlaytime(minutes: Int): String = when {
-    minutes <= 0 -> "Sin jugar"
-    minutes < 60 -> "$minutes min"
-    minutes % 60 == 0 -> "${minutes / 60} h"
-    else -> "${minutes / 60} h ${minutes % 60} min"
+    minutes <= 0 -> L10n.s(R.string.time_none)
+    minutes < 60 -> L10n.s(R.string.time_min, minutes)
+    minutes % 60 == 0 -> L10n.s(R.string.time_h, minutes / 60)
+    else -> L10n.s(R.string.time_h_min, minutes / 60, minutes % 60)
 }

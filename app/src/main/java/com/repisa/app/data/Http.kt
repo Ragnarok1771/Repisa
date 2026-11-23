@@ -15,7 +15,10 @@ object Http {
         .readTimeout(30, TimeUnit.SECONDS)
         .followRedirects(true)
         .addInterceptor { chain ->
-            chain.proceed(chain.request().newBuilder().header("User-Agent", "Repisa/0.1 (Android)").build())
+            val req = chain.request()
+            // Solo si la petición no trae ya su propia identificación (Epic necesita la del lanzador).
+            chain.proceed(if (req.header("User-Agent") != null) req
+                else req.newBuilder().header("User-Agent", "Repisa (Android)").build())
         }
         .build()
 

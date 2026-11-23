@@ -6,6 +6,7 @@ import android.net.Uri
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -14,8 +15,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,6 +33,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -49,20 +50,23 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -71,7 +75,10 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.repisa.app.R
 import com.repisa.app.data.SafTree
+import com.repisa.app.i18n.AppLanguage
+import com.repisa.app.i18n.L10n
 import com.repisa.app.launch.AppInfo
 import com.repisa.app.model.Consoles
 import com.repisa.app.model.Source
@@ -79,239 +86,152 @@ import com.repisa.app.sources.EpicSource
 import com.repisa.app.sources.SteamLogin
 import org.json.JSONObject
 
-@OptIn(ExperimentalLayoutApi::class)
+private enum class Page(val titleRes: Int, val subRes: Int?, val emoji: String) {
+    EMULATORS(R.string.menu_emulators, R.string.menu_emulators_sub, "🎮"),
+    COVERS(R.string.menu_covers, R.string.menu_covers_sub, "🖼"),
+    PLAYTIME(R.string.menu_playtime, R.string.menu_playtime_sub, "⏰"),
+    DISPLAY(R.string.menu_display, R.string.menu_display_sub, "📺"),
+    LANGUAGE(R.string.menu_language, null, "🌐"),
+}
+
+/**
+ * Ajustes: Steam y Epic en la página principal y el resto agrupado en submenús.
+ * [onLanguageChanged] recrea la pantalla con el idioma nuevo.
+ */
 @Composable
-fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
-    val s = vm.settings
-    val context = LocalContext.current
-    var refresh by remember { mutableIntStateOf(0) } // fuerza recomposición tras cambiar prefs
-    fun changed() { refresh++ }
-    // Al volver de los ajustes de Android (p. ej. tras conceder un permiso), refrescar.
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { changed() }
-
-    fun persist(uri: Uri) = context.contentResolver.takePersistableUriPermission(
-        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-    )
-    val pickRoms = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null) { persist(uri); s.romFolders = s.romFolders + uri.toString(); changed() }
-    }
-    val pickEsde = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null) { persist(uri); s.esdeFolder = uri.toString(); changed() }
-    }
-    val pickCocoon = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null) { persist(uri); s.cocoonFolder = uri.toString(); changed() }
-    }
-    val pickRetroArch = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null) { persist(uri); s.retroarchFolder = uri.toString(); changed() }
-    }
-
-    var epicWeb by remember { mutableStateOf(false) }
-    var steamWeb by remember { mutableStateOf(false) }
-    var pickEmuFor by remember { mutableStateOf<String?>(null) }
+fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit, onLanguageChanged: () -> Unit) {
+    var page by rememberSaveable { mutableStateOf<Page?>(null) }
+    // Se incrementa al cambiar un ajuste: las páginas lo leen para releer preferencias SIN reiniciar
+    // el desplazamiento ni los campos que el usuario está escribiendo.
+    var tick by remember { mutableIntStateOf(0) }
+    val changed: () -> Unit = { tick++ }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { tick++ }
+    BackHandler(enabled = page != null) { page = null }
 
     Column(Modifier.fillMaxSize().roomBackground()) {
         Row(Modifier.fillMaxWidth().background(Color(0xCC120C09)).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White) }
-            Text("Ajustes", color = Color(0xFFFFD27A), fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = DisplayFont)
+            IconButton(onClick = { if (page != null) page = null else onBack() }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White)
+            }
+            Text(
+                page?.let { stringResource(it.titleRes) } ?: stringResource(R.string.settings),
+                color = Color(0xFFFFD27A), fontSize = 22.sp, fontWeight = FontWeight.SemiBold, fontFamily = DisplayFont,
+            )
             Spacer(Modifier.weight(1f))
-            Button(onClick = { vm.syncAll(); onBack() }) { Text("Sincronizar todo") }
+            if (page == null) Button(onClick = { vm.syncAll(); onBack() }) { Text(stringResource(R.string.sync_all)) }
         }
-        // `refresh` se lee aquí para que la columna se recomponga al cambiar ajustes.
-        key(refresh) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+        Column(
+            Modifier.fillMaxSize().verticalScroll(pageScrollState(page)).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            when (page) {
+                null -> MainPage(vm, tick, changed) { page = it }
+                Page.EMULATORS -> EmulatorsPage(vm, tick, changed)
+                Page.COVERS -> CoversPage(vm, tick, changed, onBack)
+                Page.PLAYTIME -> PlaytimePage(vm, tick)
+                Page.DISPLAY -> DisplayPage(vm, tick, changed)
+                Page.LANGUAGE -> LanguageList(L10n.current) { lang ->
+                    L10n.setLanguage(vm.getApplication<android.app.Application>(), lang); onLanguageChanged()
+                }
+            }
+            Spacer(Modifier.height(40.dp))
+        }
+    }
+}
+
+/** Un desplazamiento distinto por página (al entrar en un submenú se empieza arriba). */
+@Composable
+private fun pageScrollState(page: Any?): androidx.compose.foundation.ScrollState =
+    androidx.compose.runtime.key(page) { rememberScrollState() }
+
+// ---------------------------------------------------------------------------- Página principal
+
+@Composable
+private fun MainPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit, open: (Page) -> Unit) {
+    val s = vm.settings
+    @Suppress("UNUSED_VARIABLE") val t = tick
+    var epicWeb by remember { mutableStateOf(false) }
+    var steamWeb by remember { mutableStateOf(false) }
+
+    Section(stringResource(R.string.source_steam)) {
+        if (s.steamLinkedId != null || s.steamApiKey != null) {
+            Hint(s.steamLinkedName?.let { stringResource(R.string.steam_linked, it) }
+                ?: s.steamLinkedId?.let { stringResource(R.string.steam_linked, "SteamID $it") }
+                ?: stringResource(R.string.steam_linked_key))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { vm.syncOne(Source.STEAM) }) { Text(stringResource(R.string.sync)) }
+                OutlinedButton(onClick = { vm.steamUnlink(); changed() }) { Text(stringResource(R.string.unlink), color = Color.White) }
+            }
+        } else {
+            Hint(stringResource(R.string.steam_link_hint))
+            Button(onClick = { steamWeb = true }) { Text(stringResource(R.string.steam_link)) }
+            var advanced by remember { mutableStateOf(false) }
+            TextButton(onClick = { advanced = !advanced }) {
+                Text(stringResource(if (advanced) R.string.steam_advanced_hide else R.string.steam_advanced_show))
+            }
+            if (advanced) {
+                Hint(stringResource(R.string.steam_key_hint))
+                TextButton(onClick = { vm.launcher.openUrl("https://steamcommunity.com/dev/apikey") }) {
+                    Text(stringResource(R.string.steam_get_key))
+                }
+                var key by remember { mutableStateOf(s.steamApiKey.orEmpty()) }
+                var user by remember { mutableStateOf(s.steamUser.orEmpty()) }
+                Field(stringResource(R.string.steam_key), key, secret = true) { key = it }
+                Field(stringResource(R.string.steam_user), user) { user = it }
+                Button(onClick = { s.steamApiKey = key; s.steamUser = user; vm.syncOne(Source.STEAM); changed() },
+                    enabled = key.isNotBlank() && user.isNotBlank()) { Text(stringResource(R.string.save_and_sync)) }
+            }
+        }
+    }
+
+    Section(stringResource(R.string.source_epic)) {
+        if (vm.epic.isLoggedIn) {
+            Hint(s.epicDisplayName?.let { stringResource(R.string.epic_connected, it) } ?: stringResource(R.string.epic_connected_plain))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { vm.syncOne(Source.EPIC) }) { Text(stringResource(R.string.sync)) }
+                OutlinedButton(onClick = { vm.epicLogout(); changed() }) { Text(stringResource(R.string.sign_out), color = Color.White) }
+            }
+        } else {
+            Hint(stringResource(R.string.epic_link_hint))
+            Button(onClick = { epicWeb = true }) { Text(stringResource(R.string.epic_link)) }
+            var other by remember { mutableStateOf(false) }
+            TextButton(onClick = { other = !other }) {
+                Text(stringResource(if (other) R.string.other_methods_hide else R.string.other_methods_show))
+            }
+            if (other) {
+                Hint(stringResource(R.string.epic_code_hint))
+                OutlinedButton(onClick = { vm.epicStartLink() }) { Text(stringResource(R.string.epic_link_code), color = Color.White) }
+                Hint(stringResource(R.string.epic_browser_hint))
+                TextButton(onClick = { vm.launcher.openUrl(EpicSource.LOGIN_URL) }) { Text(stringResource(R.string.epic_open_browser)) }
+                var code by remember { mutableStateOf("") }
+                Field(stringResource(R.string.epic_auth_code), code) { code = it }
+                Button(onClick = { vm.epicLogin(code); code = "" }, enabled = code.isNotBlank()) { Text(stringResource(R.string.use_code)) }
+            }
+        }
+    }
+
+    // Submenús
+    Column(Modifier.fillMaxWidth().background(Color(0xB3120C09), RoundedCornerShape(12.dp))) {
+        Page.entries.forEachIndexed { i, p ->
+            if (i > 0) HorizontalDivider(color = Color(0x22FFFFFF))
+            Row(
+                Modifier.fillMaxWidth().clickable { open(p) }.padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                // ---------------------------------------------------------- Steam
-                Section("Steam") {
-                    val linked = s.steamLinkedId != null || s.steamApiKey != null
-                    if (linked) {
-                        Hint("Cuenta vinculada" + (s.steamLinkedName?.let { ": $it" } ?: s.steamLinkedId?.let { " (SteamID $it)" } ?: " con clave de API") + ".")
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { vm.syncOne(Source.STEAM) }) { Text("Sincronizar Steam") }
-                            OutlinedButton(onClick = { vm.steamUnlink(); changed() }) { Text("Desvincular", color = Color.White) }
-                        }
-                    } else {
-                        Hint("Inicia sesión en la página oficial de Steam (con tu usuario o con el código QR de la app de Steam). " +
-                            "Repisa solo lee tu lista de juegos y tus horas; tu contraseña no pasa por la app.")
-                        Button(onClick = { steamWeb = true }) { Text("Vincular cuenta de Steam") }
-                        var advanced by remember { mutableStateOf(false) }
-                        TextButton(onClick = { advanced = !advanced }) {
-                            Text(if (advanced) "Ocultar opción avanzada" else "Avanzado: usar una clave de API en su lugar")
-                        }
-                        if (advanced) {
-                            Hint("Clave de la Steam Web API y tu SteamID64 o URL de perfil. 'Detalles de juegos' debe estar en Público.")
-                            TextButton(onClick = { vm.launcher.openUrl("https://steamcommunity.com/dev/apikey") }) { Text("Conseguir clave en steamcommunity.com/dev/apikey") }
-                            var key by remember { mutableStateOf(s.steamApiKey.orEmpty()) }
-                            var user by remember { mutableStateOf(s.steamUser.orEmpty()) }
-                            Field("Clave de API de Steam", key, secret = true) { key = it }
-                            Field("SteamID64 / perfil", user) { user = it }
-                            Button(onClick = {
-                                s.steamApiKey = key; s.steamUser = user; vm.syncOne(Source.STEAM); changed()
-                            }, enabled = key.isNotBlank() && user.isNotBlank()) { Text("Guardar y sincronizar") }
-                        }
-                    }
+                Text(p.emoji, fontSize = 22.sp, modifier = Modifier.width(40.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(p.titleRes), color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    val sub = p.subRes?.let { stringResource(it) }
+                        ?: L10n.current?.let { "${it.flag} ${it.nativeName}" }
+                    sub?.let { Text(it, color = Color(0xFFBFA98A), fontSize = 12.sp) }
                 }
-
-                // ---------------------------------------------------------- Epic
-                Section("Epic Games") {
-                    if (vm.epic.isLoggedIn) {
-                        Hint("Conectado${s.epicDisplayName?.let { " como $it" } ?: ""}.")
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { vm.syncOne(Source.EPIC) }) { Text("Sincronizar Epic") }
-                            OutlinedButton(onClick = { vm.epicLogout(); changed() }) { Text("Cerrar sesión", color = Color.White) }
-                        }
-                    } else {
-                        Hint("Pulsa el botón: Repisa te dará un código. Ábrelo en epicgames.com/activate desde cualquier navegador " +
-                            "(o escanea el QR con el móvil), inicia sesión como siempre —también con Google, Xbox, PlayStation o Steam— " +
-                            "y acepta. Repisa solo lee tu biblioteca y tu tiempo de juego.")
-                        Button(onClick = { vm.epicStartLink() }) { Text("Vincular cuenta de Epic Games") }
-                        var other by remember { mutableStateOf(false) }
-                        TextButton(onClick = { other = !other }) { Text(if (other) "Ocultar otros métodos" else "Otros métodos de inicio de sesión") }
-                        if (other) {
-                            OutlinedButton(onClick = { epicWeb = true }) { Text("Iniciar sesión dentro de la app", color = Color.White) }
-                            Hint("O ábrelo en el navegador, inicia sesión y copia aquí el valor de \"authorizationCode\":")
-                            TextButton(onClick = { vm.launcher.openUrl(EpicSource.LOGIN_URL) }) { Text("Abrir el login de Epic en el navegador") }
-                            var code by remember { mutableStateOf("") }
-                            Field("Código de autorización", code) { code = it }
-                            Button(onClick = { vm.epicLogin(code); code = "" }, enabled = code.isNotBlank()) { Text("Usar código") }
-                        }
-                    }
-                }
-
-                // ---------------------------------------------------------- Emuladores
-                Section("Emuladores") {
-                    Hint("Elige la carpeta donde guardas los ROMs (con subcarpetas por sistema: snes, psx, ps2, gba, switch…, como ES-DE). " +
-                        "Puedes añadir varias, p. ej. memoria interna y tarjeta SD.")
-                    s.romFolders.forEach { uri ->
-                        FolderRow(SafTree.displayName(context, uri)) { s.romFolders = s.romFolders - uri; changed() }
-                    }
-                    OutlinedButton(onClick = { pickRoms.launch(null) }) { Text("Añadir carpeta de ROMs", color = Color.White) }
-
-                    HorizontalDivider(color = Color(0x33FFFFFF))
-                    Hint("Opcional: carpeta ES-DE (usa sus portadas descargadas, géneros, estudios y fechas).")
-                    s.esdeFolder?.let { FolderRow(SafTree.displayName(context, it)) { s.esdeFolder = null; changed() } }
-                        ?: OutlinedButton(onClick = { pickEsde.launch(null) }) { Text("Elegir carpeta ES-DE", color = Color.White) }
-
-                    Hint("Opcional: carpeta RetroArch (lee las playlists y el tiempo de juego). Activa en RetroArch: " +
-                        "Ajustes → Guardado → 'Guardar registros de tiempo de juego'.")
-                    s.retroarchFolder?.let { FolderRow(SafTree.displayName(context, it)) { s.retroarchFolder = null; changed() } }
-                        ?: OutlinedButton(onClick = { pickRetroArch.launch(null) }) { Text("Elegir carpeta RetroArch", color = Color.White) }
-
-                    Hint("Opcional: carpeta de datos de Cocoon. En Cocoon usa Ajustes → Library & Data → Export Metadata para que " +
-                        "genere los gamelist.xml; Repisa lee de ahí géneros, fechas, carátulas y el tiempo de juego si viene incluido. " +
-                        "Sirve también para Batocera, RetroBat u otros frontends que exporten gamelist.xml.")
-                    s.cocoonFolder?.let { FolderRow(SafTree.displayName(context, it)) { s.cocoonFolder = null; changed() } }
-                        ?: OutlinedButton(onClick = { pickCocoon.launch(null) }) { Text("Elegir carpeta de Cocoon", color = Color.White) }
-
-                    Button(onClick = { vm.syncOne(Source.EMULATOR) }) { Text("Escanear emuladores") }
-
-                    val consoles = vm.consolesInLibrary()
-                    if (consoles.isNotEmpty()) {
-                        HorizontalDivider(color = Color(0x33FFFFFF))
-                        Hint("Emulador para abrir cada sistema (si no eliges ninguno, Android preguntará). Repisa mide el tiempo que pasas jugando lo que abres desde aquí.")
-                        consoles.forEach { id ->
-                            val pkg = s.emulatorFor(id)
-                            Row(Modifier.fillMaxWidth().clickable { pickEmuFor = id }.padding(vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically) {
-                                Text(Consoles.byId(id).name, color = Color.White, modifier = Modifier.weight(1f))
-                                Text(pkg?.let { vm.launcher.appLabel(it) } ?: "Preguntar", color = Color(0xFFFFD27A))
-                            }
-                        }
-                    }
-                }
-
-                // ---------------------------------------------------------- Tiempo de juego
-                Section("Tiempo de juego") {
-                    Hint("Steam, Epic y emuladores se vuelven a leer solos al abrir Repisa o al volver a ella, así que " +
-                        "las horas que juegues en el PC, en otro frontend o en RetroArch aparecen aquí actualizadas.")
-                    val granted = vm.launcher.usage.hasPermission()
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Acceso a datos de uso: " + if (granted) "concedido ✓" else "no concedido", color = Color.White)
-                            Hint("Con este permiso de Android (el mismo que usa Cocoon), Repisa mide solo el tiempo que el emulador " +
-                                "está realmente en pantalla en los juegos que abres desde aquí: no cuenta el reposo ni otras apps.")
-                        }
-                        if (!granted) OutlinedButton(onClick = { context.startActivity(vm.launcher.usage.permissionIntent()) }) {
-                            Text("Conceder", color = Color.White)
-                        }
-                    }
-                }
-
-                // ---------------------------------------------------------- Metadatos
-                Section("Portadas y datos") {
-                    Hint("Carátulas: cada juego tiene un botón \"Buscar carátula\" en su ficha. Con este botón se buscan " +
-                        "automáticamente las de todos los juegos que no tienen, por palabras clave del nombre.")
-                    Button(onClick = { vm.findMissingCovers(); onBack() }) { Text("Buscar carátulas que faltan") }
-                    Hint("Recomendado: SteamGridDB, la base de carátulas que usa Cocoon (gratis). Crea una cuenta, ve a " +
-                        "Preferencias → API y pega aquí tu clave.")
-                    TextButton(onClick = { vm.launcher.openUrl("https://www.steamgriddb.com/profile/preferences/api") }) {
-                        Text("Conseguir clave de SteamGridDB")
-                    }
-                    var sgdb by remember { mutableStateOf(s.steamGridDbKey.orEmpty()) }
-                    Field("Clave de SteamGridDB", sgdb, secret = true) { sgdb = it }
-                    OutlinedButton(onClick = { s.steamGridDbKey = sgdb.ifBlank { null }; changed() }) { Text("Guardar clave", color = Color.White) }
-                    HorizontalDivider(color = Color(0x33FFFFFF))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Portadas de libretro-thumbnails para emuladores", color = Color.White, modifier = Modifier.weight(1f))
-                        Switch(checked = s.useLibretroCovers, onCheckedChange = { s.useLibretroCovers = it; changed() })
-                    }
-                    Hint("Opcional: IGDB completa géneros, estudios y portadas de cualquier juego (sobre todo Epic y emuladores). " +
-                        "Crea una aplicación gratis en dev.twitch.tv y pega su Client ID y Client Secret.")
-                    TextButton(onClick = { vm.launcher.openUrl("https://api-docs.igdb.com/#account-creation") }) { Text("Cómo conseguir las credenciales de IGDB") }
-                    var id by remember { mutableStateOf(s.igdbClientId.orEmpty()) }
-                    var secret by remember { mutableStateOf(s.igdbClientSecret.orEmpty()) }
-                    Field("IGDB Client ID", id) { id = it }
-                    Field("IGDB Client Secret", secret, secret = true) { secret = it }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = {
-                            s.igdbClientId = id.ifBlank { null }; s.igdbClientSecret = secret.ifBlank { null }
-                            vm.startEnrichment(force = true); changed()
-                        }) { Text("Guardar y volver a buscar datos") }
-                    }
-                }
-
-                // ---------------------------------------------------------- Calificaciones
-                Section("Calificaciones") {
-                    val scale by vm.ratingScale.collectAsState()
-                    Hint("Escala con la que pones y ves las notas. Puedes cambiarla cuando quieras: las notas ya puestas se convierten solas.")
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        com.repisa.app.model.RatingScale.entries.forEach { sc ->
-                            androidx.compose.material3.FilterChip(selected = scale == sc, onClick = { vm.setRatingScale(sc) },
-                                label = { Text(sc.label) })
-                        }
-                    }
-                    Hint("Plantilla: lo que se califica por defecto en cada juego nuevo y cuánto pesa cada cosa. En cada juego puedes " +
-                        "añadir, quitar o renombrar lo que quieras (\"Historia\", \"Música\", \"El cielo\"…).")
-                    val template = remember { androidx.compose.runtime.mutableStateListOf<com.repisa.app.model.Criterion>().apply { addAll(loadTemplate(s)) } }
-                    CriteriaEditor(template, scale, withScores = false)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { saveTemplate(s, template.filter { it.name.isNotBlank() }); changed() }) { Text("Guardar plantilla") }
-                        TextButton(onClick = { template.clear(); template.addAll(com.repisa.app.model.DefaultCriteria) }) { Text("Restaurar la original") }
-                    }
-                }
-
-                // ---------------------------------------------------------- Pantalla
-                Section("Pantalla") {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Usar la segunda pantalla", color = Color.White)
-                            Hint("En la AYN Thor, la pantalla de abajo muestra la ficha del juego seleccionado.")
-                        }
-                        Switch(checked = s.secondScreen, onCheckedChange = { s.secondScreen = it; changed() })
-                    }
-                    Text("Tamaño de las cajas: ${s.shelfHeightDp} dp (altura de una caja de DVD; el resto, a escala real)", color = Color.White)
-                    var h by remember { mutableStateOf(s.shelfHeightDp.toFloat()) }
-                    Slider(value = h, onValueChange = { h = it }, onValueChangeFinished = { s.shelfHeightDp = h.toInt(); changed() },
-                        valueRange = 90f..240f, modifier = Modifier.widthIn(max = 480.dp))
-                }
-                Spacer(Modifier.height(40.dp))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = Color(0xFFBFA98A))
             }
         }
     }
 
     if (epicWeb) {
-        LoginWebDialog("Vincular cuenta de Epic Games", EpicSource.LOGIN_URL, onDismiss = { epicWeb = false }) { view, url, done ->
+        LoginWebDialog(stringResource(R.string.epic_link), EpicSource.LOGIN_URL, onDismiss = { epicWeb = false }) { view, url, done ->
             // Al terminar, Epic muestra un JSON con "authorizationCode".
             if (!url.contains("/id/api/redirect")) return@LoginWebDialog
             view.evaluateJavascript("document.body.innerText") { raw ->
@@ -327,18 +247,173 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
             onDismiss = { vm.epicCancelLink(); changed() })
     }
     if (steamWeb) {
-        LoginWebDialog("Vincular cuenta de Steam", SteamLogin.LOGIN_URL, onDismiss = { steamWeb = false }) { _, _, done ->
+        LoginWebDialog(stringResource(R.string.steam_link), SteamLogin.LOGIN_URL, onDismiss = { steamWeb = false }) { _, _, done ->
             if (SteamLogin.isLoggedInWeb()) { done(); steamWeb = false; vm.steamLinked(); changed() }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------- Emuladores
+
+@Composable
+private fun EmulatorsPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
+    val s = vm.settings
+    @Suppress("UNUSED_VARIABLE") val t = tick
+    val context = LocalContext.current
+    fun persist(uri: Uri) = context.contentResolver.takePersistableUriPermission(
+        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+    )
+    val pickRoms = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) { persist(uri); s.romFolders = s.romFolders + uri.toString(); changed() }
+    }
+    val pickEsde = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) { persist(uri); s.esdeFolder = uri.toString(); changed() }
+    }
+    val pickCocoon = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) { persist(uri); s.cocoonFolder = uri.toString(); changed() }
+    }
+    val pickRetroArch = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) { persist(uri); s.retroarchFolder = uri.toString(); changed() }
+    }
+    var pickEmuFor by remember { mutableStateOf<String?>(null) }
+
+    Section(stringResource(R.string.menu_emulators)) {
+        Hint(stringResource(R.string.rom_hint))
+        s.romFolders.forEach { uri -> FolderRow(SafTree.displayName(context, uri)) { s.romFolders = s.romFolders - uri; changed() } }
+        OutlinedButton(onClick = { pickRoms.launch(null) }) { Text(stringResource(R.string.add_rom_folder), color = Color.White) }
+        HorizontalDivider(color = Color(0x33FFFFFF))
+        Hint(stringResource(R.string.esde_hint))
+        s.esdeFolder?.let { FolderRow(SafTree.displayName(context, it)) { s.esdeFolder = null; changed() } }
+            ?: OutlinedButton(onClick = { pickEsde.launch(null) }) { Text(stringResource(R.string.choose_esde), color = Color.White) }
+        Hint(stringResource(R.string.ra_hint))
+        s.retroarchFolder?.let { FolderRow(SafTree.displayName(context, it)) { s.retroarchFolder = null; changed() } }
+            ?: OutlinedButton(onClick = { pickRetroArch.launch(null) }) { Text(stringResource(R.string.choose_ra), color = Color.White) }
+        Hint(stringResource(R.string.cocoon_hint))
+        s.cocoonFolder?.let { FolderRow(SafTree.displayName(context, it)) { s.cocoonFolder = null; changed() } }
+            ?: OutlinedButton(onClick = { pickCocoon.launch(null) }) { Text(stringResource(R.string.choose_cocoon), color = Color.White) }
+        Button(onClick = { vm.syncOne(Source.EMULATOR) }) { Text(stringResource(R.string.scan_emulators)) }
+    }
+
+    val consoles = vm.consolesInLibrary()
+    if (consoles.isNotEmpty()) Section(stringResource(R.string.emulator_for, "…")) {
+        Hint(stringResource(R.string.emu_per_system_hint))
+        consoles.forEach { id ->
+            val pkg = s.emulatorFor(id)
+            Row(Modifier.fillMaxWidth().clickable { pickEmuFor = id }.padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Text(Consoles.byId(id).name, color = Color.White, modifier = Modifier.weight(1f))
+                Text(pkg?.let { vm.launcher.appLabel(it) } ?: stringResource(R.string.ask), color = Color(0xFFFFD27A))
+            }
         }
     }
     pickEmuFor?.let { consoleId ->
         EmulatorPicker(
-            title = "Emulador para ${Consoles.byId(consoleId).name}",
+            title = stringResource(R.string.emulator_for, Consoles.byId(consoleId).name),
             apps = remember { vm.launcher.installedApps() },
             onDismiss = { pickEmuFor = null },
         ) { pkg -> s.setEmulatorFor(consoleId, pkg); pickEmuFor = null; changed() }
     }
 }
+
+// ---------------------------------------------------------------------------- Carátulas y datos
+
+@Composable
+private fun CoversPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit, onBack: () -> Unit) {
+    val s = vm.settings
+    @Suppress("UNUSED_VARIABLE") val t = tick
+    Section(stringResource(R.string.menu_covers)) {
+        Hint(stringResource(R.string.covers_hint))
+        Button(onClick = { vm.findMissingCovers(); onBack() }) { Text(stringResource(R.string.find_missing)) }
+        HorizontalDivider(color = Color(0x33FFFFFF))
+        Hint(stringResource(R.string.sgdb_hint))
+        TextButton(onClick = { vm.launcher.openUrl("https://www.steamgriddb.com/profile/preferences/api") }) {
+            Text(stringResource(R.string.sgdb_get))
+        }
+        var sgdb by remember { mutableStateOf(s.steamGridDbKey.orEmpty()) }
+        Field(stringResource(R.string.sgdb_key), sgdb, secret = true) { sgdb = it }
+        OutlinedButton(onClick = { s.steamGridDbKey = sgdb.ifBlank { null }; changed() }) {
+            Text(stringResource(R.string.save_key), color = Color.White)
+        }
+        HorizontalDivider(color = Color(0x33FFFFFF))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.libretro_toggle), color = Color.White, modifier = Modifier.weight(1f))
+            Switch(checked = s.useLibretroCovers, onCheckedChange = { s.useLibretroCovers = it; changed() })
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------- Tiempo de juego
+
+@Composable
+private fun PlaytimePage(vm: LibraryViewModel, tick: Int) {
+    @Suppress("UNUSED_VARIABLE") val t = tick
+    val context = LocalContext.current
+    Section(stringResource(R.string.menu_playtime)) {
+        Hint(stringResource(R.string.autosync_hint))
+        HorizontalDivider(color = Color(0x33FFFFFF))
+        val granted = vm.launcher.usage.hasPermission()
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(if (granted) R.string.usage_granted else R.string.usage_denied), color = Color.White)
+                Hint(stringResource(R.string.usage_hint))
+            }
+            if (!granted) OutlinedButton(onClick = { context.startActivity(vm.launcher.usage.permissionIntent()) }) {
+                Text(stringResource(R.string.grant), color = Color.White)
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------- Pantalla
+
+@Composable
+private fun DisplayPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
+    val s = vm.settings
+    @Suppress("UNUSED_VARIABLE") val t = tick
+    Section(stringResource(R.string.menu_display)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.second_screen), color = Color.White)
+                Hint(stringResource(R.string.second_screen_hint))
+            }
+            Switch(checked = s.secondScreen, onCheckedChange = { s.secondScreen = it; changed() })
+        }
+        HorizontalDivider(color = Color(0x33FFFFFF))
+        // El valor se ve mientras se arrastra; se guarda al soltar.
+        var h by remember { mutableFloatStateOf(s.shelfHeightDp.toFloat()) }
+        Text(stringResource(R.string.box_size, h.toInt()), color = Color.White)
+        Hint(stringResource(R.string.box_size_hint))
+        Slider(value = h, onValueChange = { h = it }, onValueChangeFinished = { s.shelfHeightDp = h.toInt() },
+            valueRange = 90f..240f, modifier = Modifier.widthIn(max = 560.dp))
+    }
+}
+
+// ---------------------------------------------------------------------------- Idioma
+
+/** Lista de idiomas con bandera; táctil y grande. También la usa la pantalla de bienvenida. */
+@Composable
+fun LanguageList(selected: AppLanguage?, onPick: (AppLanguage) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        AppLanguage.entries.forEach { lang ->
+            val active = lang == selected
+            Row(
+                Modifier.fillMaxWidth()
+                    .background(if (active) Color(0xFF5B3A1E) else Color(0xB3120C09), RoundedCornerShape(12.dp))
+                    .clickable { onPick(lang) }
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(lang.flag, fontSize = 30.sp)
+                Spacer(Modifier.width(16.dp))
+                Text(lang.nativeName, color = Color.White, fontSize = 18.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
+                    modifier = Modifier.weight(1f))
+                if (active) Text("✓", color = Color(0xFFFFD27A), fontSize = 20.sp)
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------- Piezas comunes
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
@@ -346,7 +421,7 @@ private fun Section(title: String, content: @Composable () -> Unit) {
         Modifier.fillMaxWidth().background(Color(0xB3120C09), RoundedCornerShape(12.dp)).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(title, color = Color(0xFFFFD27A), fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = DisplayFont)
+        Text(title, color = Color(0xFFFFD27A), fontSize = 18.sp, fontWeight = FontWeight.SemiBold, fontFamily = DisplayFont)
         content()
     }
 }
@@ -358,7 +433,7 @@ private fun Hint(text: String) = Text(text, color = Color(0xFFBFA98A), fontSize 
 private fun Field(label: String, value: String, secret: Boolean = false, onChange: (String) -> Unit) {
     OutlinedTextField(
         value = value, onValueChange = onChange, label = { Text(label) }, singleLine = true,
-        visualTransformation = if (secret) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+        visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = if (secret) KeyboardType.Password else KeyboardType.Text),
         modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth(),
     )
@@ -368,7 +443,7 @@ private fun Field(label: String, value: String, secret: Boolean = false, onChang
 private fun FolderRow(name: String, onRemove: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("📁 $name", color = Color.White, modifier = Modifier.weight(1f))
-        IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, "Quitar", tint = Color(0xFFE57373)) }
+        IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, stringResource(R.string.remove), tint = Color(0xFFE57373)) }
     }
 }
 
@@ -380,14 +455,13 @@ private fun EmulatorPicker(title: String, apps: List<AppInfo>, onDismiss: () -> 
         text = {
             LazyColumn(Modifier.heightIn(max = 420.dp)) {
                 item {
-                    Text("Preguntar cada vez", modifier = Modifier.fillMaxWidth().clickable { onPick(null) }.padding(12.dp))
+                    Text(stringResource(R.string.ask_every_time),
+                        modifier = Modifier.fillMaxWidth().clickable { onPick(null) }.padding(12.dp))
                 }
                 items(apps, key = { it.packageName }) { app ->
                     Row(Modifier.fillMaxWidth().clickable { onPick(app.packageName) }.padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically) {
-                        app.icon?.let {
-                            Image(it.toBitmap(64, 64).asImageBitmap(), null, Modifier.size(32.dp))
-                        }
+                        app.icon?.let { Image(it.toBitmap(64, 64).asImageBitmap(), null, Modifier.size(32.dp)) }
                         Column(Modifier.padding(start = 10.dp)) {
                             Text(app.label)
                             Text(app.packageName, fontSize = 10.sp, color = Color.Gray)
@@ -396,7 +470,7 @@ private fun EmulatorPicker(title: String, apps: List<AppInfo>, onDismiss: () -> 
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
 
@@ -421,7 +495,6 @@ private fun LoginWebDialog(
                     WebView(ctx).apply {
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
-                        // Algunas webs rechazan los WebView: nos presentamos como Chrome móvil.
                         // Muchas webs de login rechazan los WebView: nos presentamos como Chrome para Android normal
                         // (se quitan las marcas "; wv" y "Version/4.0" que delatan al WebView).
                         settings.userAgentString = settings.userAgentString
@@ -440,7 +513,7 @@ private fun LoginWebDialog(
             )
             Row(Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(title, color = Color.Black, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f).padding(start = 12.dp))
-                TextButton(onClick = onDismiss) { Text("Cancelar") }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
             }
         }
     }
@@ -456,39 +529,43 @@ private fun EpicLinkDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Vincular cuenta de Epic Games") },
+        title = { Text(stringResource(R.string.epic_link)) },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (state) {
-                    LibraryViewModel.EpicLink.Starting -> { CircularProgressIndicator(); Text("Pidiendo un código a Epic…") }
+                    LibraryViewModel.EpicLink.Starting -> { CircularProgressIndicator(); Text(stringResource(R.string.epic_requesting)) }
                     is LibraryViewModel.EpicLink.Waiting -> {
-                        Text("1. Abre epicgames.com/activate (o escanea el QR con el móvil)")
-                        Text("2. Inicia sesión y escribe este código:")
+                        Text(stringResource(R.string.epic_step1))
+                        Text(stringResource(R.string.epic_step2))
                         Text(state.code.userCode, fontSize = 34.sp, fontWeight = FontWeight.Black, letterSpacing = 4.sp,
                             fontFamily = FontFamily.Monospace)
                         QrCode(state.code.verificationUrl, Modifier.size(170.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                            Text("  Esperando a que aceptes en la web…", fontSize = 12.sp)
+                            Text("  " + stringResource(R.string.epic_waiting), fontSize = 12.sp)
                         }
                     }
                     is LibraryViewModel.EpicLink.Failed -> {
-                        Text("No se pudo vincular: ${state.message}")
-                        Text("Si se repite, prueba con \"Otros métodos de inicio de sesión\".", fontSize = 12.sp)
+                        Text(stringResource(R.string.epic_failed, state.message))
+                        Text(stringResource(R.string.epic_failed_hint), fontSize = 12.sp)
                     }
-                    LibraryViewModel.EpicLink.Done -> Text("¡Cuenta vinculada! Cargando tu biblioteca…")
+                    LibraryViewModel.EpicLink.Done -> Text(stringResource(R.string.epic_done))
                 }
             }
         },
         confirmButton = {
             when (state) {
-                is LibraryViewModel.EpicLink.Waiting -> TextButton(onClick = { onOpen(state.code.verificationUrl) }) { Text("Abrir aquí") }
-                is LibraryViewModel.EpicLink.Failed -> TextButton(onClick = onRetry) { Text("Pedir otro código") }
-                LibraryViewModel.EpicLink.Done -> TextButton(onClick = onDismiss) { Text("Listo") }
+                is LibraryViewModel.EpicLink.Waiting -> TextButton(onClick = { onOpen(state.code.verificationUrl) }) {
+                    Text(stringResource(R.string.open_here))
+                }
+                is LibraryViewModel.EpicLink.Failed -> TextButton(onClick = onRetry) { Text(stringResource(R.string.new_code)) }
+                LibraryViewModel.EpicLink.Done -> TextButton(onClick = onDismiss) { Text(stringResource(R.string.done)) }
                 else -> Unit
             }
         },
-        dismissButton = { if (state !is LibraryViewModel.EpicLink.Done) TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        dismissButton = {
+            if (state !is LibraryViewModel.EpicLink.Done) TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
     )
 }
 
@@ -503,6 +580,6 @@ private fun QrCode(text: String, modifier: Modifier = Modifier) {
         }
         bmp.asImageBitmap()
     }
-    Image(bitmap, "Código QR", modifier.background(Color.White).padding(8.dp),
+    Image(bitmap, "QR", modifier.background(Color.White).padding(8.dp),
         filterQuality = androidx.compose.ui.graphics.FilterQuality.None)
 }

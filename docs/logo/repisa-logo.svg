@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <defs>
+    <radialGradient id="bg" cx="54" cy="38" r="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5A3A22"/><stop offset="0.55" stop-color="#2E1D12"/><stop offset="1" stop-color="#170E08"/>
+    </radialGradient>
+    <linearGradient id="plank" x1="0" y1="72" x2="0" y2="82" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D9A066"/><stop offset="0.25" stop-color="#B07840"/><stop offset="1" stop-color="#6E4523"/>
+    </linearGradient>
+    <linearGradient id="c1" x1="34" y1="40" x2="48" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3FD8C6"/><stop offset="1" stop-color="#147A83"/>
+    </linearGradient>
+    <linearGradient id="c2" x1="46" y1="30" x2="64" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFC15E"/><stop offset="1" stop-color="#E8662A"/>
+    </linearGradient>
+    <linearGradient id="c3" x1="62" y1="38" x2="76" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF7A8A"/><stop offset="1" stop-color="#9B2C5C"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="54" cy="30" r="34" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD9A0" stop-opacity="0.35"/><stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="108" height="108" fill="url(#bg)"/>
+  <circle cx="54" cy="30" r="34" fill="url(#glow)"/>
+  <!-- sombra sobre la pared -->
+  <ellipse cx="54" cy="73" rx="27" ry="3" fill="#000" fill-opacity="0.35"/>
+  <!-- caja izquierda (teal), inclinada levemente -->
+  <g>
+    <path d="M47,40 l2.5,-1.5 v33 l-2.5,1.5z" fill="#0C4F57"/>
+    <rect x="33" y="40" width="14" height="33" rx="1.2" fill="url(#c1)"/>
+    <rect x="33" y="40" width="14" height="4" rx="1" fill="#0E3E45"/>
+    <circle cx="40" cy="55" r="4" fill="#FFFFFF" fill-opacity="0.85"/>
+    <path d="M34.5,68 l4,-6 l3,4 l2,-2.5 l3,4.5z" fill="#FFFFFF" fill-opacity="0.55"/>
+  </g>
+  <!-- caja derecha (rosa) -->
+  <g>
+    <path d="M75,42 l2.5,-1.5 v31 l-2.5,1.5z" fill="#5E1838"/>
+    <rect x="61" y="42" width="14" height="31" rx="1.2" fill="url(#c3)"/>
+    <rect x="61" y="42" width="14" height="4" rx="1" fill="#4A1230"/>
+    <path d="M64,62 l4,-8 l4,8z" fill="#FFFFFF" fill-opacity="0.8"/>
+    <rect x="64" y="65" width="8" height="1.6" rx="0.8" fill="#FFFFFF" fill-opacity="0.6"/>
+  </g>
+  <!-- caja central (ámbar), delante y más alta -->
+  <g>
+    <path d="M64,33 l3,-2 v42 l-3,2z" fill="#8A3A12"/>
+    <path d="M45,33 l3,-2 h19 l-3,2z" fill="#FFE2A8"/>
+    <rect x="45" y="33" width="19" height="42" rx="1.4" fill="url(#c2)"/>
+    <rect x="45" y="33" width="19" height="5.5" rx="1.2" fill="#2B1A0C"/>
+    <rect x="49" y="35" width="11" height="1.6" rx="0.8" fill="#FFC15E"/>
+    <!-- "R" de Repisa -->
+    <path d="M50,67 V46 h6.5 a5,5 0 0 1 0,10 h-6.5 M55.5,56 l5,11" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M45,33 h19 v42 h-19z" fill="url(#gloss)" opacity="0"/>
+    <path d="M46,34 l8,0 l-8,22z" fill="#FFFFFF" fill-opacity="0.18"/>
+  </g>
+  <!-- balda -->
+  <rect x="22" y="73" width="64" height="9" rx="1.5" fill="url(#plank)"/>
+  <rect x="22" y="73" width="64" height="1.4" rx="0.7" fill="#F2C48C"/>
+  <rect x="22" y="82" width="64" height="3" fill="#000" fill-opacity="0.3"/>
+</svg>

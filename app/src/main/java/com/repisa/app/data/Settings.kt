@@ -52,8 +52,6 @@ class Settings(context: Context) {
     fun setEmulatorFor(consoleId: String, pkg: String?) = put("emu_$consoleId", pkg)
 
     // --- Metadatos ---
-    var igdbClientId: String? get() = str("igdb_id"); set(v) = put("igdb_id", v?.trim())
-    var igdbClientSecret: String? get() = str("igdb_secret"); set(v) = put("igdb_secret", v?.trim())
     /** Clave gratuita de https://www.steamgriddb.com/profile/preferences/api (buscador de carátulas). */
     var steamGridDbKey: String? get() = str("sgdb_key"); set(v) = put("sgdb_key", v?.trim())
     /** Última "pasada" automática de búsqueda de carátulas que faltan (ver LibraryViewModel.COVER_PASS). */

@@ -3,7 +3,9 @@ package com.repisa.app.sources
 import android.content.Context
 import android.net.Uri
 import android.util.Xml
+import com.repisa.app.R
 import com.repisa.app.data.Http
+import com.repisa.app.i18n.L10n
 import com.repisa.app.data.SafTree
 import com.repisa.app.data.Settings
 import com.repisa.app.data.arr
@@ -43,20 +45,20 @@ class EmulatorSource(private val context: Context, private val settings: Setting
         fun add(g: Game) { games[g.id] = games[g.id]?.let { mergeEmu(it, g) } ?: g }
 
         settings.romFolders.forEach { uri ->
-            onProgress("Buscando ROMs en ${SafTree.displayName(context, uri)}…")
+            onProgress(L10n.s(R.string.status_scanning_roms, SafTree.displayName(context, uri)))
             runCatching { scanRomFolder(SafTree(context, Uri.parse(uri))) }.getOrDefault(emptyList()).forEach(::add)
         }
 
         val raTree = settings.retroarchFolder?.let { SafTree(context, Uri.parse(it)) }
         if (raTree != null) {
-            onProgress("Leyendo playlists de RetroArch…")
+            onProgress(L10n.s(R.string.status_ra_playlists))
             runCatching { readPlaylists(raTree) }.getOrDefault(emptyList()).forEach(::add)
         }
 
         val esde = mutableMapOf<String, MutableMap<String, EsdeMeta>>()
         listOfNotNull(settings.esdeFolder to "ES-DE", settings.cocoonFolder to "Cocoon").forEach { (uri, name) ->
             if (uri == null) return@forEach
-            onProgress("Leyendo datos de $name…")
+            onProgress(L10n.s(R.string.status_reading, name))
             runCatching { readGamelists(SafTree(context, Uri.parse(uri))) }.getOrNull()?.forEach { (console, metas) ->
                 val target = esde.getOrPut(console) { mutableMapOf() }
                 metas.forEach { (key, m) -> target[key] = target[key]?.let { combineMeta(it, m) } ?: m }
@@ -72,7 +74,7 @@ class EmulatorSource(private val context: Context, private val settings: Setting
         }
 
         val runtimes = raTree?.let {
-            onProgress("Leyendo tiempo de juego de RetroArch…")
+            onProgress(L10n.s(R.string.status_ra_time))
             runCatching { readRuntimeLogs(it) }.getOrNull()
         } ?: emptyMap()
 

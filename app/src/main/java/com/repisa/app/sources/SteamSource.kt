@@ -2,7 +2,9 @@ package com.repisa.app.sources
 
 import android.util.Base64
 import android.webkit.CookieManager
+import com.repisa.app.R
 import com.repisa.app.data.Http
+import com.repisa.app.i18n.L10n
 import com.repisa.app.data.arr
 import com.repisa.app.data.get
 import com.repisa.app.data.int
@@ -104,8 +106,7 @@ class SteamSource private constructor(
         val games = Http.getJson(url.toString())["response"]["games"].arr
         if (games.isEmpty()) {
             throw IllegalStateException(
-                if (apiKey != null) "Steam no devolvió juegos. En tu perfil de Steam, Privacidad → 'Detalles de juegos' debe estar en Público."
-                else "Steam no devolvió juegos. Prueba a desvincular y volver a vincular tu cuenta."
+                if (apiKey != null) L10n.s(R.string.err_steam_no_games_key) else L10n.s(R.string.err_steam_no_games_linked)
             )
         }
         val list = games.mapNotNull { g ->

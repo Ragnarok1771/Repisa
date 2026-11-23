@@ -11,6 +11,14 @@ pensada para la **AYN Thor** (Android, doble pantalla) y cualquier consola o mó
 
 *(Capturas con datos de ejemplo y portadas generadas; con tus cuentas conectadas se ven las carátulas reales.)*
 
+## Idiomas
+
+Español (España y Latinoamérica), English (US y UK), Français, Deutsch, Italiano, Português (Brasil y Portugal).
+La primera vez se elige tocando la bandera; después, en Ajustes → Idioma. Los textos están en
+`tools/i18n/strings.py`: para añadir un idioma se añade su columna y se ejecuta `python3 tools/i18n/strings.py`.
+
+El logo está en `docs/logo/` (PNG 1024 y 512 y SVG).
+
 ## Qué hace
 
 - **Cada juego es su caja**: el frontal es la carátula real del juego (la de la caja que compras en la tienda)
@@ -39,11 +47,10 @@ pensada para la **AYN Thor** (Android, doble pantalla) y cualquier consola o mó
 | **Metacritic** | Nota de la prensa y de los usuarios | Nada |
 | **HowLongToBeat** | Horas: historia, + extras, completista | Nada |
 | **SteamGridDB** (recomendado) | Carátulas de cualquier juego y plataforma (la base que usa Cocoon) | Clave gratuita |
-| **IGDB** (opcional) | Géneros, estudio, año y portada para cualquier juego | Client ID y Secret de Twitch (gratis) |
 
 ### Carátulas
 
-- Cada juego tiene un botón **Buscar carátula** en su ficha: busca en libretro-thumbnails, SteamGridDB, IGDB y la tienda
+- Cada juego tiene un botón **Buscar carátula** en su ficha: busca en GameTDB, libretro-thumbnails, SteamGridDB y la tienda
   de Steam, y eliges la que quieras. La elegida se respeta en futuras sincronizaciones.
 - **Buscar carátulas que faltan** (Ajustes) lo hace automáticamente para toda la biblioteca.
 - La búsqueda es por **palabras clave**: limpia el nombre de archivo (números de lista como `4262 - `, IDs `[0100…]`,

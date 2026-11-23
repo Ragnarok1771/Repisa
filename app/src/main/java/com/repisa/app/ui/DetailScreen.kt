@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -52,11 +53,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.repisa.app.R
+import com.repisa.app.i18n.L10n
 import com.repisa.app.model.Game
+import com.repisa.app.model.label
 import com.repisa.app.model.Source
 import com.repisa.app.model.formatPlaytime
 import java.text.DateFormat
@@ -105,29 +110,31 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         Text(game.title, color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Black,
                             fontFamily = DisplayFont, lineHeight = 30.sp, modifier = Modifier.weight(1f))
                         IconButton(onClick = { rating = true }) {
-                            Icon(Icons.Default.Star, "Calificar", tint = if (game.rating != null) Color(0xFFFFC94D) else Color.White)
+                            Icon(Icons.Default.Star, stringResource(R.string.rate), tint = if (game.rating != null) Color(0xFFFFC94D) else Color.White)
                         }
-                        IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Cerrar", tint = Color.White) }
+                        IconButton(onClick = onClose) { Icon(Icons.Default.Close, stringResource(R.string.close), tint = Color.White) }
                     }
                     Spacer(Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Tag(game.console.name, Color(0xFF5B3A1E))
+                        Tag(game.console.label, Color(0xFF5B3A1E))
                         Tag(game.source.label, when (game.source) {
                             Source.STEAM -> Color(0xFF1B2838); Source.EPIC -> Color(0xFF2A2A2A); Source.EMULATOR -> Color(0xFF3D2A5C)
                         })
-                        if (game.familyShared) Tag("Familia Steam", Color(0xFF2B5A7A))
-                        game.genres.forEach { Tag(it, Color(0xFF2F4A3A)) }
+                        if (game.familyShared) Tag(stringResource(R.string.tag_family), Color(0xFF2B5A7A))
+                        game.genres.forEach { Tag(L10n.genre(it), Color(0xFF2F4A3A)) }
                     }
                     Spacer(Modifier.height(14.dp))
-                    ScoresPanel(game, scale, onRate = { rating = true }, onOpen = { vm.launcher.openUrl(it) })
+                    ScoresRow(game, scale, onRate = { rating = true }, onOpen = { vm.launcher.openUrl(it) })
                     Spacer(Modifier.height(8.dp))
-                    Stat("Tiempo de juego", formatPlaytime(game.totalMinutes) +
-                        if (game.trackedMinutes > 0 && game.playtimeMinutes > 0) "  (${formatPlaytime(game.trackedMinutes)} medidos por Repisa)" else "")
-                    Stat("Última partida", game.lastPlayed?.let { DateFormat.getDateInstance(DateFormat.LONG).format(Date(it)) } ?: "—")
-                    Stat("Estudio", game.developer ?: "—")
-                    game.publisher?.takeIf { it != game.developer }?.let { Stat("Editora", it) }
-                    Stat("Año", game.releaseYear?.toString() ?: "—")
-                    game.romName?.let { Stat("Archivo", it) }
+                    Stat(stringResource(R.string.stat_playtime), formatPlaytime(game.totalMinutes) +
+                        if (game.trackedMinutes > 0 && game.playtimeMinutes > 0)
+                            "  " + stringResource(R.string.stat_tracked, formatPlaytime(game.trackedMinutes)) else "")
+                    Stat(stringResource(R.string.stat_last_played),
+                        game.lastPlayed?.let { DateFormat.getDateInstance(DateFormat.LONG).format(Date(it)) } ?: "—")
+                    Stat(stringResource(R.string.stat_studio), game.developer ?: "—")
+                    game.publisher?.takeIf { it != game.developer }?.let { Stat(stringResource(R.string.stat_publisher), it) }
+                    Stat(stringResource(R.string.stat_year), game.releaseYear?.toString() ?: "—")
+                    game.romName?.let { Stat(stringResource(R.string.stat_file), it) }
                     game.description?.let {
                         Spacer(Modifier.height(10.dp))
                         Text(it.replace(Regex("<[^>]+>"), "").take(600), color = Color(0xFFD9C8AE), fontSize = 13.sp, lineHeight = 18.sp)
@@ -137,25 +144,25 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         if (canPlay) {
                             Button(onClick = { vm.play(game) }, modifier = Modifier.focusRequester(firstButton),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D), contentColor = Color.Black)) {
-                                Icon(Icons.Default.PlayArrow, null); Text("Jugar")
+                                Icon(Icons.Default.PlayArrow, null); Text(stringResource(R.string.play))
                             }
                         }
                         game.storeUrl?.let { url ->
                             OutlinedButton(onClick = { vm.launcher.openUrl(url) },
                                 modifier = if (canPlay) Modifier else Modifier.focusRequester(firstButton)) {
-                                Text(if (game.source == Source.STEAM) "Ver en Steam" else "Ver en la tienda", color = Color.White)
+                                Text(stringResource(if (game.source == Source.STEAM) R.string.view_steam else R.string.view_store), color = Color.White)
                             }
                         }
                         OutlinedButton(onClick = { vm.toggleFavorite(game) },
                             modifier = if (!canPlay && game.storeUrl == null) Modifier.focusRequester(firstButton) else Modifier) {
                             Icon(Icons.Default.Star, null, tint = if (game.favorite) Color(0xFFFFD27A) else Color.Gray)
-                            Text(if (game.favorite) " Favorito" else " Marcar favorito", color = Color.White)
+                            Text(" " + stringResource(if (game.favorite) R.string.favorite else R.string.mark_favorite), color = Color.White)
                         }
                         OutlinedButton(onClick = { searchingCover = true }) {
-                            Icon(Icons.Default.Search, null, tint = Color.White); Text(" Buscar carátula", color = Color.White)
+                            Icon(Icons.Default.Search, null, tint = Color.White); Text(" " + stringResource(R.string.search_cover), color = Color.White)
                         }
                         OutlinedButton(onClick = { editing = true }) {
-                            Icon(Icons.Default.Edit, null, tint = Color.White); Text(" Editar datos", color = Color.White)
+                            Icon(Icons.Default.Edit, null, tint = Color.White); Text(" " + stringResource(R.string.edit_data), color = Color.White)
                         }
                     }
                 }
@@ -188,20 +195,20 @@ private fun EditDialog(game: Game, onDismiss: () -> Unit, onSave: (Game) -> Unit
     var dev by remember { mutableStateOf(game.developer.orEmpty()) }
     var year by remember { mutableStateOf(game.releaseYear?.toString().orEmpty()) }
     var cover by remember { mutableStateOf(game.coverUrl.orEmpty()) }
-    var hours by remember { mutableStateOf(((game.trackedMinutes) / 60.0).let { if (it == 0.0) "" else "%.1f".format(it) }) }
+    var hours by remember { mutableStateOf(((game.trackedMinutes) / 60.0).let { if (it == 0.0) "" else L10n.decimal(it) }) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar ${game.title}") },
+        title = { Text(stringResource(R.string.edit_title, game.title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(title, { title = it }, label = { Text("Título") }, singleLine = true)
-                OutlinedTextField(genres, { genres = it }, label = { Text("Géneros (separados por comas)") })
-                OutlinedTextField(dev, { dev = it }, label = { Text("Estudio") }, singleLine = true)
-                OutlinedTextField(year, { year = it.filter(Char::isDigit).take(4) }, label = { Text("Año") }, singleLine = true,
+                OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.field_title)) }, singleLine = true)
+                OutlinedTextField(genres, { genres = it }, label = { Text(stringResource(R.string.field_genres)) })
+                OutlinedTextField(dev, { dev = it }, label = { Text(stringResource(R.string.stat_studio)) }, singleLine = true)
+                OutlinedTextField(year, { year = it.filter(Char::isDigit).take(4) }, label = { Text(stringResource(R.string.stat_year)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(hours, { hours = it }, label = { Text("Horas extra jugadas (a mano)") }, singleLine = true,
+                OutlinedTextField(hours, { hours = it }, label = { Text(stringResource(R.string.field_extra_hours)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-                OutlinedTextField(cover, { cover = it }, label = { Text("URL de la portada") }, singleLine = true)
+                OutlinedTextField(cover, { cover = it }, label = { Text(stringResource(R.string.field_cover_url)) }, singleLine = true)
             }
         },
         confirmButton = {
@@ -216,54 +223,57 @@ private fun EditDialog(game: Game, onDismiss: () -> Unit, onSave: (Game) -> Unit
                     trackedMinutes = ((hours.replace(',', '.').toDoubleOrNull() ?: 0.0) * 60).toInt(),
                     userEdited = true,
                 ))
-            }) { Text("Guardar") }
+            }) { Text(stringResource(R.string.save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
 
-/** Mi nota, Metacritic (prensa y usuarios) y duración según HowLongToBeat. */
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * Mi nota, Metacritic (prensa y usuarios) y HowLongToBeat en una sola fila compacta.
+ * [small] es la versión reducida para la segunda pantalla.
+ */
 @Composable
-private fun ScoresPanel(game: Game, scale: com.repisa.app.model.RatingScale, onRate: () -> Unit, onOpen: (String) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+fun ScoresRow(game: Game, scale: com.repisa.app.model.RatingScale, small: Boolean = false,
+              onRate: (() -> Unit)? = null, onOpen: ((String) -> Unit)? = null) {
+    val label = if (small) 9.sp else 10.sp
+    val value = if (small) 13.sp else 15.sp
+    val pad = Modifier.padding(horizontal = if (small) 8.dp else 10.dp, vertical = if (small) 4.dp else 6.dp)
+    fun box(onClick: (() -> Unit)?) = Modifier.fillMaxHeight().background(Color(0xE6261A12), RoundedCornerShape(8.dp))
+        .let { if (onClick != null) it.clickable(onClick = onClick) else it }.then(pad)
+    // Los tres recuadros con la misma altura.
+    Row(Modifier.height(androidx.compose.foundation.layout.IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         // Mi nota
-        Column(Modifier.background(Color(0xE6261A12), RoundedCornerShape(10.dp)).clickable(onClick = onRate)
-            .padding(horizontal = 12.dp, vertical = 8.dp)) {
-            Text("Mi nota", color = Color(0xFF9C8A70), fontSize = 11.sp)
+        Column(box(onRate)) {
+            Text(stringResource(R.string.my_score), color = Color(0xFF9C8A70), fontSize = label)
             val r = game.rating
-            if (r == null) Text("Calificar ★", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            if (r == null) Text(stringResource(R.string.rate_action), color = Color.White, fontSize = value, fontWeight = FontWeight.Bold)
             else Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(scale.format(r.overall), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = DisplayFont)
-                Text("/${scale.max}  ", color = Color(0xFF9C8A70), fontSize = 11.sp)
-                Stars(r.stars, 14.dp)
+                Text(scale.format(r.overall), color = Color.White, fontSize = value, fontWeight = FontWeight.Bold, fontFamily = DisplayFont)
+                Spacer(Modifier.width(4.dp))
+                Stars(r.stars, if (small) 10.dp else 12.dp)
             }
         }
         // Metacritic
         if (game.metascore != null || game.userScore != null) {
-            Row(Modifier.background(Color(0xE6261A12), RoundedCornerShape(10.dp))
-                .clickable { game.metacriticUrl?.let(onOpen) }.padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text("Metacritic", color = Color(0xFF9C8A70), fontSize = 11.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        ScoreBadge(game.metascore?.toString() ?: "–", game.metascore?.toFloat()?.div(100f))
-                        Text("prensa", color = Color(0xFFD9C8AE), fontSize = 11.sp)
-                        ScoreBadge(game.userScore?.let { "%.1f".format(it).replace('.', ',') } ?: "–", game.userScore?.toFloat()?.div(10f), round = true)
-                        Text("usuarios", color = Color(0xFFD9C8AE), fontSize = 11.sp)
-                    }
+            Column(box(game.metacriticUrl?.let { url -> onOpen?.let { { it(url) } } })) {
+                Text("Metacritic", color = Color(0xFF9C8A70), fontSize = label)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    ScoreBadge(game.metascore?.toString() ?: "–", game.metascore?.toFloat()?.div(100f), value)
+                    if (!small) Text(stringResource(R.string.press), color = Color(0xFFD9C8AE), fontSize = label)
+                    ScoreBadge(game.userScore?.let { L10n.decimal(it) } ?: "–", game.userScore?.toFloat()?.div(10f), value, round = true)
+                    if (!small) Text(stringResource(R.string.users), color = Color(0xFFD9C8AE), fontSize = label)
                 }
             }
         }
         // HowLongToBeat
         if (game.hltbMain != null || game.hltbExtra != null || game.hltbComplete != null) {
-            Column(Modifier.background(Color(0xE6261A12), RoundedCornerShape(10.dp))
-                .clickable { game.hltbUrl?.let(onOpen) }.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                Text("HowLongToBeat", color = Color(0xFF9C8A70), fontSize = 11.sp)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Hours("Historia", game.hltbMain)
-                    Hours("+ Extras", game.hltbExtra)
-                    Hours("Completista", game.hltbComplete)
+            Column(box(game.hltbUrl?.let { url -> onOpen?.let { { it(url) } } })) {
+                Text("HowLongToBeat", color = Color(0xFF9C8A70), fontSize = label)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Hours(stringResource(R.string.hltb_main), game.hltbMain, value, label)
+                    Hours(stringResource(R.string.hltb_extra), game.hltbExtra, value, label)
+                    Hours(stringResource(R.string.hltb_complete), game.hltbComplete, value, label)
                 }
             }
         }
@@ -271,22 +281,28 @@ private fun ScoresPanel(game: Game, scale: com.repisa.app.model.RatingScale, onR
 }
 
 @Composable
-private fun ScoreBadge(text: String, normalized: Float?, round: Boolean = false) {
+private fun ScoreBadge(text: String, normalized: Float?, size: androidx.compose.ui.unit.TextUnit, round: Boolean = false) {
     val color = when {
         normalized == null -> Color(0xFF555555)
         normalized >= 0.75f -> Color(0xFF2E9E4F)
         normalized >= 0.5f -> Color(0xFFE0A526)
         else -> Color(0xFFD9443A)
     }
-    Text(text, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp,
-        modifier = Modifier.background(color, RoundedCornerShape(if (round) 50 else 6)).padding(horizontal = 8.dp, vertical = 2.dp))
+    Text(text, color = Color.White, fontWeight = FontWeight.Bold, fontSize = size,
+        modifier = Modifier.background(color, RoundedCornerShape(if (round) 50 else 5)).padding(horizontal = 6.dp, vertical = 1.dp))
+}
+
+/** "2,5 h", "45 h", "120 h": sin decimales a partir de 10 h para que quepa todo en una fila. */
+private fun hoursText(h: Float): String = when {
+    h < 1f -> L10n.s(R.string.time_min, (h * 60).toInt())
+    h >= 10f || h % 1f == 0f -> L10n.s(R.string.time_h, Math.round(h))
+    else -> L10n.decimal(h) + " h"
 }
 
 @Composable
-private fun Hours(label: String, h: Float?) {
+private fun Hours(label: String, h: Float?, value: androidx.compose.ui.unit.TextUnit, small: androidx.compose.ui.unit.TextUnit) {
     Column {
-        Text(h?.let { if (it < 1f) "${(it * 60).toInt()} min" else "%.1f h".format(it).replace(".0 h", " h").replace('.', ',') } ?: "–",
-            color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-        Text(label, color = Color(0xFFD9C8AE), fontSize = 10.sp)
+        Text(h?.let(::hoursText) ?: "–", color = Color.White, fontSize = value, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(label, color = Color(0xFFD9C8AE), fontSize = small, maxLines = 1)
     }
 }

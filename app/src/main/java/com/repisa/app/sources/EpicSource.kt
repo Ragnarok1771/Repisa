@@ -30,9 +30,12 @@ import java.time.Instant
 class EpicSource(private val settings: Settings) {
 
     companion object {
-        // Credenciales públicas del cliente del Epic Games Launcher (las mismas que usa Legendary).
+        // Credenciales públicas del cliente del Epic Games Launcher, las mismas que usan Legendary y Heroic
+        // (legendary/api/egs.py).
         private const val CLIENT_ID = "34a02cf8f4414e29b15921876da36f9a"
-        private const val CLIENT_SECRET = "daafbccc737745039dffe53d94cc76b1"
+        private const val CLIENT_SECRET = "daafbccc737745039dffe53d94fc76cf"
+        /** Epic espera que las peticiones vengan del lanzador. */
+        private const val UA = "UELauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit"
         private const val OAUTH = "https://account-public-service-prod03.ol.epicgames.com/account/api/oauth/token"
         private const val LIBRARY = "https://library-service.live.use1a.on.epicgames.com/library/api/public"
         private const val CATALOG = "https://catalog-public-service-prod06.ol.epicgames.com/catalog/api/shared/namespace"
@@ -71,10 +74,10 @@ class EpicSource(private val settings: Settings) {
 
     /** Pide a Epic un código para que el usuario lo introduzca en epicgames.com/activate. */
     suspend fun startDeviceLogin(): DeviceCode {
-        val cc = Http.getJson(Request.Builder().url("$OAUTH_BASE/token").header("Authorization", deviceBasic)
+        val cc = Http.getJson(Request.Builder().header("User-Agent", UA).url("$OAUTH_BASE/token").header("Authorization", deviceBasic)
             .post(FormBody.Builder().add("grant_type", "client_credentials").build()).build())["access_token"].str
             ?: error("Epic no respondió")
-        val r = Http.getJson(Request.Builder().url("$OAUTH_BASE/deviceAuthorization").header("Authorization", "bearer $cc")
+        val r = Http.getJson(Request.Builder().header("User-Agent", UA).url("$OAUTH_BASE/deviceAuthorization").header("Authorization", "bearer $cc")
             .post(FormBody.Builder().add("prompt", "login").build()).build())
         return DeviceCode(
             userCode = r["user_code"].str ?: error("Epic no devolvió un código"),
@@ -91,7 +94,7 @@ class EpicSource(private val settings: Settings) {
      */
     suspend fun pollDeviceLogin(code: DeviceCode): Boolean {
         val resp = try {
-            Http.getJson(Request.Builder().url("$OAUTH_BASE/token").header("Authorization", deviceBasic)
+            Http.getJson(Request.Builder().header("User-Agent", UA).url("$OAUTH_BASE/token").header("Authorization", deviceBasic)
                 .post(FormBody.Builder().add("grant_type", "device_code").add("device_code", code.deviceCode).build()).build())
         } catch (e: com.repisa.app.data.HttpException) {
             if (e.body.contains("authorization_pending") || e.body.contains("slow_down")) return false
@@ -101,7 +104,7 @@ class EpicSource(private val settings: Settings) {
         // Lo ideal es cambiar el token "con código" por uno del lanzador de Epic. Si Epic no lo permite
         // (invalid_client_credentials), nos quedamos con la sesión del propio código.
         val launcherOk = runCatching {
-            val exchange = Http.getJson(Request.Builder().url("$OAUTH_BASE/exchange")
+            val exchange = Http.getJson(Request.Builder().header("User-Agent", UA).url("$OAUTH_BASE/exchange")
                 .header("Authorization", "bearer $deviceToken").build())["code"].str ?: error("sin código de intercambio")
             tokenRequest(FormBody.Builder()
                 .add("grant_type", "exchange_code")
@@ -131,7 +134,7 @@ class EpicSource(private val settings: Settings) {
     }
 
     private suspend fun tokenRequest(body: FormBody, client: String = "launcher") {
-        val req = Request.Builder().url(OAUTH).header("Authorization", if (client == "device") deviceBasic else basic)
+        val req = Request.Builder().header("User-Agent", UA).url(OAUTH).header("Authorization", if (client == "device") deviceBasic else basic)
             .post(body).build()
         saveSession(Http.getJson(req), client)
     }
@@ -159,7 +162,7 @@ class EpicSource(private val settings: Settings) {
     }
 
     private suspend fun authGet(url: String): JsonElement = try {
-        Http.getJson(Request.Builder().url(url).header("Authorization", "bearer ${ensureToken()}").build())
+        Http.getJson(Request.Builder().header("User-Agent", UA).url(url).header("Authorization", "bearer ${ensureToken()}").build())
     } catch (e: com.repisa.app.data.HttpException) {
         throw IllegalStateException(
             (epicError(e.body) ?: "error ${e.code}") +

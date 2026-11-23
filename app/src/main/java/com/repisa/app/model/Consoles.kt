@@ -167,3 +167,7 @@ object Consoles {
             .firstOrNull { t.contains(it.first) }?.second
     }
 }
+
+/** Nombre para mostrar (traduce "Otros"; el resto son nombres propios). */
+val Console.label: String
+    get() = if (id == "other") com.repisa.app.i18n.L10n.s(com.repisa.app.R.string.console_other) else name

@@ -3,11 +3,14 @@ package com.repisa.app.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.repisa.app.R
 import com.repisa.app.data.LibraryStore
+import com.repisa.app.i18n.L10n
 import com.repisa.app.data.Settings
 import com.repisa.app.data.mergeGame
 import com.repisa.app.launch.Launcher
 import com.repisa.app.model.Consoles
+import com.repisa.app.model.label
 import com.repisa.app.model.Game
 import com.repisa.app.model.Source
 import com.repisa.app.model.formatPlaytime
@@ -29,14 +32,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-enum class SortMode(val label: String) {
-    ALPHA("A – Z"), PLAYTIME("Tiempo de juego"), RECENT("Jugado recientemente"), YEAR("Año"), CONSOLE("Consola"),
-    RATING("Mi nota"), METACRITIC("Metacritic")
+enum class SortMode(private val labelRes: Int) {
+    ALPHA(R.string.sort_alpha), PLAYTIME(R.string.sort_playtime), RECENT(R.string.sort_recent), YEAR(R.string.sort_year),
+    CONSOLE(R.string.sort_console), RATING(R.string.sort_rating), METACRITIC(R.string.sort_metacritic);
+
+    val label: String get() = L10n.s(labelRes)
 }
 
-enum class GroupMode(val label: String) {
-    NONE("Todo junto"), GENRE("Género"), CONSOLE("Consola"), DEVELOPER("Estudio"), SOURCE("Plataforma"),
-    DECADE("Década"), FAVORITES("Favoritos")
+enum class GroupMode(private val labelRes: Int) {
+    NONE(R.string.group_none), GENRE(R.string.group_genre), CONSOLE(R.string.group_console),
+    DEVELOPER(R.string.group_developer), SOURCE(R.string.group_source), DECADE(R.string.group_decade),
+    FAVORITES(R.string.group_favorites);
+
+    val label: String get() = L10n.s(labelRes)
 }
 
 data class ShelfGroup(val title: String, val subtitle: String, val games: List<Game>)
@@ -121,30 +129,34 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             SortMode.METACRITIC -> filtered.sortedWith(compareByDescending<Game> { it.metascore ?: -1 }.thenBy { it.sortKey })
         }
         fun group(title: String, games: List<Game>) =
-            ShelfGroup(title, "${games.size} juego${if (games.size == 1) "" else "s"} · ${hours(games)}", games)
+            ShelfGroup(title, "${L10n.games(games.size)} · ${hours(games)}", games)
 
         return when (o.group) {
-            GroupMode.NONE -> if (sorted.isEmpty()) emptyList() else listOf(group("Mi colección", sorted))
+            GroupMode.NONE -> if (sorted.isEmpty()) emptyList() else listOf(group(MY_COLLECTION, sorted))
             GroupMode.GENRE -> {
                 val map = linkedMapOf<String, MutableList<Game>>()
-                sorted.forEach { g -> g.genres.ifEmpty { listOf("Sin género") }.forEach { map.getOrPut(it) { mutableListOf() } += g } }
-                map.entries.sortedWith(compareBy<Map.Entry<String, MutableList<Game>>> { it.key == "Sin género" }.thenByDescending { it.value.size })
+                val none = L10n.s(R.string.shelf_no_genre)
+                sorted.forEach { g -> g.genres.map(L10n::genre).ifEmpty { listOf(none) }.forEach { map.getOrPut(it) { mutableListOf() } += g } }
+                map.entries.sortedWith(compareBy<Map.Entry<String, MutableList<Game>>> { it.key == none }.thenByDescending { it.value.size })
                     .map { group(it.key, it.value) }
             }
             GroupMode.CONSOLE -> sorted.groupBy { it.consoleId }.entries
                 .sortedWith(compareBy({ Consoles.byId(it.key).year }, { Consoles.byId(it.key).name }))
-                .map { group(Consoles.byId(it.key).let { c -> if (c.id == "pc") "PC" else "${c.maker} · ${c.name}" }, it.value) }
-            GroupMode.DEVELOPER -> sorted.groupBy { it.developer?.trim()?.ifBlank { null } ?: "Estudio desconocido" }.entries
-                .sortedWith(compareBy<Map.Entry<String, List<Game>>> { it.key == "Estudio desconocido" }.thenByDescending { it.value.size }.thenBy { it.key })
-                .map { group(it.key, it.value) }
+                .map { group(Consoles.byId(it.key).let { c -> if (c.id == "pc") "PC" else if (c.id == "other") c.label else "${c.maker} · ${c.name}" }, it.value) }
+            GroupMode.DEVELOPER -> {
+                val unknown = L10n.s(R.string.shelf_unknown_studio)
+                sorted.groupBy { it.developer?.trim()?.ifBlank { null } ?: unknown }.entries
+                    .sortedWith(compareBy<Map.Entry<String, List<Game>>> { it.key == unknown }.thenByDescending { it.value.size }.thenBy { it.key })
+                    .map { group(it.key, it.value) }
+            }
             GroupMode.SOURCE -> sorted.groupBy { it.source }.entries.sortedBy { it.key.ordinal }
                 .map { group(it.key.label, it.value) }
-            GroupMode.DECADE -> sorted.groupBy { it.releaseYear?.let { y -> "Años ${y / 10 * 10}" } ?: "Año desconocido" }.entries
+            GroupMode.DECADE -> sorted.groupBy { it.releaseYear?.let { y -> y / 10 * 10 } ?: 9999 }.entries
                 .sortedBy { it.key }
-                .map { group(it.key, it.value) }
+                .map { group(if (it.key == 9999) L10n.s(R.string.shelf_unknown_year) else L10n.s(R.string.shelf_decade, it.key), it.value) }
             GroupMode.FAVORITES -> sorted.partition { it.favorite }.let { (fav, rest) ->
-                listOfNotNull(fav.takeIf { it.isNotEmpty() }?.let { group("★ Favoritos", it) },
-                    rest.takeIf { it.isNotEmpty() }?.let { group("El resto", it) })
+                listOfNotNull(fav.takeIf { it.isNotEmpty() }?.let { group(L10n.s(R.string.shelf_favorites), it) },
+                    rest.takeIf { it.isNotEmpty() }?.let { group(L10n.s(R.string.shelf_rest), it) })
             }
         }
     }
@@ -167,14 +179,15 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             if (epic.isLoggedIn) syncSource(Source.EPIC, quiet)?.let(errors::add)
             if (settings.hasEmulatorSources) syncSource(Source.EMULATOR, quiet)?.let(errors::add)
             if (errors.isNotEmpty()) message.value = errors.joinToString("\n")
-            else if (!hasAnySource()) message.value = "Conecta Steam, Epic o tus carpetas de emuladores en Ajustes."
+            else if (!hasAnySource()) message.value = L10n.s(R.string.msg_connect_sources)
             else if (quiet) {
                 // Resumen de lo que cambió desde la última vez (p. ej. horas jugadas en Steam desde el PC).
                 val changed = _games.value.filter { g -> before[g.id]?.let { g.totalMinutes > it } == true }
                 if (changed.isNotEmpty()) {
                     val mins = changed.sumOf { it.totalMinutes - (before[it.id] ?: 0) }
-                    message.value = "Tiempo actualizado: " + changed.take(3).joinToString(", ") { it.title } +
-                        (if (changed.size > 3) " y ${changed.size - 3} más" else "") + " (+${formatPlaytime(mins)})"
+                    val names = changed.take(3).joinToString(", ") { it.title }
+                    message.value = L10n.s(R.string.msg_time_updated,
+                        if (changed.size > 3) L10n.s(R.string.msg_and_more, names, changed.size - 3) else names, formatPlaytime(mins))
                 }
             }
             status.value = null
@@ -203,13 +216,13 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Devuelve un mensaje de error o null. */
     private suspend fun syncSource(source: Source, quiet: Boolean = false): String? {
-        status.value = "Sincronizando ${source.label}…"
+        status.value = L10n.s(R.string.status_syncing, source.label)
         return try {
             val known = _games.value.associateBy { it.id }
             val fresh: List<Game> = when (source) {
                 Source.STEAM -> steamSource().let { src ->
                     src.fetchGames().also {
-                        src.familyError?.let { e -> if (!quiet) message.value = "Steam: no se pudo leer el grupo familiar ($e)" }
+                        src.familyError?.let { e -> if (!quiet) message.value = L10n.s(R.string.msg_family_error, e) }
                     }
                 }
                 Source.EPIC -> epic.fetchGames(known)
@@ -223,7 +236,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 _games.value = _games.value.filter { it.source != source && it.id !in freshIds } + merged
                 store.save(_games.value)
             }
-            if (!quiet) message.value = "${source.label}: ${fresh.size} juegos"
+            if (!quiet) message.value = L10n.s(R.string.msg_sync_count, source.label, fresh.size)
             null
         } catch (e: Exception) {
             "${source.label}: ${e.message ?: e.javaClass.simpleName}"
@@ -236,23 +249,23 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         if (key != null && user != null) return SteamSource.withApiKey(key, user)
         val id = settings.steamLinkedId ?: error("No hay ninguna cuenta de Steam vinculada")
         val token = SteamLogin.fetchWebToken()
-            ?: error("la sesión de Steam ha caducado. Vuelve a vincular tu cuenta en Ajustes.")
+            ?: error(L10n.s(R.string.err_steam_session))
         return SteamSource.withToken(token, id)
     }
 
     /** Se llama cuando el usuario termina de iniciar sesión en la web de Steam. */
     fun steamLinked() = viewModelScope.launch {
-        status.value = "Vinculando cuenta de Steam…"
+        status.value = L10n.s(R.string.status_linking_steam)
         try {
             val token = SteamLogin.fetchWebToken() ?: error("Steam no confirmó la sesión")
             val id = SteamLogin.steamIdFromToken(token) ?: error("no se pudo leer el SteamID")
             settings.steamLinkedId = id
             settings.steamLinkedName = SteamLogin.profileName(id)
-            message.value = "Cuenta de Steam vinculada" + (settings.steamLinkedName?.let { ": $it" } ?: "")
+            message.value = L10n.s(R.string.msg_steam_linked) + (settings.steamLinkedName?.let { ": $it" } ?: "")
             syncSource(Source.STEAM)?.let { message.value = it }
             startEnrichment()
         } catch (e: Exception) {
-            message.value = "Steam: no se pudo vincular la cuenta (${e.message})."
+            message.value = L10n.s(R.string.msg_steam_link_failed, e.message ?: "")
         } finally {
             status.value = null
         }
@@ -277,7 +290,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             if (force) mutex.withLock { _games.update { list -> list.map { if (it.userEdited) it else it.copy(metaFetched = false) } } }
             val pending = _games.value.filter { metadata.needsWork(it) }
             pending.forEachIndexed { i, g ->
-                status.value = "Buscando portadas y datos (${i + 1}/${pending.size})…"
+                status.value = L10n.s(R.string.status_metadata, i + 1, pending.size)
                 val enriched = runCatching { metadata.enrich(g) }.getOrElse { g.copy(metaFetched = true) }
                 replace(enriched, save = i % 10 == 9 || i == pending.lastIndex)
             }
@@ -291,6 +304,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private companion object {
+        val MY_COLLECTION get() = L10n.s(R.string.shelf_my_collection)
         /** Súbelo cuando se añada una fuente de carátulas nueva para que se repasen los juegos sin carátula. */
         const val COVER_PASS = 2
     }
@@ -351,20 +365,21 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         launcher.consumeSession()?.let { s ->
             val g = _games.value.firstOrNull { it.id == s.gameId } ?: return@let
             updateGame(g.copy(trackedMinutes = g.trackedMinutes + s.minutes, lastPlayed = System.currentTimeMillis()))
-            message.value = "${g.title}: +${formatPlaytime(s.minutes)} de juego" + if (s.measured) "" else " (aprox.)"
+            message.value = L10n.s(R.string.msg_session_added, g.title, formatPlaytime(s.minutes)) +
+                if (s.measured) "" else L10n.s(R.string.msg_session_approx)
         }
         autoSync()
     }
 
     fun epicLogin(code: String) = viewModelScope.launch {
-        status.value = "Conectando con Epic Games…"
+        status.value = L10n.s(R.string.status_epic_connecting)
         try {
             epic.login(code)
-            message.value = "Sesión de Epic iniciada"
+            message.value = L10n.s(R.string.msg_epic_linked)
             syncSource(Source.EPIC)?.let { message.value = it }
             startEnrichment()
         } catch (e: Exception) {
-            message.value = "Epic: no se pudo iniciar sesión (${e.message}). El código caduca en unos minutos; vuelve a intentarlo."
+            message.value = L10n.s(R.string.msg_epic_login_failed, e.message ?: "")
         } finally {
             status.value = null
         }
@@ -394,19 +409,19 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                     kotlinx.coroutines.delay(code.intervalSec * 1000L)
                     if (epic.pollDeviceLogin(code)) {
                         epicLink.value = EpicLink.Done
-                        message.value = "Cuenta de Epic Games vinculada"
+                        message.value = L10n.s(R.string.msg_epic_linked)
                         syncSource(Source.EPIC)?.let { message.value = it }
                         status.value = null
                         startEnrichment()
                         return@launch
                     }
                 }
-                epicLink.value = EpicLink.Failed("El código caducó. Pide uno nuevo.")
+                epicLink.value = EpicLink.Failed(L10n.s(R.string.msg_epic_code_expired))
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
                 val msg = if (e is java.io.IOException && e !is com.repisa.app.data.HttpException)
-                    "no se pudo conectar con Epic Games. Revisa la conexión a internet."
+                    L10n.s(R.string.msg_epic_no_conn)
                 else e.message ?: e.javaClass.simpleName
                 epicLink.value = EpicLink.Failed(msg)
             }
@@ -472,7 +487,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     private suspend fun missingCoversPass(quiet: Boolean) {
         run {
-            status.value = "Comprobando carátulas…"
+            status.value = L10n.s(R.string.status_checking_covers)
             val candidates = _games.value.filter { !it.customCover && !it.userEdited }
             val missing = candidates.filter { g ->
                 val url = g.coverUrl
@@ -480,7 +495,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             }
             var found = 0
             missing.forEachIndexed { i, g ->
-                status.value = "Buscando carátulas (${i + 1}/${missing.size})…"
+                status.value = L10n.s(R.string.status_finding_covers, i + 1, missing.size)
                 val url = runCatching { coverSearch.auto(g) }.getOrNull()
                 if (url != null) found++
                 mutex.withLock {
@@ -493,9 +508,9 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             status.value = null
             if (quiet && found == 0) return
             message.value = when {
-                missing.isEmpty() -> "Todas las cajas tienen carátula"
-                else -> "Carátulas encontradas: $found de ${missing.size}." +
-                    if (found < missing.size) " Para el resto, abre el juego y usa \"Buscar carátula\"." else ""
+                missing.isEmpty() -> L10n.s(R.string.msg_all_covers)
+                else -> L10n.s(R.string.msg_covers_found, found, missing.size) +
+                    if (found < missing.size) L10n.s(R.string.msg_covers_rest) else ""
             }
         }
     }

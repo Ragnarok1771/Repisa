@@ -7,7 +7,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import com.repisa.app.R
 import com.repisa.app.data.Settings
+import com.repisa.app.i18n.L10n
 import com.repisa.app.model.Game
 import com.repisa.app.model.Source
 
@@ -45,7 +47,7 @@ class Launcher(private val context: Context, private val settings: Settings) {
             (pkg == null || pkg.startsWith("com.retroarch")) && g.romPath != null && g.corePath != null ->
                 retroArchIntent(pkg ?: "com.retroarch", g.romPath, g.corePath)
             g.romUri != null -> viewIntent(pkg, Uri.parse(g.romUri))
-            else -> return "No sé dónde está el archivo de este juego. Añade su carpeta de ROMs en Ajustes."
+            else -> return L10n.s(R.string.err_launch_nofile)
         }
         return try {
             settings.pendingSessionStart = System.currentTimeMillis()
@@ -54,9 +56,9 @@ class Launcher(private val context: Context, private val settings: Settings) {
             settings.pendingSessionPackage = intent.component?.packageName ?: intent.`package`
             null
         } catch (_: ActivityNotFoundException) {
-            "No se encontró el emulador. Elige uno para ${g.console.name} en Ajustes."
+            L10n.s(R.string.err_launch_noemu, g.console.name)
         } catch (e: SecurityException) {
-            "Android no permitió abrir el juego: ${e.message}"
+            L10n.s(R.string.err_launch_denied, e.message ?: "")
         }
     }
 
@@ -79,7 +81,7 @@ class Launcher(private val context: Context, private val settings: Settings) {
         return Intent.createChooser(
             Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/octet-stream")
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
-            "Abrir con…",
+            null,
         ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 

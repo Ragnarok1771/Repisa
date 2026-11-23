@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,6 +49,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
+import com.repisa.app.R
+import com.repisa.app.i18n.L10n
 import com.repisa.app.model.Game
 import com.repisa.app.sources.CoverResult
 import com.repisa.app.sources.EmulatorSource
@@ -55,7 +58,7 @@ import kotlinx.coroutines.launch
 
 /**
  * Buscador de carátulas: escribe el nombre (viene relleno con el del juego, ya limpio),
- * y elige una de las carátulas encontradas en libretro, SteamGridDB, IGDB o la tienda de Steam.
+ * y elige una de las carátulas encontradas en GameTDB, libretro, SteamGridDB o la tienda de Steam.
  */
 @Composable
 fun CoverSearchDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
@@ -71,7 +74,7 @@ fun CoverSearchDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
         scope.launch {
             val out = runCatching { vm.coverSearch.search(game, query) }.getOrNull()
             results = out?.results.orEmpty()
-            failed = out?.failed ?: listOf("todos")
+            failed = out?.failed ?: listOf(L10n.s(R.string.all_sources))
             loading = false
         }
     }
@@ -82,24 +85,24 @@ fun CoverSearchDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
             Modifier.fillMaxSize().padding(16.dp).background(Color(0xFF1E1612), RoundedCornerShape(14.dp)).padding(16.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Buscar carátula · ${game.console.name}", color = Color(0xFFFFD27A), fontSize = 18.sp,
+                Text(stringResource(R.string.cover_search_title, game.console.name), color = Color(0xFFFFD27A), fontSize = 18.sp,
                     fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                TextButton(onClick = onDismiss) { Text("Cerrar") }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = query, onValueChange = { query = it }, singleLine = true,
-                    label = { Text("Nombre del juego") },
+                    label = { Text(stringResource(R.string.game_name)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { search() }),
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { search() }) { Icon(Icons.Default.Search, null); Text(" Buscar") }
+                Button(onClick = { search() }) { Icon(Icons.Default.Search, null); Text(" " + stringResource(R.string.search)) }
             }
             if (!vm.coverSearch.hasSteamGridDb) {
                 Text(
-                    "Consejo: añade tu clave gratuita de SteamGridDB en Ajustes → Portadas y datos para tener muchísimas más carátulas (Switch, 3DS, PC…).",
+                    stringResource(R.string.sgdb_tip),
                     color = Color(0xFFBFA98A), fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp),
                 )
             }
@@ -110,8 +113,8 @@ fun CoverSearchDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
                     loading -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color(0xFFFFB74D))
                     r == null -> Unit
                     r.isEmpty() -> Text(
-                        if (failed.isNotEmpty()) "No se pudo conectar con: ${failed.joinToString(", ")}. Revisa la conexión a internet."
-                        else "No se encontró nada. Prueba con menos palabras (p. ej. solo \"Bravely Default\") o con el nombre en inglés.",
+                        if (failed.isNotEmpty()) stringResource(R.string.cover_conn_failed, failed.joinToString(", "))
+                        else stringResource(R.string.cover_none),
                         color = Color(0xFFBFA98A), modifier = Modifier.align(Alignment.Center).padding(24.dp),
                     )
                     else -> LazyVerticalGrid(

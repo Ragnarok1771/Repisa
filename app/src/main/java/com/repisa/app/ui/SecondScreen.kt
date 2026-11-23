@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,7 +35,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.repisa.app.R
+import com.repisa.app.i18n.L10n
 import com.repisa.app.model.formatPlaytime
+import com.repisa.app.model.label
 import java.text.DateFormat
 import java.util.Date
 
@@ -101,16 +105,20 @@ private fun FocusPanel(vm: LibraryViewModel) {
         if (g == null) {
             Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Repisa", color = Color(0xFFFFD27A), fontSize = 40.sp, fontWeight = FontWeight.Black, fontFamily = DisplayFont)
-                Text("${all.size} juegos · ${all.sumOf { it.totalMinutes } / 60} h jugadas", color = Color(0xFFBFA98A))
+                Text(L10n.games(all.size) + " · " + stringResource(R.string.hours_played, all.sumOf { it.totalMinutes } / 60),
+                    color = Color(0xFFBFA98A))
                 Spacer(Modifier.height(12.dp))
                 val top = all.sortedByDescending { it.totalMinutes }.take(3)
                 if (top.isNotEmpty()) {
-                    Text("Los más jugados", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.most_played), color = Color.White, fontWeight = FontWeight.Bold)
                     top.forEach { Text("${it.title} — ${formatPlaytime(it.totalMinutes)}", color = Color(0xFFD9C8AE), fontSize = 13.sp) }
                 }
             }
         } else {
             BoxWithConstraints(Modifier.fillMaxSize()) {
+                val scale by vm.ratingScale.collectAsState()
+                // Notas en la esquina superior derecha, en pequeño, para no recargar la ficha.
+                Box(Modifier.align(Alignment.TopEnd)) { ScoresRow(g, scale, small = true) }
                 val h = minOf(maxHeight * 0.92f, maxWidth * 0.42f / frontAspect(g))
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
                     GameBox(g, h, lifted = false)
@@ -118,13 +126,13 @@ private fun FocusPanel(vm: LibraryViewModel) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(g.title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Black,
                             fontFamily = DisplayFont, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                        Text("${g.console.name} · ${g.source.label}", color = Color(0xFFFFD27A), fontSize = 14.sp)
+                        Text("${g.console.label} · ${g.source.label}", color = Color(0xFFFFD27A), fontSize = 14.sp)
                         Spacer(Modifier.height(6.dp))
-                        Line("Tiempo de juego", formatPlaytime(g.totalMinutes))
-                        Line("Última partida", g.lastPlayed?.let { DateFormat.getDateInstance().format(Date(it)) } ?: "—")
-                        Line("Género", g.genres.joinToString(", ").ifEmpty { "—" })
-                        Line("Estudio", g.developer ?: "—")
-                        Line("Año", g.releaseYear?.toString() ?: "—")
+                        Line(stringResource(R.string.stat_playtime), formatPlaytime(g.totalMinutes))
+                        Line(stringResource(R.string.stat_last_played), g.lastPlayed?.let { DateFormat.getDateInstance().format(Date(it)) } ?: "—")
+                        Line(stringResource(R.string.stat_genre), g.genres.joinToString(", ") { L10n.genre(it) }.ifEmpty { "—" })
+                        Line(stringResource(R.string.stat_studio), g.developer ?: "—")
+                        Line(stringResource(R.string.stat_year), g.releaseYear?.toString() ?: "—")
                         g.description?.let {
                             Text(it.replace(Regex("<[^>]+>"), ""), color = Color(0xFFD9C8AE), fontSize = 12.sp,
                                 maxLines = 5, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp)

@@ -37,6 +37,8 @@ class GameTdb(private val context: Context) {
 
     fun supports(consoleId: String) = consoleId in platforms
 
+    private val digitalTypes = setOf("CUSTOM", "eShop", "3DSWare", "DSiWare", "WiiWare", "Channel", "Homebrew")
+
     private val mutex = Mutex()
     private val memory = mutableMapOf<String, List<Entry>>()
 
@@ -113,7 +115,9 @@ class GameTdb(private val context: Context) {
         val wanted = CoverSearch.tokens(query)
         if (wanted.isEmpty()) return emptyList()
         return entries(p.db).asSequence()
-            .filter { p.idFilter(it.id) && it.type != "CUSTOM" && !it.title.contains("demo", true) }
+            // Fuera demos, ediciones caseras y versiones solo digitales: estas últimas tienen en GameTDB una
+            // portada genérica (fondo rojo con "Nintendo eShop"), no una carátula de verdad.
+            .filter { p.idFilter(it.id) && it.type !in digitalTypes && !it.type.startsWith("VC") && !it.title.contains("demo", true) }
             .map { e ->
                 val regionBonus = when (e.region) { "NTSC-U", "ALL" -> 0.03; "PAL" -> 0.02; else -> 0.0 }
                 e to CoverSearch.similarity(wanted, CoverSearch.tokens(e.title)) + regionBonus

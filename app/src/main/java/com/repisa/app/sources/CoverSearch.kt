@@ -31,7 +31,6 @@ data class CoverResult(val url: String, val thumb: String, val source: String, v
  *    nombres de cada sistema y se busca por parecido, así no hace falta que el ROM se llame exactamente igual.
  *  - Tienda de Steam: carátula vertical oficial de la versión de PC, si existe (sin cuenta).
  *  - SteamGridDB: miles de carátulas de cualquier plataforma (necesita una clave gratuita).
- *  - IGDB: carátula oficial (necesita credenciales de Twitch).
  */
 class CoverSearch(private val context: Context, private val settings: Settings) {
 
@@ -51,11 +50,10 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
             async { safe("GameTDB") { gameTdbResults(game, q, 8) } + safe("libretro") { libretro(game, q, 12) } },
             async { safe("SteamGridDB") { steamGridDb(q, 12) } },
             async { safe("Steam") { steamStore(q, 6) } },
-            async { safe("IGDB") { igdb(q, 6) } },
         )
         // libretro primero si es un juego de consola; en PC, Steam/SteamGridDB primero.
-        val (lr, sg, st, ig) = jobs.awaitAll()
-        Outcome(if (game.consoleId == "pc") sg + st + ig + lr else lr + sg + ig + st, failed.toList())
+        val (lr, sg, st) = jobs.awaitAll()
+        Outcome(if (game.consoleId == "pc") sg + st + lr else lr + sg + st, failed.toList())
     }
 
     val hasSteamGridDb get() = settings.steamGridDbKey != null
@@ -77,7 +75,6 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
         }
         val title = EmulatorSource.cleanTitle(game.title)
         runCatching { steamGridDb(title, 1, minSim = 0.8) }.getOrNull()?.firstOrNull()?.let { return it.url }
-        runCatching { igdb(title, 1, minSim = 0.8) }.getOrNull()?.firstOrNull()?.let { return it.url }
         runCatching { steamStore(title, 1, minSim = 0.85) }.getOrNull()?.firstOrNull()?.let { return it.url }
         return null
     }
@@ -206,38 +203,6 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
             val cover = covers[id] ?: return@mapNotNull null
             CoverResult(cover, cover, "Steam", item["name"].str.orEmpty())
         }
-    }
-
-    // ------------------------------------------------------------------ IGDB
-
-    private var igdbToken: String? = null
-    private var igdbExpiry = 0L
-
-    private suspend fun igdb(query: String, limit: Int, minSim: Double = 0.0): List<CoverResult> {
-        val id = settings.igdbClientId ?: return emptyList()
-        val secret = settings.igdbClientSecret ?: return emptyList()
-        if (igdbToken == null || System.currentTimeMillis() > igdbExpiry) {
-            val r = Http.getJson(Request.Builder()
-                .url("https://id.twitch.tv/oauth2/token?client_id=$id&client_secret=$secret&grant_type=client_credentials")
-                .post(ByteArray(0).toRequestBody()).build())
-            igdbToken = r["access_token"].str
-            igdbExpiry = System.currentTimeMillis() + ((r["expires_in"].long ?: 3600) - 60) * 1000
-        }
-        val body = """search "${query.replace("\"", "")}"; fields name,cover.image_id,platforms.abbreviation; limit 10;"""
-        val results = Http.getJson(Request.Builder().url("https://api.igdb.com/v4/games")
-            .header("Client-ID", id).header("Authorization", "Bearer $igdbToken")
-            .post(body.toRequestBody("text/plain".toMediaType())).build()).arr
-        return results
-            .filter { close(query, it["name"].str.orEmpty(), minSim) }
-            .mapNotNull { r ->
-                val img = r["cover"]["image_id"].str ?: return@mapNotNull null
-                val platforms = r["platforms"].arr.mapNotNull { it["abbreviation"].str }.take(3).joinToString(", ")
-                CoverResult(
-                    "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/$img.jpg",
-                    "https://images.igdb.com/igdb/image/upload/t_cover_big/$img.jpg",
-                    "IGDB", r["name"].str.orEmpty() + if (platforms.isNotEmpty()) " ($platforms)" else "",
-                )
-            }.take(limit)
     }
 
     // ------------------------------------------------------------------ Parecido de nombres
