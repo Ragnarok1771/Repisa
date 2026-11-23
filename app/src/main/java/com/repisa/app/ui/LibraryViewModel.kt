@@ -79,12 +79,14 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     private var enrichJob: Job? = null
     private var loaded = false
+    private val libraryLoaded = kotlinx.coroutines.CompletableDeferred<Unit>()
     private var syncJob: Job? = null
 
     init {
         viewModelScope.launch {
             _games.value = store.load()
             loaded = true
+            libraryLoaded.complete(Unit)
             if (!autoSync()) startEnrichment()
         }
     }
@@ -317,7 +319,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         launcher.launch(game)?.let { message.value = it }
     }
 
-    fun onResume() {
+    fun onResume() = viewModelScope.launch {
+        // Si Android cerró Repisa mientras jugabas, hay que esperar a cargar la biblioteca
+        // antes de anotar la sesión; si no, se perdería.
+        libraryLoaded.await()
         launcher.consumeSession()?.let { s ->
             val g = _games.value.firstOrNull { it.id == s.gameId } ?: return@let
             updateGame(g.copy(trackedMinutes = g.trackedMinutes + s.minutes, lastPlayed = System.currentTimeMillis()))

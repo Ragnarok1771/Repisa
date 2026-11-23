@@ -35,13 +35,20 @@ class UsageTracker(private val context: Context) {
         val events = usm.queryEvents(start, end)
         val openSince = mutableMapOf<String, Long>()
         val total = mutableMapOf<String, Long>()
+        val seen = mutableSetOf<String>()
         val e = UsageEvents.Event()
         while (events.hasNextEvent()) {
             events.getNextEvent(e)
             val pkg = e.packageName ?: continue
+            val firstEvent = seen.add(pkg)
             when (e.eventType) {
                 UsageEvents.Event.ACTIVITY_RESUMED -> openSince.putIfAbsent(pkg, e.timeStamp)
-                UsageEvents.Event.ACTIVITY_PAUSED, UsageEvents.Event.ACTIVITY_STOPPED -> openSince.remove(pkg)?.let { t ->
+                UsageEvents.Event.ACTIVITY_PAUSED -> {
+                    // Si lo primero que vemos es que se pausa, ya estaba en pantalla al empezar.
+                    val t = openSince.remove(pkg) ?: if (firstEvent) start else null
+                    if (t != null) total[pkg] = (total[pkg] ?: 0L) + (e.timeStamp - t)
+                }
+                UsageEvents.Event.ACTIVITY_STOPPED -> openSince.remove(pkg)?.let { t ->
                     total[pkg] = (total[pkg] ?: 0L) + (e.timeStamp - t)
                 }
                 // Pantalla apagada o consola en reposo: se corta la sesión de todas las apps.
