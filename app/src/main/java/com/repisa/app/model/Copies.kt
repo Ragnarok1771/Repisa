@@ -16,8 +16,18 @@ object Copies {
     )
 
     /** Clave de grupo, o null si el usuario pidió no agrupar este juego. */
+    private val keyCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    /** Clave de grupo (con caché: limpiar el título con expresiones regulares cuesta). */
     fun key(g: Game): String? {
         if (g.noMerge) return null
+        val cacheKey = g.consoleId + "|" + g.title
+        keyCache[cacheKey]?.let { return it.ifEmpty { null } }
+        if (keyCache.size > 20_000) keyCache.clear()
+        return computeKey(g).also { keyCache[cacheKey] = it ?: "" }
+    }
+
+    private fun computeKey(g: Game): String? {
         val words = CoverSearch.norm(EmulatorSource.cleanTitle(g.title)).split(' ')
             .filter { it.isNotBlank() && it !in editionWords && it !in setOf("the", "of", "to") }
             .map { if (it == "v") "5" else it } // "Grand Theft Auto V" = "... 5"
@@ -33,8 +43,9 @@ object Copies {
         val out = mutableListOf<Game>()
         games.groupBy { key(it) ?: "solo:${it.id}" }.values.forEach { group ->
             if (group.size == 1) { out += group[0]; return@forEach }
+            // Preferente: la elegida por el usuario; si no, la de Steam (la más completa); si no, la más jugada.
             val main = group.firstOrNull { it.preferredCopy }
-                ?: group.maxWith(compareBy<Game> { it.totalMinutes }.thenBy { it.source == Source.STEAM })
+                ?: group.maxWith(compareBy<Game> { it.source == Source.STEAM }.thenBy { it.totalMinutes })
             // Nombre de la caja: el más corto del grupo ("Grand Theft Auto V" en vez de "... Legacy"),
             // salvo que el usuario haya puesto uno a mano.
             val name = if (main.userEdited) main.title else group.minBy { it.title.length }.title
@@ -57,7 +68,9 @@ object Tools {
         "dedicated server", "mod kit", "modkit", "dev kit", "devkit", "editor", "sdk", "soundtrack", "artbook",
         "art book", "benchmark", "resource archiver", "toolkit", "creation kit", "map maker",
         "wallpaper", "unreal engine", "playtest", "test server", "pre-game editor",
-    ).map { Regex("""(^|[^a-z])${Regex.escape(it)}([^a-z]|$)""") }
+    ).map { Regex("""(^|[^a-z])${Regex.escape(it)}([^a-z]|$)""") } +
+        // Paquetes de contenido que no son el juego: "Death Stranding Content", "... Bonus Content".
+        Regex("""\s(bonus |digital |extra )?content\s*$""")
 
     fun looksLikeTool(title: String): Boolean {
         val t = title.lowercase()

@@ -72,6 +72,7 @@ object L10n {
     }
 
     fun init(app: Context) {
+        genreCache.clear()
         current = saved(app)
         ctx = wrap(app)
     }
@@ -91,11 +92,13 @@ object L10n {
     fun decimal(v: Number, digits: Int = 1): String = String.format(Locale.getDefault(), "%.${digits}f", v.toDouble())
 
     /** Nombre visible de un género (internamente se guardan con su nombre en español). */
-    fun genre(key: String): String {
+    private val genreCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    fun genre(key: String): String = genreCache.getOrPut(key) {
         val keys = ctx.resources.getStringArray(R.array.genre_keys)
         val i = keys.indexOf(key)
-        if (i < 0) return key
+        if (i < 0) return@getOrPut key
         val id = ctx.resources.getIdentifier("genre_$i", "string", ctx.packageName)
-        return if (id != 0) ctx.getString(id) else key
+        if (id != 0) ctx.getString(id) else key
     }
 }

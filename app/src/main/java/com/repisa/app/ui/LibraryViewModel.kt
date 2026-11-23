@@ -26,7 +26,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.async
@@ -88,11 +90,17 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     val inSettings = MutableStateFlow(false)
 
     /** Biblioteca tal como se muestra: copias del mismo juego unidas en una sola caja. */
-    val displayGames: StateFlow<List<Game>> = _games.map { Copies.merge(it) }
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val displayGames: StateFlow<List<Game>> = _games
+        .mapLatest { Copies.merge(it) }
+        .flowOn(kotlinx.coroutines.Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     // También se reconstruye al cambiar de idioma (los títulos de las repisas están traducidos).
-    val shelves: StateFlow<List<ShelfGroup>> = combine(displayGames, _options, L10n.version) { g, o, _ -> buildShelves(g, o) }
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val shelves: StateFlow<List<ShelfGroup>> = combine(displayGames, _options, L10n.version) { g, o, _ -> g to o }
+        .mapLatest { (g, o) -> buildShelves(g, o) }
+        .flowOn(kotlinx.coroutines.Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private var enrichJob: Job? = null
@@ -351,11 +359,26 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     private var aspectSaveJob: Job? = null
 
     /** La carátula ya cargó: guarda su proporción para que la caja tenga su forma exacta. */
+    private val pendingAspects = java.util.concurrent.ConcurrentHashMap<String, Float>()
+
+    /**
+     * Las carátulas cargan de una en una; aplicar cada proporción por separado reconstruiría la biblioteca
+     * cientos de veces seguidas (tirones). Se acumulan y se aplican juntas cada ~1 s.
+     */
     fun setCoverAspect(id: String, aspect: Float) {
-        _games.update { list -> list.map { if (it.id == id) it.copy(coverAspect = aspect) else it } }
-        aspectSaveJob?.cancel()
+        pendingAspects[id] = aspect
+        if (aspectSaveJob?.isActive == true) return
         aspectSaveJob = viewModelScope.launch {
-            kotlinx.coroutines.delay(3000)
+            while (true) {
+                kotlinx.coroutines.delay(1000)
+                val batch = HashMap(pendingAspects)
+                if (batch.isEmpty()) break
+                batch.keys.forEach { pendingAspects.remove(it) }
+                mutex.withLock {
+                    _games.update { list -> list.map { g -> batch[g.id]?.let { g.copy(coverAspect = it) } ?: g } }
+                }
+            }
+            kotlinx.coroutines.delay(2000)
             mutex.withLock { store.save(_games.value) }
         }
     }

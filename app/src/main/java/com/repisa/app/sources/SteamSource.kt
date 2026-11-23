@@ -60,7 +60,8 @@ class SteamSource private constructor(
                         val format = assets["asset_url_format"].str
                         fun asset(name: String?) = if (format != null && name != null) ASSETS + format.replace("\${FILENAME}", name) else null
                         out[appId] = StoreInfo(
-                            cover = asset(assets["library_capsule_2x"].str ?: assets["library_capsule"].str),
+                            // 600×900 basta para la caja; la versión _2x pesa 4 veces más y daba tirones.
+                            cover = asset(assets["library_capsule"].str ?: assets["library_capsule_2x"].str),
                             header = asset(assets["header"].str),
                             developer = item["basic_info"]["developers"][0]["name"].str,
                             isGame = item["type"].long?.let { it == 0L },
@@ -126,7 +127,7 @@ class SteamSource private constructor(
                 playtimeMinutes = g["playtime_forever"].int ?: 0,
                 lastPlayed = g["rtime_last_played"].long?.takeIf { it > 0 }?.times(1000),
                 // Carátula vertical clásica; se corrige abajo con la ruta exacta de la tienda.
-                coverUrl = "${ASSETS}steam/apps/$appId/library_600x900_2x.jpg",
+                coverUrl = "${ASSETS}steam/apps/$appId/library_600x900.jpg",
                 altCoverUrl = "${ASSETS}steam/apps/$appId/header.jpg",
                 storeUrl = "https://store.steampowered.com/app/$appId",
             )
@@ -191,7 +192,7 @@ class SteamSource private constructor(
                 consoleId = "pc",
                 playtimeMinutes = p?.first ?: 0,
                 lastPlayed = p?.second ?: a["rt_last_played"].long?.takeIf { it > 0 }?.times(1000),
-                coverUrl = "${ASSETS}steam/apps/$appId/library_600x900_2x.jpg",
+                coverUrl = "${ASSETS}steam/apps/$appId/library_600x900.jpg",
                 altCoverUrl = "${ASSETS}steam/apps/$appId/header.jpg",
                 storeUrl = "https://store.steampowered.com/app/$appId",
                 familyShared = true,

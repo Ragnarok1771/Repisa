@@ -109,7 +109,7 @@ private fun FocusPanel(vm: LibraryViewModel) {
                 Text(L10n.games(all.size) + " · " + stringResource(R.string.hours_played, all.sumOf { it.totalMinutes } / 60),
                     color = Color(0xFFBFA98A))
                 Spacer(Modifier.height(12.dp))
-                val top = all.sortedByDescending { it.totalMinutes }.take(3)
+                val top = androidx.compose.runtime.remember(all) { all.sortedByDescending { it.totalMinutes }.take(3) }
                 if (top.isNotEmpty()) {
                     Text(stringResource(R.string.most_played), color = Color.White, fontWeight = FontWeight.Bold)
                     top.forEach { Text("${it.title} — ${formatPlaytime(it.totalMinutes)}", color = Color(0xFFD9C8AE), fontSize = 13.sp) }

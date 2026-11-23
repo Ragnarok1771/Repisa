@@ -41,6 +41,16 @@ class CopiesTest {
     }
 
     @Test
+    fun steamIsPreferredByDefault() {
+        val merged = Copies.merge(listOf(
+            g("epic:1", "Celeste", Source.EPIC, 900),
+            g("steam:1", "Celeste", minutes = 10),
+        ))
+        assertEquals("steam:1", merged.single().id)
+        assertEquals(910, merged.single().totalMinutes)
+    }
+
+    @Test
     fun preferredCopyWins() {
         val merged = Copies.merge(listOf(
             g("steam:1", "Dead by Daylight", minutes = 900),
@@ -58,5 +68,8 @@ class CopiesTest {
         assertFalse(Tools.looksLikeTool("ARK: Survival Evolved"))
         assertFalse(Tools.looksLikeTool("ARK: Survival Of The Fittest"))
         assertFalse(Tools.looksLikeTool("Football Manager 2024"))
+        assertTrue(Tools.looksLikeTool("Death Stranding Content"))
+        assertFalse(Tools.looksLikeTool("Content Warning"))
+        assertFalse(Tools.looksLikeTool("Death Stranding"))
     }
 }
