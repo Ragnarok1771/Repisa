@@ -75,6 +75,7 @@ import java.util.Date
 fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     var editing by remember { mutableStateOf(false) }
     var hiding by remember { mutableStateOf(false) }
+    var resetting by remember { mutableStateOf(false) }
     var searchingCover by remember { mutableStateOf(false) }
     var rating by remember { mutableStateOf(false) }
     var showCopies by remember { mutableStateOf(false) }
@@ -177,6 +178,9 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         OutlinedButton(onClick = { editing = true }) {
                             Icon(Icons.Default.Edit, null, tint = Color.White); Text(" " + stringResource(R.string.edit_data), color = Color.White)
                         }
+                        if (game.totalMinutes > 0) OutlinedButton(onClick = { resetting = true }) {
+                            Text("⟲ " + stringResource(R.string.reset_time), color = Color.White)
+                        }
                         OutlinedButton(onClick = { hiding = true }) {
                             Text("✕ " + stringResource(R.string.hide_game), color = Color(0xFFFFB4A8))
                         }
@@ -188,7 +192,18 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     if (rating) RatingDialog(game, vm, onDismiss = { rating = false })
     if (showCopies) CopiesDialog(game, vm, onDismiss = { showCopies = false })
     if (searchingCover) CoverSearchDialog(game, vm, onDismiss = { searchingCover = false })
-    if (editing) EditDialog(game, onDismiss = { editing = false }) { vm.updateGame(it); editing = false }
+    if (editing) EditDialog(game, vm.settings.manualTimeIsTotal, onDismiss = { editing = false }) { vm.updateGame(it); editing = false }
+    if (resetting) androidx.compose.material3.AlertDialog(
+        onDismissRequest = { resetting = false },
+        title = { Text(stringResource(R.string.reset_time)) },
+        text = { Text(stringResource(R.string.reset_time_confirm, game.title)) },
+        confirmButton = { androidx.compose.material3.TextButton(onClick = {
+            resetting = false
+            // El total queda en 0: lo que registren las fuentes desde ahora se vuelve a sumar.
+            vm.updateGame(game.copy(manualMinutes = game.manualMinutes - game.totalMinutes))
+        }) { Text(stringResource(R.string.reset_time)) } },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = { resetting = false }) { Text(stringResource(R.string.cancel)) } },
+    )
     if (hiding) androidx.compose.material3.AlertDialog(
         onDismissRequest = { hiding = false },
         title = { Text(stringResource(R.string.hide_game)) },
@@ -213,14 +228,16 @@ private fun Stat(label: String, value: String) {
 }
 
 @Composable
-private fun EditDialog(game: Game, onDismiss: () -> Unit, onSave: (Game) -> Unit) {
+private fun EditDialog(game: Game, totalMode: Boolean, onDismiss: () -> Unit, onSave: (Game) -> Unit) {
     var title by remember { mutableStateOf(game.title) }
     var genres by remember { mutableStateOf(game.genres.joinToString(", ")) }
     var dev by remember { mutableStateOf(game.developer.orEmpty()) }
     var year by remember { mutableStateOf(game.releaseYear?.toString().orEmpty()) }
     var cover by remember { mutableStateOf(game.coverUrl.orEmpty()) }
-    var hours by remember { mutableStateOf((game.manualMinutes / 60).takeIf { game.manualMinutes > 0 }?.toString().orEmpty()) }
-    var minutes by remember { mutableStateOf((game.manualMinutes % 60).takeIf { game.manualMinutes > 0 }?.toString().orEmpty()) }
+    // Modo «sumar»: se edita solo el tiempo puesto a mano. Modo «total»: se edita el tiempo total del juego.
+    val shown = if (totalMode) game.totalMinutes else maxOf(0, game.manualMinutes)
+    var hours by remember { mutableStateOf(if (shown > 0) (shown / 60).toString() else "") }
+    var minutes by remember { mutableStateOf(if (shown > 0) (shown % 60).toString() else "") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.edit_title, game.title)) },
@@ -232,7 +249,8 @@ private fun EditDialog(game: Game, onDismiss: () -> Unit, onSave: (Game) -> Unit
                 OutlinedTextField(year, { year = it.filter(Char::isDigit).take(4) }, label = { Text(stringResource(R.string.stat_year)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 // Tiempo jugado fuera de Repisa en horas y minutos (17 h 52 min), no en decimales.
-                Text(stringResource(R.string.field_extra_time), fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+                Text(stringResource(if (totalMode) R.string.field_total_time else R.string.field_extra_time), fontSize = 13.sp,
+                    modifier = Modifier.padding(top = 8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(hours, { hours = it.filter(Char::isDigit).take(5) }, label = { Text(stringResource(R.string.field_hours)) },
                         singleLine = true, modifier = Modifier.weight(1f), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
@@ -244,7 +262,9 @@ private fun EditDialog(game: Game, onDismiss: () -> Unit, onSave: (Game) -> Unit
         },
         confirmButton = {
             TextButton(onClick = {
-                val manual = (hours.toIntOrNull() ?: 0) * 60 + (minutes.toIntOrNull() ?: 0).coerceAtMost(59)
+                val typed = (hours.toIntOrNull() ?: 0) * 60 + (minutes.toIntOrNull() ?: 0).coerceAtMost(59)
+                // En modo total, el tiempo a mano es lo que falta (o sobra) para llegar al total escrito.
+                val manual = if (totalMode) game.manualMinutes + (typed - game.totalMinutes) else typed
                 // Solo cambiar el tiempo no «congela» el resto de datos del juego.
                 val onlyTime = title == game.title && genres == game.genres.joinToString(", ") &&
                     dev == game.developer.orEmpty() && year == game.releaseYear?.toString().orEmpty() && cover == game.coverUrl.orEmpty()

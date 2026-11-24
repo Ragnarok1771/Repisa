@@ -2,6 +2,15 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.11.4]
+
+- **Corregir el tiempo jugado**: Ajustes → Tiempo de juego → «Al escribir el tiempo de un juego a mano»:
+  *Sumarlo al tiempo registrado* (como hasta ahora) o *Usarlo como tiempo total del juego* (escribes 17 h 52 min y
+  el juego queda con 17 h 52 min, sea más o menos de lo que tenía).
+- En modo «sumar», la casilla muestra lo que pusiste a mano: borrarla o ponerla en 0 quita lo añadido.
+- Botón **⟲ Reiniciar tiempo** en la ficha (con confirmación): deja el juego en 0; lo que juegues después se vuelve a
+  sumar.
+
 ## [0.11.3]
 
 - **Tiempo a mano en horas y minutos**: Editar datos → «Tiempo jugado fuera de Repisa» con dos casillas (17 h 52 min),

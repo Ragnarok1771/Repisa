@@ -44,6 +44,10 @@ class Settings(context: Context) {
     var retroarchFolder: String? get() = str("ra_folder"); set(v) = put("ra_folder", v)
     /** Carpeta de datos de Cocoon (o cualquier carpeta con gamelist.xml exportados). */
     var cocoonFolder: String? get() = str("cocoon_folder"); set(v) = put("cocoon_folder", v)
+    /** Al escribir el tiempo a mano: true = es el tiempo total del juego; false = se suma al registrado. */
+    var manualTimeIsTotal: Boolean
+        get() = prefs.getBoolean("manual_time_total", false)
+        set(v) = prefs.edit { putBoolean("manual_time_total", v) }
     /** Juegos que el usuario quitó de la repisa (no vuelven al sincronizar). */
     var hiddenGames: Set<String>
         get() = prefs.getStringSet("hidden_games", emptySet()) ?: emptySet()

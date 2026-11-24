@@ -181,7 +181,13 @@
     <string name="unhide_all">Wieder anzeigen</string>
     <string name="field_hours">Stunden</string>
     <string name="field_minutes">Minuten</string>
-    <string name="field_extra_time">Außerhalb von Repisa gespielte Zeit (wird addiert)</string>
+    <string name="field_extra_time">Außerhalb von Repisa gespielte Zeit (wird zu dem addiert, was Repisa und deine Plattformen erfassen)</string>
+    <string name="field_total_time">Gesamte Spielzeit (ersetzt die aktuelle Summe)</string>
+    <string name="manual_time_mode">Wenn du die Zeit eines Spiels von Hand eingibst (Bearbeiten):</string>
+    <string name="manual_time_add">Zur erfassten Zeit addieren</string>
+    <string name="manual_time_total">Als Gesamtspielzeit verwenden</string>
+    <string name="reset_time">Zeit zurücksetzen</string>
+    <string name="reset_time_confirm">Die Spielzeit von „%1$s“ wird auf 0 gesetzt. Ab jetzt wird neue Spielzeit wieder addiert.</string>
     <string name="stat_origin">Herkunft</string>
     <string name="origin_rom_folder">deinem ROM-Ordner</string>
     <string name="origin_retroarch">einer RetroArch-Playlist</string>

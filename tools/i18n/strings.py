@@ -498,9 +498,32 @@ s("hidden_count", "Games removed from the shelf: %1$d", "Juegos quitados de la r
 s("unhide_all", "Show them again", "Volver a mostrarlos", "Les réafficher", "Wieder anzeigen", "Mostrali di nuovo", "Mostrar de novo")
 s("field_hours", "Hours", "Horas", "Heures", "Stunden", "Ore", "Horas")
 s("field_minutes", "Minutes", "Minutos", "Minutes", "Minuten", "Minuti", "Minutos")
-s("field_extra_time", "Time played outside Repisa (added to the rest)", "Tiempo jugado fuera de Repisa (se suma al resto)",
-  "Temps joué hors de Repisa (s’ajoute au reste)", "Außerhalb von Repisa gespielte Zeit (wird addiert)",
-  "Tempo giocato fuori da Repisa (si somma al resto)", "Tempo jogado fora do Repisa (soma-se ao resto)")
+s("field_extra_time", "Time played outside Repisa (added to what Repisa and your platforms record)",
+  "Tiempo jugado fuera de Repisa (se suma a lo que registran Repisa y tus plataformas)",
+  "Temps joué hors de Repisa (s’ajoute à ce qu’enregistrent Repisa et vos plateformes)",
+  "Außerhalb von Repisa gespielte Zeit (wird zu dem addiert, was Repisa und deine Plattformen erfassen)",
+  "Tempo giocato fuori da Repisa (si somma a quello registrato da Repisa e dalle piattaforme)",
+  "Tempo jogado fora do Repisa (soma-se ao que o Repisa e suas plataformas registram)")
+s("field_total_time", "Total time played (replaces the current total)", "Tiempo total jugado (reemplaza el total actual)",
+  "Temps de jeu total (remplace le total actuel)", "Gesamte Spielzeit (ersetzt die aktuelle Summe)",
+  "Tempo di gioco totale (sostituisce il totale attuale)", "Tempo total jogado (substitui o total atual)")
+s("manual_time_mode", "When you type a game's time by hand (Edit data):", "Al escribir el tiempo de un juego a mano (Editar datos):",
+  "Quand vous saisissez le temps d’un jeu à la main (Modifier) :", "Wenn du die Zeit eines Spiels von Hand eingibst (Bearbeiten):",
+  "Quando scrivi a mano il tempo di un gioco (Modifica dati):", "Ao digitar o tempo de um jogo à mão (Editar dados):",
+  ptPT="Ao escrever o tempo de um jogo à mão (Editar dados):")
+s("manual_time_add", "Add it to the recorded time", "Sumarlo al tiempo registrado", "L’ajouter au temps enregistré",
+  "Zur erfassten Zeit addieren", "Sommarlo al tempo registrato", "Somar ao tempo registrado")
+s("manual_time_total", "Use it as the game's total time", "Usarlo como tiempo total del juego", "L’utiliser comme temps total du jeu",
+  "Als Gesamtspielzeit verwenden", "Usarlo come tempo totale del gioco", "Usar como tempo total do jogo")
+s("reset_time", "Reset time", "Reiniciar tiempo", "Remettre le temps à zéro", "Zeit zurücksetzen", "Azzera tempo", "Zerar tempo",
+  ptPT="Repor tempo")
+s("reset_time_confirm", "The time played of “%1$s” will be set to 0. From now on, new play time is added again.",
+  "El tiempo jugado de «%1$s» se pondrá en 0. Desde ahora se vuelve a sumar lo que juegues.",
+  "Le temps de jeu de « %1$s » passera à 0. Le temps joué ensuite s’ajoutera à nouveau.",
+  "Die Spielzeit von „%1$s“ wird auf 0 gesetzt. Ab jetzt wird neue Spielzeit wieder addiert.",
+  "Il tempo di gioco di «%1$s» verrà azzerato. Da ora in poi il nuovo tempo si somma di nuovo.",
+  "O tempo jogado de \"%1$s\" vai para 0. A partir de agora, o que você jogar volta a ser somado.",
+  ptPT="O tempo jogado de \"%1$s\" passa a 0. A partir de agora, o que jogar volta a ser somado.")
 s("stat_origin", "Comes from", "Origen", "Provenance", "Herkunft", "Origine", "Origem")
 s("origin_rom_folder", "your ROM folder", "tu carpeta de ROMs", "votre dossier de ROM", "deinem ROM-Ordner", "la tua cartella ROM",
   "sua pasta de ROMs", ptPT="a sua pasta de ROMs")

@@ -371,6 +371,17 @@ private fun PlaytimePage(vm: LibraryViewModel, tick: Int) {
                 Text(stringResource(R.string.grant), color = Color.White)
             }
         }
+        HorizontalDivider(color = Color(0x33FFFFFF))
+        // Cómo se interpreta el tiempo escrito a mano en «Editar datos».
+        var total by remember { mutableStateOf(vm.settings.manualTimeIsTotal) }
+        Text(stringResource(R.string.manual_time_mode), color = Color.White)
+        listOf(false to R.string.manual_time_add, true to R.string.manual_time_total).forEach { (value, label) ->
+            Row(Modifier.fillMaxWidth().clickable { total = value; vm.settings.manualTimeIsTotal = value }.padding(vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.material3.RadioButton(selected = total == value, onClick = { total = value; vm.settings.manualTimeIsTotal = value })
+                Text(stringResource(label), color = Color(0xFFE8D9C0), fontSize = 14.sp)
+            }
+        }
     }
 }
 

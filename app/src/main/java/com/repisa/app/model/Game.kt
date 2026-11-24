@@ -84,7 +84,8 @@ data class Game(
     /** El usuario editó los datos a mano: no sobrescribir con metadatos automáticos. */
     val userEdited: Boolean = false,
 ) {
-    val totalMinutes: Int get() = groupMinutes ?: (playtimeMinutes + trackedMinutes + manualMinutes)
+    /** [manualMinutes] puede ser negativo (tiempo corregido o reiniciado a mano), pero el total nunca. */
+    val totalMinutes: Int get() = maxOf(0, groupMinutes ?: (playtimeMinutes + trackedMinutes + manualMinutes))
     /** Última partida (de cualquiera de las copias si están unidas). */
     val lastPlayedAny: Long? get() = groupLastPlayed ?: lastPlayed
     /** Quita lo que solo existe en memoria antes de guardar. */
