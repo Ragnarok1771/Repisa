@@ -174,6 +174,9 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
             if (inRandom) com.repisa.app.ui.RandomPicker(vm, onClose = { inRandom = false }, onOpen = { vm.selectedId.value = it.id })
             selected?.let { DetailScreen(it, vm, onClose = { vm.selectedId.value = null }) }
         }
+        val onboarding by vm.onboarding.collectAsState()
+        if (onboarding && !inSettings) com.repisa.app.ui.OnboardingScreen(vm, openSettings = { vm.inSettings.value = true },
+            onDone = { vm.finishOnboarding() })
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp))
         update?.let { r -> com.repisa.app.ui.UpdateDialog(r, updateProgress, onUpdate = { vm.installUpdate() },
             onLater = { vm.update.value = null }, onSkip = { vm.skipUpdate() }) }

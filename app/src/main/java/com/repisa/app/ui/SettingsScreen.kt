@@ -212,6 +212,25 @@ private fun MainPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit, open:
         }
     }
 
+    // RetroAchievements: logros de juegos de emulador (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube...)
+    Section("RetroAchievements") {
+        Hint(stringResource(R.string.ra_hint))
+        var user by remember { mutableStateOf(s.raUser.orEmpty()) }
+        var key by remember { mutableStateOf(if (s.raApiKey != null) "••••••••" else "") }
+        Field(stringResource(R.string.ra_user), user) { user = it }
+        Field(stringResource(R.string.ra_key), key, secret = true) { key = it }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = {
+                s.raUser = user
+                if (!key.startsWith("••")) s.raApiKey = key
+                vm.checkRetroAchievements()
+            }, enabled = user.isNotBlank() && key.isNotBlank()) { Text(stringResource(R.string.save)) }
+            if (s.raUser != null) TextButton(onClick = { s.raUser = null; s.raApiKey = null; user = ""; key = ""; changed() }) {
+                Text(stringResource(R.string.unlink))
+            }
+        }
+    }
+
     // Submenús
     Column(Modifier.fillMaxWidth().background(Color(0xB3120C09), RoundedCornerShape(12.dp))) {
         Page.entries.forEachIndexed { i, p ->
@@ -710,6 +729,7 @@ private fun DataPage(vm: LibraryViewModel) {
         }
         OutlinedButton(onClick = { vm.checkForUpdate(quiet = false) }) { Text(stringResource(R.string.updates_check_now), color = Color.White) }
         HorizontalDivider(color = Color(0x33FFFFFF))
+        OutlinedButton(onClick = { vm.restartOnboarding() }) { Text(stringResource(R.string.onb_again), color = Color.White) }
         Hint(stringResource(R.string.license_hint))
     }
 }

@@ -35,7 +35,7 @@ class Settings(context: Context) {
         val SECRET_KEYS = setOf("steam_key", "epic_access", "epic_refresh", "sgdb_key", "ra_api_key")
         /** Carpetas: los permisos de Android no sobreviven a reinstalar, así que no se exportan. */
         val DEVICE_KEYS = setOf("rom_folders", "esde_folder", "ra_folder", "cocoon_folder", "session_game", "session_pkg",
-            "session_start", "last_auto_sync", "frontend_report", "cover_pass", "last_update_check")
+            "session_start", "last_auto_sync", "frontend_report", "cover_pass", "last_update_check", "onboarding_step")
     }
 
     val prefsForBackup: android.content.SharedPreferences get() = prefs
@@ -78,6 +78,22 @@ class Settings(context: Context) {
     var manualTimeIsTotal: Boolean
         get() = prefs.getBoolean("manual_time_total", false)
         set(v) = prefs.edit { putBoolean("manual_time_total", v) }
+    /** RetroAchievements: usuario y clave de la Web API (la clave va cifrada). */
+    var raUser: String? get() = str("ra_user"); set(v) = put("ra_user", v?.trim()?.ifBlank { null })
+    var raApiKey: String? get() = secret("ra_api_key"); set(v) = putSecret("ra_api_key", v?.trim()?.ifBlank { null })
+
+    /** Valores JSON propios (logros marcados a mano...); viajan en la copia de seguridad. */
+    fun rawString(key: String): String? = str(key)
+    fun putRawString(key: String, value: String?) = put(key, value)
+
+    /** Guía de primera vez terminada, y en qué paso iba. */
+    var onboardingDone: Boolean
+        get() = prefs.getBoolean("onboarding_done", false)
+        set(v) = prefs.edit { putBoolean("onboarding_done", v) }
+    var onboardingStep: Int
+        get() = prefs.getInt("onboarding_step", 0)
+        set(v) = prefs.edit { putInt("onboarding_step", v) }
+
     /** Repisa «Seguir jugando» arriba del todo. */
     var continueShelf: Boolean
         get() = prefs.getBoolean("continue_shelf", true)

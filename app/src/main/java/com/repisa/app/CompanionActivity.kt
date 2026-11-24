@@ -94,6 +94,7 @@ private fun CompanionPanel(game: Game, vm: LibraryViewModel, onClose: () -> Unit
     val start = vm.settings.pendingSessionStart.takeIf { it > 0 } ?: now
     var rating by remember { mutableStateOf(false) }
     var editingNotes by remember { mutableStateOf(false) }
+    var showAch by remember { mutableStateOf(false) }
 
     BoxWithConstraints(Modifier.fillMaxSize().roomBackground().padding(16.dp)) {
         val h = minOf(maxHeight * 0.62f, maxWidth * 0.34f / frontAspect(game))
@@ -123,6 +124,9 @@ private fun CompanionPanel(game: Game, vm: LibraryViewModel, onClose: () -> Unit
                         Text((if (game.favorite) "♥ " else "♡ ") + stringResource(R.string.favorite), color = Color.White)
                     }
                     OutlinedButton(onClick = { editingNotes = true }) { Text("✎ " + stringResource(R.string.notes), color = Color.White) }
+                    OutlinedButton(onClick = { showAch = true }) {
+                        Text("🏆" + (game.achTotal?.takeIf { it > 0 }?.let { " ${game.achUnlocked ?: 0}/$it" } ?: ""), color = Color.White)
+                    }
                 }
                 // Notas personales: dónde lo dejaste, pistas, lo que quieras apuntar mientras juegas.
                 Box(Modifier.fillMaxWidth().background(Color(0x33000000), RoundedCornerShape(8.dp)).padding(10.dp)) {
@@ -138,6 +142,7 @@ private fun CompanionPanel(game: Game, vm: LibraryViewModel, onClose: () -> Unit
         }
     }
     if (rating) RatingDialog(game, vm, onDismiss = { rating = false })
+    if (showAch) com.repisa.app.ui.AchievementsDialog(game, vm, onDismiss = { showAch = false })
     if (editingNotes) NotesDialog(game.notes.orEmpty(), onDismiss = { editingNotes = false }) {
         vm.updateGame(game.copy(notes = it.ifBlank { null })); editingNotes = false
     }

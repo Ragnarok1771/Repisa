@@ -27,7 +27,34 @@ object Backup {
     const val FORMAT = 1
     private val gamesSerializer = ListSerializer(Game.serializer())
 
-    fun export(games: List<Game>, prefs: SharedPreferences, appVersion: String): String {
+    /** Carátulas propias (de la galería) que viven en la app: viajan dentro de la copia, en base64. */
+    private fun ownCovers(games: List<Game>, coversDir: java.io.File?): Map<String, JsonElement> {
+        if (coversDir == null) return emptyMap()
+        return games.mapNotNull { g ->
+            val url = g.coverUrl ?: return@mapNotNull null
+            if (!url.startsWith("file:")) return@mapNotNull null
+            val f = java.io.File(android.net.Uri.parse(url).path ?: return@mapNotNull null)
+            if (!f.exists() || f.parentFile?.canonicalPath != coversDir.canonicalPath) return@mapNotNull null
+            f.name to JsonPrimitive(java.util.Base64.getEncoder().encodeToString(f.readBytes()))
+        }.toMap()
+    }
+
+    /** Escribe las carátulas propias de la copia y devuelve los juegos apuntando a ellas. */
+    fun restoreCovers(text: String, games: List<Game>, coversDir: java.io.File): List<Game> {
+        val covers = Http.json.parseToJsonElement(text).jsonObject["covers"]?.jsonObject ?: return games
+        coversDir.mkdirs()
+        covers.forEach { (name, data) ->
+            runCatching { java.io.File(coversDir, name).writeBytes(java.util.Base64.getDecoder().decode(data.jsonPrimitive.content)) }
+        }
+        return games.map { g ->
+            val url = g.coverUrl
+            if (url == null || !url.startsWith("file:")) return@map g
+            val name = url.substringAfterLast('/')
+            if (name in covers) g.copy(coverUrl = android.net.Uri.fromFile(java.io.File(coversDir, name)).toString()) else g
+        }
+    }
+
+    fun export(games: List<Game>, prefs: SharedPreferences, appVersion: String, coversDir: java.io.File? = null): String {
         val skip = Settings.SECRET_KEYS + Settings.DEVICE_KEYS
         val savedPrefs = prefs.all.filterKeys { it !in skip }.mapNotNull { (k, v) ->
             val typed: JsonObject = when (v) {
@@ -49,6 +76,7 @@ object Backup {
             "exportedAt" to JsonPrimitive(System.currentTimeMillis()),
             "games" to Http.json.encodeToJsonElement(gamesSerializer, games.map { it.stored() }),
             "settings" to JsonObject(savedPrefs),
+            "covers" to JsonObject(ownCovers(games, coversDir)),
         ))
         return root.toString()
     }

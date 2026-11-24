@@ -687,6 +687,159 @@ s("stats_by_decade", "Games by release decade", "Juegos por década de salida", 
   "Giochi per decennio", "Jogos por década de lançamento")
 s("stats_most_played", "Most played", "Los más jugados", "Les plus joués", "Am meisten gespielt", "I più giocati", "Os mais jogados")
 s("stats_other", "Others", "Otros", "Autres", "Andere", "Altri", "Outros")
+s("cover_from_gallery", "From gallery", "Desde la galería", "Depuis la galerie", "Aus der Galerie", "Dalla galleria", "Da galeria")
+s("crop_title", "Frame the cover (%1$s box)", "Encuadra la carátula (caja de %1$s)", "Cadrez la jaquette (boîte %1$s)",
+  "Cover zuschneiden (%1$s-Hülle)", "Inquadra la copertina (scatola %1$s)", "Enquadre a capa (caixa de %1$s)")
+s("crop_hint", "Drag to move and pinch (or − / +) to zoom. The frame has the real proportions of the box.",
+  "Arrastra para mover y pellizca (o − / +) para ampliar. El marco tiene la proporción real de la caja.",
+  "Glissez pour déplacer et pincez (ou − / +) pour zoomer. Le cadre a les proportions réelles de la boîte.",
+  "Ziehen zum Verschieben, zwei Finger (oder − / +) zum Zoomen. Der Rahmen hat das echte Hüllenformat.",
+  "Trascina per spostare e pizzica (o − / +) per ingrandire. La cornice ha le proporzioni reali della scatola.",
+  "Arraste para mover e pince (ou − / +) para ampliar. O quadro tem a proporção real da caixa.")
+s("crop_reset", "Reset", "Restablecer", "Réinitialiser", "Zurücksetzen", "Ripristina", "Redefinir")
+s("achievements", "Achievements", "Logros", "Succès", "Erfolge", "Obiettivi", "Conquistas")
+s("ach_source_steam", "Steam (your progress)", "Steam (tu progreso)", "Steam (votre progression)", "Steam (dein Fortschritt)",
+  "Steam (i tuoi progressi)", "Steam (seu progresso)", ptPT="Steam (o seu progresso)")
+s("ach_source_steam_list", "Steam list (mark them yourself)", "Lista de Steam (márcalos tú)", "Liste Steam (à cocher vous-même)",
+  "Steam-Liste (selbst abhaken)", "Elenco Steam (segnali tu)", "Lista do Steam (marque você)", ptPT="Lista do Steam (marque-as)")
+s("ach_source_ra", "RetroAchievements", "RetroAchievements", "RetroAchievements", "RetroAchievements", "RetroAchievements", "RetroAchievements")
+s("ach_progress", "%1$d of %2$d (%3$d%%)", "%1$d de %2$d (%3$d %%)", "%1$d sur %2$d (%3$d %%)", "%1$d von %2$d (%3$d %%)",
+  "%1$d di %2$d (%3$d%%)", "%1$d de %2$d (%3$d%%)")
+s("ach_unlocked", "Unlocked (%1$d)", "Conseguidos (%1$d)", "Débloqués (%1$d)", "Freigeschaltet (%1$d)", "Sbloccati (%1$d)",
+  "Desbloqueadas (%1$d)")
+s("ach_locked", "To get (%1$d) · %% of players who have it", "Por conseguir (%1$d) · %% de jugadores que lo tienen",
+  "À obtenir (%1$d) · %% de joueurs qui l’ont", "Noch offen (%1$d) · %% der Spieler mit diesem Erfolg",
+  "Da ottenere (%1$d) · %% di giocatori che lo hanno", "A conseguir (%1$d) · %% de jogadores que têm")
+s("open_web", "Open web", "Abrir web", "Ouvrir le site", "Webseite öffnen", "Apri sito", "Abrir site")
+s("ach_repisa", "Repisa achievements (for every game)", "Logros de Repisa (para todos los juegos)", "Succès Repisa (pour tous les jeux)",
+  "Repisa-Erfolge (für alle Spiele)", "Obiettivi Repisa (per tutti i giochi)", "Conquistas do Repisa (para todos os jogos)")
+s("ach_hidden", "Hidden achievement", "Logro oculto", "Succès caché", "Versteckter Erfolg", "Obiettivo nascosto", "Conquista oculta")
+s("ach_manual", "marked by you", "marcado a mano", "coché par vous", "selbst abgehakt", "segnato da te", "marcada por você",
+  ptPT="marcada por si")
+s("ach_loading", "Looking for achievements…", "Buscando logros…", "Recherche des succès…", "Suche Erfolge…", "Cerco gli obiettivi…",
+  "Procurando conquistas…", ptPT="A procurar conquistas…")
+s("ach_none", "No achievements found for this game.", "No se encontraron logros para este juego.", "Aucun succès trouvé pour ce jeu.",
+  "Keine Erfolge für dieses Spiel gefunden.", "Nessun obiettivo trovato per questo gioco.", "Nenhuma conquista encontrada para este jogo.")
+s("ach_link_ra", "Link RetroAchievements in Settings to see this game's achievements.",
+  "Vincula RetroAchievements en Ajustes para ver los logros de este juego.",
+  "Reliez RetroAchievements dans Paramètres pour voir les succès de ce jeu.",
+  "Verknüpfe RetroAchievements in den Einstellungen, um die Erfolge zu sehen.",
+  "Collega RetroAchievements nelle Impostazioni per vedere gli obiettivi.",
+  "Vincule o RetroAchievements em Ajustes para ver as conquistas deste jogo.", ptPT="Ligue o RetroAchievements nas Definições para ver as conquistas.")
+s("ach_note_epic", "These are the achievements of the Steam version. Epic doesn't let Repisa see yours, so tick the ones you get: the date and time are saved.",
+  "Son los logros de la versión de Steam. Epic no deja que Repisa vea los tuyos, así que marca los que consigas: se guarda la fecha y la hora.",
+  "Ce sont les succès de la version Steam. Epic ne laisse pas Repisa voir les vôtres : cochez ceux que vous obtenez (date et heure enregistrées).",
+  "Das sind die Erfolge der Steam-Version. Epic zeigt Repisa deine nicht, also hake die erreichten ab: Datum und Uhrzeit werden gespeichert.",
+  "Sono gli obiettivi della versione Steam. Epic non permette a Repisa di vedere i tuoi: segna quelli che ottieni (data e ora salvate).",
+  "São as conquistas da versão Steam. A Epic não deixa o Repisa ver as suas: marque as que conseguir (data e hora ficam salvas).")
+s("ach_note_private", "Steam isn't showing your achievements (your game details are private). In Steam: Profile → Edit profile → Privacy settings → Game details: Public. Or add your Steam API key in Settings → Steam → Advanced. Meanwhile you can tick them yourself.",
+  "Steam no deja ver tus logros (los detalles de juego de tu perfil son privados). En Steam: Perfil → Editar perfil → Configuración de privacidad → Detalles de juego: Público. O pon tu clave de API de Steam en Ajustes → Steam → Avanzado. Mientras, puedes marcarlos a mano.",
+  "Steam ne montre pas vos succès (détails de jeu privés). Dans Steam : Profil → Modifier → Confidentialité → Détails des jeux : Public. Ou ajoutez votre clé API Steam. En attendant, cochez-les vous-même.",
+  "Steam zeigt deine Erfolge nicht (Spieldetails privat). In Steam: Profil → Profil bearbeiten → Privatsphäre → Spieldetails: Öffentlich. Oder Steam-API-Schlüssel eintragen. Bis dahin selbst abhaken.",
+  "Steam non mostra i tuoi obiettivi (dettagli di gioco privati). In Steam: Profilo → Modifica → Privacy → Dettagli di gioco: Pubblico. Oppure aggiungi la chiave API di Steam. Intanto puoi segnarli tu.",
+  "O Steam não mostra suas conquistas (detalhes de jogo privados). No Steam: Perfil → Editar perfil → Privacidade → Detalhes de jogo: Público. Ou coloque sua chave de API do Steam. Enquanto isso, marque-as você.")
+s("ra_hint", "Achievements for emulated games (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Your Web API key is at retroachievements.org → Settings → Keys.",
+  "Logros de juegos emulados (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Tu clave «Web API Key» está en retroachievements.org → Settings → Keys.",
+  "Succès des jeux émulés (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Votre « Web API Key » est sur retroachievements.org → Settings → Keys.",
+  "Erfolge für emulierte Spiele (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Deinen Web-API-Schlüssel findest du auf retroachievements.org → Settings → Keys.",
+  "Obiettivi dei giochi emulati (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). La «Web API Key» è su retroachievements.org → Settings → Keys.",
+  "Conquistas de jogos emulados (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Sua \"Web API Key\" está em retroachievements.org → Settings → Keys.")
+s("ra_user", "RetroAchievements user", "Usuario de RetroAchievements", "Utilisateur RetroAchievements", "RetroAchievements-Benutzer",
+  "Utente RetroAchievements", "Usuário do RetroAchievements", ptPT="Utilizador do RetroAchievements")
+s("ra_key", "Web API Key", "Web API Key", "Web API Key", "Web-API-Schlüssel", "Web API Key", "Web API Key")
+s("ra_ok", "RetroAchievements linked. Looking for your achievements…", "RetroAchievements vinculado. Buscando tus logros…",
+  "RetroAchievements relié. Recherche de vos succès…", "RetroAchievements verknüpft. Suche deine Erfolge…",
+  "RetroAchievements collegato. Cerco i tuoi obiettivi…", "RetroAchievements vinculado. Procurando suas conquistas…",
+  ptPT="RetroAchievements ligado. A procurar as suas conquistas…")
+s("ra_failed", "RetroAchievements didn't accept that user and key.", "RetroAchievements no aceptó ese usuario y clave.",
+  "RetroAchievements n’a pas accepté cet utilisateur et cette clé.", "RetroAchievements hat Benutzer und Schlüssel nicht akzeptiert.",
+  "RetroAchievements non ha accettato utente e chiave.", "O RetroAchievements não aceitou esse usuário e chave.")
+s("sort_achievements", "Achievements %", "% de logros", "% de succès", "Erfolge in %", "% obiettivi", "% de conquistas")
+s("rach_first", "First session", "Primera partida", "Première partie", "Erste Partie", "Prima partita", "Primeira partida")
+s("rach_first_d", "Play it for the first time.", "Juégalo por primera vez.", "Jouez-y pour la première fois.", "Spiele es zum ersten Mal.",
+  "Giocalo per la prima volta.", "Jogue pela primeira vez.")
+s("rach_10h", "Hooked", "Enganchado", "Accro", "Gefesselt", "Preso bene", "Viciado")
+s("rach_10h_d", "Reach 10 hours.", "Llega a 10 horas.", "Atteignez 10 heures.", "Erreiche 10 Stunden.", "Raggiungi 10 ore.", "Chegue a 10 horas.")
+s("rach_50h", "Devoted", "Entregado", "Dévoué", "Hingegeben", "Devoto", "Dedicado")
+s("rach_50h_d", "Reach 50 hours.", "Llega a 50 horas.", "Atteignez 50 heures.", "Erreiche 50 Stunden.", "Raggiungi 50 ore.", "Chegue a 50 horas.")
+s("rach_100h", "A hundred hours", "Cien horas", "Cent heures", "Hundert Stunden", "Cento ore", "Cem horas")
+s("rach_100h_d", "Reach 100 hours.", "Llega a 100 horas.", "Atteignez 100 heures.", "Erreiche 100 Stunden.", "Raggiungi 100 ore.", "Chegue a 100 horas.")
+s("rach_hltb", "No rush", "Sin prisa", "Sans se presser", "Keine Eile", "Senza fretta", "Sem pressa")
+s("rach_hltb_d", "Play longer than HowLongToBeat's story time.", "Juega más que el tiempo de historia de HowLongToBeat.",
+  "Jouez plus longtemps que le temps « histoire » de HowLongToBeat.", "Spiele länger als die Story-Zeit von HowLongToBeat.",
+  "Gioca più del tempo «storia» di HowLongToBeat.", "Jogue mais que o tempo de história do HowLongToBeat.")
+s("rach_finished", "To the end", "Hasta el final", "Jusqu’au bout", "Bis zum Ende", "Fino alla fine", "Até o fim", ptPT="Até ao fim")
+s("rach_finished_d", "Mark it as finished.", "Márcalo como terminado.", "Marquez-le comme terminé.", "Markiere es als beendet.",
+  "Segnalo come finito.", "Marque como zerado.", ptPT="Marque-o como terminado.")
+s("rach_completed", "Completionist", "Completista", "Complétionniste", "Komplettist", "Completista", "Completista")
+s("rach_completed_d", "Mark it as 100%.", "Márcalo al 100 %.", "Marquez-le à 100 %.", "Markiere es mit 100 %.", "Segnalo al 100%.",
+  "Marque como 100%.")
+s("rach_rated", "Critic", "Crítico", "Critique", "Kritiker", "Critico", "Crítico")
+s("rach_rated_d", "Rate it.", "Califícalo.", "Notez-le.", "Bewerte es.", "Valutalo.", "Avalie-o.")
+s("rach_notes", "Logbook", "Cuaderno de bitácora", "Carnet de bord", "Logbuch", "Diario di bordo", "Diário de bordo")
+s("rach_notes_d", "Write notes about it.", "Escribe notas sobre él.", "Écrivez des notes.", "Schreib Notizen dazu.", "Scrivi delle note.",
+  "Escreva notas sobre ele.")
+s("rach_favorite", "One of mine", "Uno de los míos", "Un des miens", "Einer von meinen", "Uno dei miei", "Um dos meus")
+s("rach_favorite_d", "Mark it as favourite.", "Márcalo como favorito.", "Marquez-le en favori.", "Markiere es als Favorit.",
+  "Segnalo come preferito.", "Marque como favorito.")
+s("onb_welcome_title", "Welcome to Repisa", "Te damos la bienvenida a Repisa", "Bienvenue dans Repisa", "Willkommen bei Repisa",
+  "Benvenuto in Repisa", "Boas-vindas ao Repisa")
+s("onb_welcome_body", "Repisa puts all your games — Steam, Epic Games and emulators — on wooden shelves as real boxes, with their cover, playtime, scores, achievements and your own ratings. Let's set it up in a minute.",
+  "Repisa pone todos tus juegos (Steam, Epic Games y emuladores) en repisas de madera como cajas de verdad, con su carátula, tiempo jugado, notas, logros y tus calificaciones. Vamos a dejarla lista en un minuto.",
+  "Repisa range tous vos jeux (Steam, Epic Games et émulateurs) sur des étagères en bois, comme de vraies boîtes, avec jaquette, temps de jeu, notes, succès et vos avis. Configurons-la en une minute.",
+  "Repisa stellt all deine Spiele (Steam, Epic Games und Emulatoren) als echte Hüllen in Holzregale, mit Cover, Spielzeit, Wertungen, Erfolgen und deinen Bewertungen. Richten wir sie in einer Minute ein.",
+  "Repisa mette tutti i tuoi giochi (Steam, Epic Games ed emulatori) su scaffali di legno come vere scatole, con copertina, tempo di gioco, voti, obiettivi e le tue valutazioni. Configuriamola in un minuto.",
+  "O Repisa coloca todos os seus jogos (Steam, Epic Games e emuladores) em estantes de madeira como caixas de verdade, com capa, tempo jogado, notas, conquistas e suas avaliações. Vamos configurar em um minuto.")
+s("onb_backup_body", "Do you have a Repisa backup (for example, from another console or an older version)? Import it now and everything comes back.",
+  "¿Tienes una copia de seguridad de Repisa (por ejemplo, de otra consola o de una versión anterior)? Impórtala ahora y vuelve todo.",
+  "Vous avez une sauvegarde Repisa (autre console, ancienne version) ? Importez-la maintenant et tout revient.",
+  "Hast du eine Repisa-Sicherung (z. B. von einer anderen Konsole oder Version)? Importiere sie jetzt und alles ist wieder da.",
+  "Hai un backup di Repisa (da un’altra console o una versione precedente)? Importalo ora e torna tutto.",
+  "Tem um backup do Repisa (de outro console ou de uma versão anterior)? Importe agora e tudo volta.")
+s("onb_start", "Let's start", "Empezar", "Commencer", "Los geht’s", "Iniziamo", "Começar")
+s("onb_import", "I have a backup: import it", "Tengo una copia: importarla", "J’ai une sauvegarde : l’importer",
+  "Ich habe eine Sicherung: importieren", "Ho un backup: importalo", "Tenho um backup: importar", ptPT="Tenho uma cópia: importar")
+s("onb_pc_title", "Your PC games", "Tus juegos de PC", "Vos jeux PC", "Deine PC-Spiele", "I tuoi giochi PC", "Seus jogos de PC",
+  ptPT="Os seus jogos de PC")
+s("onb_pc_body", "Link Steam (also your Family group) and Epic Games by signing in on their official pages. Repisa only reads your games and hours. They are at the top of Settings; when you come back, the guide continues.",
+  "Vincula Steam (también tu grupo familiar) y Epic Games iniciando sesión en sus páginas oficiales. Repisa solo lee tus juegos y horas. Están arriba del todo en Ajustes; al volver, la guía sigue.",
+  "Reliez Steam (et votre groupe familial) et Epic Games en vous connectant sur leurs pages officielles. Repisa lit seulement vos jeux et heures. C’est en haut des Paramètres ; au retour, le guide continue.",
+  "Verknüpfe Steam (auch deine Familiengruppe) und Epic Games über ihre offiziellen Anmeldeseiten. Repisa liest nur Spiele und Stunden. Ganz oben in den Einstellungen; danach geht die Anleitung weiter.",
+  "Collega Steam (anche il gruppo famiglia) ed Epic Games accedendo alle loro pagine ufficiali. Repisa legge solo giochi e ore. Sono in cima alle Impostazioni; al ritorno la guida continua.",
+  "Vincule o Steam (também o grupo familiar) e a Epic Games entrando nas páginas oficiais. O Repisa só lê seus jogos e horas. Ficam no topo de Ajustes; ao voltar, o guia continua.")
+s("onb_pc_link", "Link Steam / Epic", "Vincular Steam / Epic", "Relier Steam / Epic", "Steam / Epic verknüpfen", "Collega Steam / Epic",
+  "Vincular Steam / Epic", ptPT="Ligar Steam / Epic")
+s("onb_skip_step", "Not now", "Ahora no", "Pas maintenant", "Jetzt nicht", "Non ora", "Agora não")
+s("onb_next", "Next", "Siguiente", "Suivant", "Weiter", "Avanti", "Próximo", ptPT="Seguinte")
+s("onb_emu_title", "Your emulators", "Tus emuladores", "Vos émulateurs", "Deine Emulatoren", "I tuoi emulatori", "Seus emuladores",
+  ptPT="Os seus emuladores")
+s("onb_emu_body", "Choose the folder where you keep your ROMs (just the main one: Repisa looks inside for switch/, gba/, ps2/…). Repisa will detect your installed emulators and open each game directly. Cocoon, ES-DE and RetroArch are in Settings → Emulators.",
+  "Elige la carpeta donde tienes tus ROMs (basta la principal: Repisa busca dentro switch/, gba/, ps2/…). Repisa detectará tus emuladores instalados y abrirá cada juego directamente. Cocoon, ES-DE y RetroArch están en Ajustes → Emuladores.",
+  "Choisissez le dossier de vos ROM (le principal suffit : Repisa cherche switch/, gba/, ps2/…). Repisa détectera vos émulateurs et ouvrira chaque jeu directement. Cocoon, ES-DE et RetroArch sont dans Paramètres → Émulateurs.",
+  "Wähle den Ordner mit deinen ROMs (der Hauptordner reicht: Repisa sucht switch/, gba/, ps2/…). Repisa erkennt deine Emulatoren und öffnet jedes Spiel direkt. Cocoon, ES-DE und RetroArch unter Einstellungen → Emulatoren.",
+  "Scegli la cartella delle ROM (basta la principale: Repisa cerca switch/, gba/, ps2/…). Repisa rileverà gli emulatori e aprirà ogni gioco direttamente. Cocoon, ES-DE e RetroArch sono in Impostazioni → Emulatori.",
+  "Escolha a pasta das suas ROMs (basta a principal: o Repisa procura switch/, gba/, ps2/…). O Repisa detecta seus emuladores e abre cada jogo direto. Cocoon, ES-DE e RetroArch ficam em Ajustes → Emuladores.")
+s("onb_emu_added", "%1$d folder(s) added", "%1$d carpeta(s) añadida(s)", "%1$d dossier(s) ajouté(s)", "%1$d Ordner hinzugefügt",
+  "%1$d cartella/e aggiunta/e", "%1$d pasta(s) adicionada(s)")
+s("onb_time_title", "Playtime", "Tiempo de juego", "Temps de jeu", "Spielzeit", "Tempo di gioco", "Tempo de jogo")
+s("onb_time_body", "Allow “Usage access” so Repisa can measure exactly how long you play the games you open from here (only the time the emulator is on screen). Android will open the setting: find Repisa and turn it on.",
+  "Permite el «Acceso a datos de uso» para que Repisa mida exactamente cuánto juegas a lo que abres desde aquí (solo el tiempo con el emulador en pantalla). Android abrirá el ajuste: busca Repisa y actívalo.",
+  "Autorisez « Accès aux données d’utilisation » pour que Repisa mesure le temps de jeu exact de ce que vous lancez d’ici. Android ouvre le réglage : trouvez Repisa et activez-le.",
+  "Erlaube den „Nutzungsdatenzugriff“, damit Repisa genau misst, wie lange du hier gestartete Spiele spielst. Android öffnet die Einstellung: Repisa suchen und aktivieren.",
+  "Consenti l’«Accesso ai dati di utilizzo» così Repisa misura con precisione quanto giochi a ciò che avvii da qui. Android apre l’impostazione: trova Repisa e attivalo.",
+  "Permita o \"Acesso ao uso\" para o Repisa medir exatamente quanto você joga o que abre daqui. O Android abre o ajuste: encontre o Repisa e ative.")
+s("onb_done_title", "All set!", "¡Todo listo!", "C’est prêt !", "Alles bereit!", "Tutto pronto!", "Tudo pronto!")
+s("onb_done_body", "Controller: D-pad to move · A details · X play · Y favourite · B back · L1/R1 platform · Select shelves · Start settings.\n🎲 next to the magnifier picks a game for you · tap the totals at the top for statistics · mark each game Backlog / Playing / Finished / 100% / Dropped · 🏆 achievements from Steam, RetroAchievements and Repisa.",
+  "Mando: cruceta para moverte · A ficha · X jugar · Y favorito · B atrás · L1/R1 plataforma · Select repisas · Start ajustes.\n🎲 junto a la lupa elige un juego por ti · toca los totales de arriba para ver estadísticas · marca cada juego como Pendiente / Jugando / Terminado / 100 % / Abandonado · 🏆 logros de Steam, RetroAchievements y Repisa.",
+  "Manette : croix pour bouger · A fiche · X jouer · Y favori · B retour · L1/R1 plateforme · Select étagères · Start réglages.\n🎲 à côté de la loupe choisit un jeu · touchez les totaux en haut pour les statistiques · marquez chaque jeu À faire / En cours / Terminé / 100 % / Abandonné · 🏆 succès Steam, RetroAchievements et Repisa.",
+  "Controller: Steuerkreuz bewegen · A Details · X spielen · Y Favorit · B zurück · L1/R1 Plattform · Select Regale · Start Einstellungen.\n🎲 neben der Lupe wählt ein Spiel · tippe oben auf die Summen für Statistiken · markiere Spiele als Ausstehend / Spiele gerade / Beendet / 100 % / Abgebrochen · 🏆 Erfolge von Steam, RetroAchievements und Repisa.",
+  "Controller: croce per muoverti · A scheda · X gioca · Y preferito · B indietro · L1/R1 piattaforma · Select scaffali · Start impostazioni.\n🎲 accanto alla lente sceglie un gioco · tocca i totali in alto per le statistiche · segna ogni gioco Da giocare / In corso / Finito / 100% / Abbandonato · 🏆 obiettivi Steam, RetroAchievements e Repisa.",
+  "Controle: direcional para mover · A ficha · X jogar · Y favorito · B voltar · L1/R1 plataforma · Select estantes · Start ajustes.\n🎲 ao lado da lupa escolhe um jogo · toque nos totais em cima para estatísticas · marque cada jogo como Pendente / Jogando / Zerado / 100% / Abandonado · 🏆 conquistas do Steam, RetroAchievements e Repisa.")
+s("onb_finish", "Let's play!", "¡A jugar!", "À vous de jouer !", "Los, spielen!", "Si gioca!", "Bora jogar!", ptPT="Vamos jogar!")
+s("onb_skip_all", "Skip the guide", "Saltar la guía", "Passer le guide", "Anleitung überspringen", "Salta la guida", "Pular o guia",
+  ptPT="Saltar o guia")
+s("onb_again", "Show the start guide again", "Ver la guía de inicio otra vez", "Revoir le guide de démarrage", "Startanleitung erneut zeigen",
+  "Rivedi la guida iniziale", "Ver o guia inicial de novo")
 s("diag_copy", "Copy diagnostics", "Copiar diagnóstico", "Copier le diagnostic", "Diagnose kopieren", "Copia diagnostica", "Copiar diagnóstico")
 s("diag_copied", "Copied ✓", "Copiado ✓", "Copié ✓", "Kopiert ✓", "Copiato ✓", "Copiado ✓")
 s("diag_share", "Share diagnostics", "Compartir diagnóstico", "Partager le diagnostic", "Diagnose teilen", "Condividi diagnostica", "Compartilhar diagnóstico",

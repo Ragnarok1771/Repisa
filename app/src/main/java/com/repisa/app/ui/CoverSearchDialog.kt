@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -80,6 +81,20 @@ fun CoverSearchDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
     }
     LaunchedEffect(game.id) { search() }
 
+    // Carátula desde la galería: se elige una foto y se encuadra al tamaño de la caja.
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var picked by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    val pickImage = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> if (uri != null) picked = loadPicked(context, uri) }
+    picked?.let { bmp ->
+        CoverCropDialog(game, bmp, onDismiss = { picked = null }) { file ->
+            vm.setCustomCover(game, android.net.Uri.fromFile(file).toString(), game.console.case.aspect)
+            picked = null
+            onDismiss()
+        }
+    }
+
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
             Modifier.fillMaxSize().padding(16.dp).background(Color(0xFF1E1612), RoundedCornerShape(14.dp)).padding(16.dp),
@@ -99,6 +114,11 @@ fun CoverSearchDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
                 )
                 Spacer(Modifier.width(8.dp))
                 Button(onClick = { search() }) { Icon(Icons.Default.Search, null); Text(" " + stringResource(R.string.search)) }
+                Spacer(Modifier.width(8.dp))
+                OutlinedButton(onClick = {
+                    pickImage.launch(androidx.activity.result.PickVisualMediaRequest(
+                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }) { Text("🖼 " + stringResource(R.string.cover_from_gallery), color = Color.White) }
             }
             if (!vm.coverSearch.hasSteamGridDb) {
                 Text(

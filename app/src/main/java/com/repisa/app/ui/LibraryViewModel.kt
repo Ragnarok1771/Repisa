@@ -39,7 +39,8 @@ import kotlinx.coroutines.sync.withLock
 
 enum class SortMode(private val labelRes: Int) {
     ALPHA(R.string.sort_alpha), PLAYTIME(R.string.sort_playtime), RECENT(R.string.sort_recent), YEAR(R.string.sort_year),
-    CONSOLE(R.string.sort_console), RATING(R.string.sort_rating), METACRITIC(R.string.sort_metacritic);
+    CONSOLE(R.string.sort_console), RATING(R.string.sort_rating), METACRITIC(R.string.sort_metacritic),
+    ACHIEVEMENTS(R.string.sort_achievements);
 
     val label: String get() = L10n.s(labelRes)
 }
@@ -94,6 +95,92 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     val selectedId = MutableStateFlow<String?>(null)
     val inSettings = MutableStateFlow(false)
 
+    /** Guía de primera vez visible. */
+    val onboarding = MutableStateFlow(!settings.onboardingDone)
+
+    fun finishOnboarding() { settings.onboardingDone = true; onboarding.value = false }
+
+    fun restartOnboarding() { settings.onboardingDone = false; settings.onboardingStep = 0; onboarding.value = true; inSettings.value = false }
+
+    // ------------------------------------------------------------------ Logros
+
+    val achievementStore = com.repisa.app.data.AchievementStore(app, settings)
+    /** Logros cargados por juego (null = el juego no tiene logros conocidos). */
+    val achievements = MutableStateFlow<Map<String, com.repisa.app.sources.AchievementSet?>>(emptyMap())
+    val achievementsLoading = MutableStateFlow<Set<String>>(emptySet())
+
+    private suspend fun fetchAchievements(game: Game): com.repisa.app.sources.AchievementSet? = when (game.source) {
+        Source.STEAM, Source.EPIC -> com.repisa.app.sources.Achievements.steam(game, settings, achievementStore.manual(game.id))
+        Source.EMULATOR -> com.repisa.app.sources.Achievements.retro(game, settings)
+    }
+
+    private fun publishAchievements(game: Game, set: com.repisa.app.sources.AchievementSet?) {
+        achievements.update { it + (game.id to set) }
+        val unlocked = set?.unlocked
+        val total = set?.items?.size
+        if (set != null && (game.achUnlocked != unlocked || game.achTotal != total)) {
+            _games.value.firstOrNull { it.id == game.id }?.let { updateGame(it.copy(achUnlocked = unlocked, achTotal = total)) }
+        }
+    }
+
+    /** Carga los logros de un juego (caché de 1 día; [force] para pedirlos ya). */
+    fun loadAchievements(game: Game, force: Boolean = false) = viewModelScope.launch {
+        val cached = achievementStore.cached(game.id)
+        if (cached != null) achievements.update { it + (game.id to cached) }
+        if (!force && cached != null && System.currentTimeMillis() - cached.fetchedAt < 86_400_000L) return@launch
+        if (game.id in achievementsLoading.value) return@launch
+        achievementsLoading.update { it + game.id }
+        val fresh = runCatching { fetchAchievements(game) }.getOrNull()
+        if (fresh != null) achievementStore.save(game.id, fresh)
+        publishAchievements(game, fresh ?: cached)
+        achievementsLoading.update { it - game.id }
+    }
+
+    /** Marca o desmarca a mano un logro (juegos de Epic con la lista de Steam, o perfil de Steam privado). */
+    fun toggleManualAchievement(game: Game, achId: String) {
+        val marks = achievementStore.toggleManual(game.id, achId)
+        val set = achievements.value[game.id] ?: return
+        val updated = set.copy(items = set.items.map { a ->
+            if (set.kind == com.repisa.app.sources.Achievements.STEAM) a else a.copy(unlockedAt = marks[a.id], manual = a.id in marks)
+        })
+        achievementStore.save(game.id, updated)
+        publishAchievements(game, updated)
+    }
+
+    /** Logros de Repisa del juego con la fecha en que se cumplieron (las guarda la primera vez que se ven). */
+    fun repisaAchievements(game: Game): List<Pair<com.repisa.app.model.RepisaAchievement, Long?>> {
+        val list = com.repisa.app.model.RepisaAchievement.entries
+        val seen = achievementStore.repisaSeen(game.id, list.filter { it.met(game) }.map { it.name }.toSet())
+        return list.map { it to (if (it.met(game)) seen[it.name] else null) }
+    }
+
+    fun checkRetroAchievements() = viewModelScope.launch {
+        val ok = runCatching { com.repisa.app.sources.Achievements.raCheck(settings) }.getOrDefault(false)
+        message.value = L10n.s(if (ok) R.string.ra_ok else R.string.ra_failed)
+        if (ok) achievementsPass()
+    }
+
+    private var achievementsJob: Job? = null
+
+    /** En segundo plano: logros de los juegos de Steam jugados y de los de emulador con RetroAchievements. */
+    fun achievementsPass() {
+        if (achievementsJob?.isActive == true) return
+        achievementsJob = viewModelScope.launch {
+            val ra = settings.raUser != null && settings.raApiKey != null
+            val pending = displayGames.value.filter { g ->
+                g.achTotal == null && when (g.source) {
+                    Source.STEAM -> g.playtimeMinutes > 0
+                    Source.EMULATOR -> ra && g.consoleId in com.repisa.app.sources.Achievements.raConsoles
+                    Source.EPIC -> false
+                }
+            }.take(80)
+            for (g in pending) {
+                loadAchievements(g).join()
+                kotlinx.coroutines.delay(1200)
+            }
+        }
+    }
+
     // ------------------------------------------------------------------ Actualizaciones
 
     /** Versión nueva disponible (se muestra un aviso con sus notas). */
@@ -138,7 +225,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     fun exportBackup(uri: android.net.Uri) = viewModelScope.launch {
         val app = getApplication<android.app.Application>()
         runCatching {
-            val text = com.repisa.app.data.Backup.export(_games.value, settings.prefsForBackup, com.repisa.app.BuildConfig.VERSION_NAME)
+            val text = com.repisa.app.data.Backup.export(_games.value, settings.prefsForBackup, com.repisa.app.BuildConfig.VERSION_NAME,
+                java.io.File(app.filesDir, "covers"))
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 app.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(text.toByteArray()) }
             }
@@ -153,7 +241,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             val text = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 app.contentResolver.openInputStream(uri)!!.use { it.readBytes().toString(Charsets.UTF_8) }
             }
-            val parsed = com.repisa.app.data.Backup.parse(text)
+            val parsed = com.repisa.app.data.Backup.parse(text).let {
+                com.repisa.app.data.Backup.Parsed(
+                    com.repisa.app.data.Backup.restoreCovers(text, it.games, java.io.File(app.filesDir, "covers")), it.settings, it.version)
+            }
             com.repisa.app.data.Backup.restoreSettings(parsed.settings, settings.prefsForBackup)
             mutex.withLock {
                 _games.value = com.repisa.app.data.Backup.mergeLibrary(_games.value, parsed.games)
@@ -161,6 +252,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             }
             // Refrescar lo que depende de los ajustes recién restaurados.
             hidden.value = settings.hiddenGames
+            onboarding.value = !settings.onboardingDone
             ratingScale.value = runCatching { com.repisa.app.model.RatingScale.valueOf(settings.ratingScale) }.getOrDefault(ratingScale.value)
             _options.update { it.copy(
                 sort = runCatching { SortMode.valueOf(settings.sortMode) }.getOrDefault(it.sort),
@@ -244,6 +336,9 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             SortMode.CONSOLE -> filtered.sortedWith(compareBy<Game> { it.console.year }.thenBy { it.console.name }.thenBy { it.sortKey })
             SortMode.RATING -> filtered.sortedWith(compareByDescending<Game> { it.rating?.overall ?: -1f }.thenBy { it.sortKey })
             SortMode.METACRITIC -> filtered.sortedWith(compareByDescending<Game> { it.metascore ?: -1 }.thenBy { it.sortKey })
+            SortMode.ACHIEVEMENTS -> filtered.sortedWith(compareByDescending<Game> { g ->
+                g.achTotal?.takeIf { it > 0 }?.let { (g.achUnlocked ?: 0).toFloat() / it } ?: -1f
+            }.thenBy { it.sortKey })
         }
         fun group(title: String, games: List<Game>) =
             ShelfGroup(title, "${L10n.games(games.size)} · ${hours(games)}", games)
@@ -436,6 +531,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 replace(enriched, save = i % 10 == 9 || i == pending.lastIndex)
             }
             status.value = null
+            achievementsPass()
             // Tras actualizar la app con buscadores de carátulas nuevos, repasar una vez los juegos que no tienen.
             if (settings.coverPass < COVER_PASS) {
                 missingCoversPass(quiet = true)
@@ -465,6 +561,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             manualMinutes = current.manualMinutes,
             notes = current.notes,
             status = current.status,
+            achUnlocked = current.achUnlocked, achTotal = current.achTotal,
             coverUrl = if (current.customCover) current.coverUrl else enriched.coverUrl,
             customCover = current.customCover,
             rating = current.rating,
@@ -707,8 +804,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     // ------------------------------------------------------------------ Carátulas
 
     /** El usuario eligió una carátula en el buscador. */
-    fun setCustomCover(game: Game, url: String) =
-        updateGame(game.copy(coverUrl = url, coverAspect = null, customCover = true))
+    fun setCustomCover(game: Game, url: String, aspect: Float? = null) =
+        updateGame(game.copy(coverUrl = url, coverAspect = aspect, customCover = true))
 
     /** Busca carátula para todos los juegos que no tienen (o cuya carátula ya no carga). */
     fun findMissingCovers() {

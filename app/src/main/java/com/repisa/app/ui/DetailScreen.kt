@@ -76,6 +76,7 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     var editing by remember { mutableStateOf(false) }
     var hiding by remember { mutableStateOf(false) }
     var editingNotes by remember { mutableStateOf(false) }
+    var showAchievements by remember { mutableStateOf(false) }
     var resetting by remember { mutableStateOf(false) }
     var searchingCover by remember { mutableStateOf(false) }
     var rating by remember { mutableStateOf(false) }
@@ -180,6 +181,10 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         if (game.copyIds.isNotEmpty()) OutlinedButton(onClick = { showCopies = true }) {
                             Text("⧉ " + stringResource(R.string.copies_button, game.copyIds.size + 1), color = Color.White)
                         }
+                        OutlinedButton(onClick = { showAchievements = true }) {
+                            Text("🏆 " + stringResource(R.string.achievements) +
+                                (game.achTotal?.takeIf { it > 0 }?.let { " ${game.achUnlocked ?: 0}/$it" } ?: ""), color = Color.White)
+                        }
                         OutlinedButton(onClick = { editingNotes = true }) {
                             Text("✎ " + stringResource(R.string.notes), color = Color.White)
                         }
@@ -201,6 +206,7 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     if (showCopies) CopiesDialog(game, vm, onDismiss = { showCopies = false })
     if (searchingCover) CoverSearchDialog(game, vm, onDismiss = { searchingCover = false })
     if (editing) EditDialog(game, vm.settings.manualTimeIsTotal, onDismiss = { editing = false }) { vm.updateGame(it); editing = false }
+    if (showAchievements) AchievementsDialog(game, vm, onDismiss = { showAchievements = false })
     if (editingNotes) com.repisa.app.NotesDialog(game.notes.orEmpty(), onDismiss = { editingNotes = false }) {
         vm.updateGame(game.copy(notes = it.ifBlank { null })); editingNotes = false
     }
