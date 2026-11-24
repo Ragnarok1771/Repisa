@@ -116,7 +116,9 @@ private fun FocusPanel(vm: LibraryViewModel) {
                     color = Color(0xFFE8D9C0), fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp),
                 )
                 Spacer(Modifier.height(12.dp))
-                val top = androidx.compose.runtime.remember(all) { all.sortedByDescending { it.totalMinutes }.take(3) }
+                val top = androidx.compose.runtime.remember(all) {
+                    all.filter { it.playStatus != com.repisa.app.model.PlayStatus.NOT_APPLICABLE }.sortedByDescending { it.totalMinutes }.take(3)
+                }
                 if (top.isNotEmpty()) {
                     Text(stringResource(R.string.most_played), color = Color.White, fontWeight = FontWeight.Bold)
                     top.forEach { Text("${it.title} — ${formatPlaytime(it.totalMinutes)}", color = Color(0xFFD9C8AE), fontSize = 13.sp) }
