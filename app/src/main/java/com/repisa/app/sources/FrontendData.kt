@@ -173,7 +173,7 @@ internal class FrontendReader(private val context: Context, private val tree: Sa
                         ?: (f["thumbnail"] ?: f["image"] ?: f["cover"] ?: f["boxart"])?.let { resolveRelative(dir, it) },
                     playMinutes = playtimeFields.firstNotNullOfOrNull { f[it] }?.let(EmulatorSource::parsePlaytime),
                 )
-                val tokens = CoverSearch.tokens(name ?: fileKey ?: continue)
+                val tokens = CoverSearch.tokens(matchName(name ?: fileKey ?: continue))
                 entries += FrontendEntry(console?.id, fileKey, tokens, meta)
             }
         }
@@ -545,6 +545,14 @@ internal class FrontendReader(private val context: Context, private val tree: Sa
             }
             return minutes.toInt().takeIf { it > 0 }
         }
+
+        private val addOnSuffix = Regex("""\s+\+\s+.*\b(set|pack|pass|bundle|dlc|expansion|edition)\b.*$""", RegexOption.IGNORE_CASE)
+
+        /**
+         * Nombre para emparejar: sin el añadido de la edición con DLC
+         * ("Dragon Ball Z Kakarot + A New Power Awakens Set" → "Dragon Ball Z Kakarot").
+         */
+        fun matchName(name: String): String = name.replace(addOnSuffix, "").ifBlank { name }
 
         /** Decodifica %2F, %20... sin convertir "+" en espacio ("Mario + Rabbids"). */
         fun decode(s: String): String =

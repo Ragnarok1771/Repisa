@@ -89,12 +89,20 @@ class EmulatorSource(private val context: Context, private val settings: Setting
             out
         }.toMutableList()
 
-        // Juegos que el frontend conoce pero que no salieron en las carpetas escaneadas.
+        // Juegos que el frontend conoce pero que no salieron en las carpetas escaneadas. Solo para sistemas de los
+        // que no hay ningún archivo en tus carpetas: si tienes la carpeta de Switch, manda esa carpeta, y lo que
+        // Cocoon tenga de más (DLC, packs, entradas viejas, juegos que ya no están) no aparece como juego.
+        val withFiles = result.map { it.consoleId }.toSet()
+        val skipped = mutableListOf<String>()
         index.unused().forEach { (consoleId, fileKey, m) ->
             val key = fileKey ?: romKey(m.name ?: return@forEach)
+            val title = m.name ?: cleanTitle(key)
+            if (consoleId in withFiles || isAddOn(title)) { skipped += "$consoleId:$title"; return@forEach }
             val id = "emu:$consoleId:$key"
-            if (result.none { it.id == id }) result += applyMeta(Game(id, Source.EMULATOR, m.name ?: cleanTitle(key), consoleId, romName = key), m)
+            if (result.none { it.id == id }) result += applyMeta(Game(id, Source.EMULATOR, title, consoleId, romName = key), m)
         }
+        if (skipped.isNotEmpty()) diag.append("\nEn el frontend pero no en tus carpetas (no se añaden, ").append(skipped.size)
+            .append("): ").append(skipped.take(40).joinToString()).append('\n')
         if (settings.esdeFolder != null || settings.cocoonFolder != null) {
             settings.frontendReport = report.encode()
             diag.append("\nEmparejados con la biblioteca: ").append(report.matched).append(" (con tiempo: ").append(report.matchedWithTime).append(")\n")
@@ -252,6 +260,12 @@ class EmulatorSource(private val context: Context, private val settings: Setting
     }
 
     companion object {
+        /** DLC, actualizaciones, packs de contenido: no son juegos por sí solos. */
+        private val addOn = Regex(
+            """(?i)\bdlc\b|\bupdate\b|season pass|expansion pass|\+\s.*\b(set|pack|pass|bundle)\b|\b(costume|character|outfit|music) pack\b""")
+
+        fun isAddOn(title: String) = addOn.containsMatchIn(title) || com.repisa.app.model.Tools.looksLikeTool(title)
+
         /** Diagnóstico de la última lectura de ES-DE/Cocoon, en la caché de la app. */
         const val DIAG_FILE = "frontend-diag.txt"
 

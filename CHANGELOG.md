@@ -2,6 +2,15 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.11.1]
+
+- **Fuera los juegos fantasma de Cocoon**: lo que Cocoon conoce pero no está en tus carpetas (DLC, packs, entradas
+  viejas, colecciones) ya no se añade como juego si tienes la carpeta de ese sistema. Solo se añaden juegos de
+  Cocoon/ES-DE para sistemas de los que no hay ninguna carpeta en Repisa, y nunca DLC ni actualizaciones.
+- Las ediciones «+ … Set / Pack / Pass» se emparejan con el juego base: «Dragon Ball Z Kakarot + A New Power
+  Awakens Set» de Cocoon da sus datos a tu archivo «Dragon Ball Z Kakarot».
+- El diagnóstico lista lo que el frontend tiene pero no se añadió.
+
 ## [0.11.0]
 
 - **Género, estudio y año en los juegos de emulador**: se buscan solos en segundo plano en **GameTDB** (Switch, 3DS,

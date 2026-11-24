@@ -80,4 +80,16 @@ class FrontendTest {
         assertEquals("7", games[0]["id"])
         assertEquals("Kirby Mass Attack", games[1]["name"])
     }
+
+    @Test fun addOnEditionsMatchTheBaseGame() {
+        assertEquals("Dragon Ball Z Kakarot", FrontendReader.matchName("Dragon Ball Z Kakarot + A New Power Awakens Set"))
+        assertEquals("Mario + Rabbids Kingdom Battle", FrontendReader.matchName("Mario + Rabbids Kingdom Battle"))
+        val index = FrontendIndex(listOf(FrontendEntry("switch", "x", CoverSearch.tokens(FrontendReader.matchName(
+            "Dragon Ball Z Kakarot + A New Power Awakens Set")), meta("Dragon Ball Z Kakarot + A New Power Awakens Set", 900, "Action"))))
+        assertEquals(900, index.find("switch", "dragon ball z kakarot [01008cf01baac000][v0]", "Dragon Ball Z Kakarot")?.playMinutes)
+        assertTrue(com.repisa.app.sources.EmulatorSource.isAddOn("Dragon Ball Z Kakarot + A New Power Awakens Set"))
+        assertTrue(com.repisa.app.sources.EmulatorSource.isAddOn("Xenoblade Chronicles 2 Expansion Pass"))
+        assertTrue(!com.repisa.app.sources.EmulatorSource.isAddOn("Final Fantasy VI"))
+        assertTrue(!com.repisa.app.sources.EmulatorSource.isAddOn("Mario + Rabbids Kingdom Battle"))
+    }
 }
