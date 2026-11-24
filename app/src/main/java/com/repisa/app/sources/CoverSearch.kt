@@ -34,7 +34,7 @@ data class CoverResult(val url: String, val thumb: String, val source: String, v
  */
 class CoverSearch(private val context: Context, private val settings: Settings) {
 
-    private val gameTdb = GameTdb(context)
+    val gameTdb = GameTdb(context)
 
     // ------------------------------------------------------------------ Búsqueda manual
 

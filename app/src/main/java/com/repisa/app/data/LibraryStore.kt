@@ -55,6 +55,7 @@ fun mergeGame(old: Game?, new: Game): Game {
         storeUrl = new.storeUrl ?: old.storeUrl,
         favorite = old.favorite,
         metaFetched = old.metaFetched,
+        factsFetched = old.factsFetched,
         userEdited = old.userEdited,
     )
     return merged.copy(coverAspect = if (merged.coverUrl == old.coverUrl) old.coverAspect else null)

@@ -481,6 +481,10 @@ s("frontend_report_no_match",
   "Keines dieser Spiele passt zu deiner Bibliothek. Prüfe, ob deine ROM-Ordner oben hinzugefügt sind.",
   "Nessuno di questi giochi corrisponde alla tua libreria. Controlla che le cartelle ROM siano aggiunte qui sopra.",
   "Nenhum destes jogos corresponde à sua biblioteca. Verifique se as pastas de ROMs estão adicionadas acima.")
+s("diag_copy", "Copy diagnostics", "Copiar diagnóstico", "Copier le diagnostic", "Diagnose kopieren", "Copia diagnostica", "Copiar diagnóstico")
+s("diag_copied", "Copied ✓", "Copiado ✓", "Copié ✓", "Kopiert ✓", "Copiato ✓", "Copiado ✓")
+s("diag_share", "Share diagnostics", "Compartir diagnóstico", "Partager le diagnostic", "Diagnose teilen", "Condividi diagnostica", "Compartilhar diagnóstico",
+  ptPT="Partilhar diagnóstico")
 s("frontend_reading", "Reading…", "Leyendo…", "Lecture…", "Wird gelesen…", "Lettura…", "Lendo…", ptPT="A ler…")
 s("choose_cocoon", "Choose Cocoon folder", "Elegir carpeta de Cocoon", "Choisir le dossier Cocoon",
   "Cocoon-Ordner wählen", "Scegli cartella Cocoon", "Escolher pasta do Cocoon")

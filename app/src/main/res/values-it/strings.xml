@@ -174,6 +174,9 @@
     <string name="frontend_report_empty">⚠ Nessun gamelist.xml né backup in questa cartella. Scegli la cartella in cui Cocoon ha esportato i metadati (o la sua cartella dati).</string>
     <string name="frontend_report_no_time">Gli elenchi esportati non hanno il tempo di gioco (il formato ES-DE non lo prevede). Per quello di Cocoon crea un backup e scegli la sua cartella dati, oppure avvia i giochi da Repisa con l’accesso ai dati di utilizzo.</string>
     <string name="frontend_report_no_match">Nessuno di questi giochi corrisponde alla tua libreria. Controlla che le cartelle ROM siano aggiunte qui sopra.</string>
+    <string name="diag_copy">Copia diagnostica</string>
+    <string name="diag_copied">Copiato ✓</string>
+    <string name="diag_share">Condividi diagnostica</string>
     <string name="frontend_reading">Lettura…</string>
     <string name="choose_cocoon">Scegli cartella Cocoon</string>
     <string name="scan_emulators">Analizza emulatori</string>

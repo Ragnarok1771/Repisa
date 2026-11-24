@@ -49,9 +49,13 @@ class EmulatorSource(private val context: Context, private val settings: Setting
         // ES-DE y Cocoon (o cualquier frontend): gamelist.xml y copias de seguridad.
         val entries = mutableListOf<FrontendEntry>()
         var report = FrontendReport()
+        val diag = StringBuilder("Repisa ${com.repisa.app.BuildConfig.VERSION_NAME} · diagnóstico de ES-DE / Cocoon\n")
         listOfNotNull(settings.esdeFolder?.let { it to "ES-DE" }, settings.cocoonFolder?.let { it to "Cocoon" }).forEach { (uri, name) ->
             onProgress(L10n.s(R.string.status_reading, name))
-            runCatching { FrontendReader(context, SafTree(context, Uri.parse(uri))).read() }.getOrNull()?.let { (found, r) ->
+            diag.append("\n== ").append(name).append(" ==\n")
+            val reader = FrontendReader(context, SafTree(context, Uri.parse(uri)))
+            runCatching { reader.read() }.also { r -> diag.append(reader.diag); r.exceptionOrNull()?.let { diag.append("ERROR: ").append(it).append('\n') } }
+                .getOrNull()?.let { (found, r) ->
                 entries += found
                 report = report.copy(lists = report.lists + r.lists, systems = report.systems + r.systems,
                     entries = report.entries + r.entries, withGenre = report.withGenre + r.withGenre,
@@ -91,7 +95,13 @@ class EmulatorSource(private val context: Context, private val settings: Setting
             val id = "emu:$consoleId:$key"
             if (result.none { it.id == id }) result += applyMeta(Game(id, Source.EMULATOR, m.name ?: cleanTitle(key), consoleId, romName = key), m)
         }
-        if (settings.esdeFolder != null || settings.cocoonFolder != null) settings.frontendReport = report.encode()
+        if (settings.esdeFolder != null || settings.cocoonFolder != null) {
+            settings.frontendReport = report.encode()
+            diag.append("\nEmparejados con la biblioteca: ").append(report.matched).append(" (con tiempo: ").append(report.matchedWithTime).append(")\n")
+            diag.append("Juegos de la biblioteca (emuladores, primeros 15): ")
+                .append(result.take(15).joinToString { "${it.consoleId}:${it.romName ?: it.title}" }).append('\n')
+            runCatching { java.io.File(context.cacheDir, DIAG_FILE).writeText(diag.toString().take(60_000)) }
+        }
         result
     }
 
@@ -242,6 +252,9 @@ class EmulatorSource(private val context: Context, private val settings: Setting
     }
 
     companion object {
+        /** Diagnóstico de la última lectura de ES-DE/Cocoon, en la caché de la app. */
+        const val DIAG_FILE = "frontend-diag.txt"
+
         /**
          * Tiempo en segundos ("37842"), "h:mm:ss" o con unidades ("10h 30m"). Devuelve minutos.
          */

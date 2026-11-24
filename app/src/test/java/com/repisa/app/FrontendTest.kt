@@ -66,4 +66,18 @@ class FrontendTest {
         assertEquals(r, FrontendReport.decode(r.encode()))
         assertNull(FrontendReport.decode(null))
     }
+
+    @Test fun looseParserSurvivesBrokenXml() {
+        val xml = "\uFEFF<?xml version=\"1.0\"?>\n<gameList>\n" +
+            "<game id=\"7\"><path>./Atelier Ryza.nsp</path><name>Atelier Ryza: Ever Darkness & the Secret Hideout</name>" +
+            "<genre>Role-playing</genre><playtime>26940</playtime><desc><![CDATA[Ryza <3]]></desc></game>\n" +
+            "<Game path=\"./Kirby Mass Attack.nds\" name=\"Kirby Mass Attack\"/>\n</gameList>"
+        val games = FrontendReader.parseLoose(xml)
+        assertEquals(2, games.size)
+        assertEquals("Atelier Ryza: Ever Darkness & the Secret Hideout", games[0]["name"])
+        assertEquals("26940", games[0]["playtime"])
+        assertEquals("Ryza <3", games[0]["desc"])
+        assertEquals("7", games[0]["id"])
+        assertEquals("Kirby Mass Attack", games[1]["name"])
+    }
 }

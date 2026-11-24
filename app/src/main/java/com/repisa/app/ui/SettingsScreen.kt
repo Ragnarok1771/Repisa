@@ -611,5 +611,29 @@ private fun FrontendReportText(raw: String?) {
     Column(Modifier.fillMaxWidth().background(Color(0x22FFD27A), RoundedCornerShape(8.dp)).padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)) {
         lines.forEach { Text(it, color = Color(0xFFE8D9C0), fontSize = 13.sp) }
+        if (r != null) DiagnosticsButtons()
+    }
+}
+
+/** Copiar o compartir el diagnóstico de la última lectura, para enviárselo a quien te ayude. */
+@Composable
+private fun DiagnosticsButtons() {
+    val context = LocalContext.current
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    fun text() = runCatching {
+        java.io.File(context.cacheDir, com.repisa.app.sources.EmulatorSource.DIAG_FILE).readText()
+    }.getOrNull()
+    var copied by remember { mutableStateOf(false) }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = { text()?.let { clipboard.setText(androidx.compose.ui.text.AnnotatedString(it)); copied = true } }) {
+            Text(stringResource(if (copied) R.string.diag_copied else R.string.diag_copy), color = Color.White)
+        }
+        OutlinedButton(onClick = {
+            text()?.let {
+                context.startActivity(Intent.createChooser(
+                    Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, it), null,
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+        }) { Text(stringResource(R.string.diag_share), color = Color.White) }
     }
 }

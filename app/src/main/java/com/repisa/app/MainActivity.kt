@@ -125,11 +125,14 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
 
     fun closeSettings() { vm.inSettings.value = false; onSettingsClosed() }
 
-    BackHandler(enabled = inSettings || inRated || selected != null) {
+    // Siempre activo: en la repisa principal, B/Atrás no cierra la app (se pulsaba sin querer y había que
+    // volver a abrirla). Para salir, el botón de inicio.
+    BackHandler(enabled = true) {
         when {
             selected != null -> vm.selectedId.value = null
             inRated -> inRated = false
-            else -> closeSettings()
+            inSettings -> closeSettings()
+            else -> Unit
         }
     }
 

@@ -90,9 +90,17 @@ internal class FrontendReader(private val context: Context, private val tree: Sa
         "saves", "states", "bios", "system", "cheats", "textures", "imgs", "themes", "sounds", "music", "cache",
         "shaders", "artwork", "wallpapers")
 
+    /** Texto de diagnóstico: qué archivos se encontraron y qué se leyó de cada uno (Ajustes → Copiar diagnóstico). */
+    val diag = StringBuilder()
+
+    private fun pathOf(path: List<String>, dir: SafTree.Doc, file: SafTree.Doc) =
+        (path.drop(1) + dir.name + file.name).let { if (path.isEmpty()) listOf(file.name) else it }.joinToString("/")
+
     fun read(): Pair<List<FrontendEntry>, FrontendReport> {
         val lists = mutableListOf<Pair<SafTree.Doc, SafTree.Doc>>() // carpeta, xml
         val ancestors = HashMap<String, List<String>>()
+        val paths = HashMap<String, String>()
+        val otherFiles = mutableListOf<String>()
         val backups = mutableListOf<SafTree.Doc>()
         var visited = 0
         fun walk(dir: SafTree.Doc, depth: Int, path: List<String>) {
@@ -101,6 +109,8 @@ internal class FrontendReader(private val context: Context, private val tree: Sa
             for (c in children) {
                 if (c.isDir) continue
                 val n = c.name.lowercase()
+                paths[c.id] = if (depth == 0) c.name else pathOf(path, dir, c)
+                if (otherFiles.size < 60) otherFiles += "${paths[c.id]} (${c.size} B)"
                 val inGamelists = dir.name.equals("gamelists", true) || path.any { it.equals("gamelists", true) }
                 when {
                     n.endsWith(".xml") && (n.startsWith("gamelist") || inGamelists) -> {
@@ -115,14 +125,30 @@ internal class FrontendReader(private val context: Context, private val tree: Sa
                 .forEach { walk(it, depth + 1, path + dir.name) }
         }
         walk(tree.root, 0, emptyList())
+        diag.append("Carpeta: ").append(tree.root.name).append(" · carpetas visitadas: ").append(visited).append('\n')
+        diag.append("Listas (").append(lists.size).append("):\n")
 
         val entries = mutableListOf<FrontendEntry>()
         val systems = mutableSetOf<String>()
         val media = tree.path("downloaded_media")
+        var samples = 0
         for ((dir, xmlDoc) in lists) {
-            val xml = tree.readText(xmlDoc) ?: continue
-            val games = runCatching { parseGamelist(xml) }.getOrNull() ?: continue
+            val label = paths[xmlDoc.id] ?: xmlDoc.name
+            val xml = tree.readText(xmlDoc)
+            if (xml == null) { diag.append(" - ").append(label).append(": no se pudo abrir\n"); continue }
+            val strict = runCatching { parseGamelist(xml) }
+            // Si el XML tiene algún fallo («&» sin escapar, etiquetas raras...), lectura tolerante con expresiones.
+            val games = strict.getOrNull()?.takeIf { it.isNotEmpty() } ?: parseLoose(xml)
             val console = consoleFor(dir, xmlDoc, ancestors[xmlDoc.id].orEmpty(), xml, games)
+            diag.append(" - ").append(label).append(" (").append(xml.length).append(" car.) → ").append(games.size)
+                .append(" juegos, sistema: ").append(console?.id ?: "?")
+            strict.exceptionOrNull()?.let { diag.append(", XML con errores: ").append(it.message?.take(120)) }
+            diag.append('\n')
+            if (samples < 2) {
+                samples++
+                diag.append("   inicio: ").append(xml.take(700).replace("\n", "⏎")).append('\n')
+                games.firstOrNull()?.let { diag.append("   1er juego: ").append(it.entries.joinToString { (k, v) -> "$k=${v.take(60)}" }).append('\n') }
+            }
             console?.let { systems += it.id }
             // Portadas descargadas por ES-DE: downloaded_media/<sistema>/covers/
             val covers: Map<String, String> = media?.let { m ->
@@ -153,11 +179,20 @@ internal class FrontendReader(private val context: Context, private val tree: Sa
         }
 
         var backupWithTime = 0
+        diag.append("Copias de seguridad / JSON / bases de datos (").append(backups.size).append("):\n")
         for (doc in backups) {
-            val found = runCatching { readBackup(doc) }.getOrDefault(emptyList())
-            backupWithTime += found.count { it.meta.playMinutes != null }
-            entries += found
+            val found = runCatching { readBackup(doc) }
+            val list = found.getOrDefault(emptyList())
+            backupWithTime += list.count { it.meta.playMinutes != null }
+            entries += list
+            diag.append(" - ").append(paths[doc.id] ?: doc.name).append(" (").append(doc.size).append(" B) → ")
+                .append(list.size).append(" juegos, ").append(list.count { it.meta.playMinutes != null }).append(" con tiempo")
+            found.exceptionOrNull()?.let { diag.append(", error: ").append(it.message?.take(120)) }
+            diag.append('\n')
+            describe(doc)?.let { diag.append("   ").append(it).append('\n') }
         }
+        diag.append("Archivos vistos (máx. 60):\n")
+        otherFiles.forEach { diag.append(" · ").append(it).append('\n') }
 
         val report = FrontendReport(
             lists = lists.size,
@@ -223,6 +258,32 @@ internal class FrontendReader(private val context: Context, private val tree: Sa
         }
     }
 
+    /** Qué hay dentro de una copia de seguridad, para el diagnóstico (nombres de archivos, claves o tablas). */
+    private fun describe(doc: SafTree.Doc): String? = runCatching {
+        val n = doc.name.lowercase()
+        tree.open(doc)?.use { stream ->
+            when {
+                n.endsWith(".zip") -> ZipInputStream(stream).use { zip ->
+                    val names = mutableListOf<String>()
+                    var first: String? = null
+                    while (names.size < 25) {
+                        val e = zip.nextEntry ?: break
+                        names += "${e.name} (${e.size} B)"
+                        if (first == null && (e.name.endsWith(".json", true) || e.name.endsWith(".xml", true))) {
+                            first = String(zip.readNBytesCompat(4096, truncate = true) ?: ByteArray(0)).take(500)
+                        }
+                    }
+                    "zip: " + names.joinToString() + (first?.let { " | contenido: " + it.replace("\n", "⏎") } ?: "")
+                }
+                n.endsWith(".json") -> "json: " + String(stream.readNBytesCompat(4096, truncate = true) ?: ByteArray(0)).take(500).replace("\n", "⏎")
+                else -> {
+                    val head = stream.readNBytesCompat(16, truncate = true) ?: ByteArray(0)
+                    "cabecera: " + String(head.map { if (it in 32..126) it.toInt().toChar() else '.' }.toCharArray())
+                }
+            }
+        }
+    }.getOrElse { "no se pudo leer: ${it.message}" }
+
     /** Resuelve "./media/covers/x.png" relativo a la carpeta del gamelist. */
     private fun resolveRelative(base: SafTree.Doc, path: String): String? {
         if (path.startsWith("http") || path.startsWith("content://")) return path
@@ -271,14 +332,15 @@ internal class FrontendReader(private val context: Context, private val tree: Sa
         return bytes?.toString(Charsets.UTF_8)
     }
 
-    private fun InputStream.readNBytesCompat(max: Int): ByteArray? {
+    /** Lee hasta [max] bytes; si hay más, devuelve null (o lo leído si [truncate]). */
+    private fun InputStream.readNBytesCompat(max: Int, truncate: Boolean = false): ByteArray? {
         val buf = java.io.ByteArrayOutputStream()
-        val chunk = ByteArray(64 * 1024)
+        val chunk = ByteArray(minOf(64 * 1024, max + 1))
         while (true) {
-            val r = read(chunk)
+            val r = read(chunk, 0, minOf(chunk.size, max + 1 - buf.size()).coerceAtLeast(1))
             if (r < 0) break
             buf.write(chunk, 0, r)
-            if (buf.size() > max) return null
+            if (buf.size() > max) return if (truncate) buf.toByteArray().copyOf(max) else null
         }
         return buf.toByteArray()
     }
@@ -438,6 +500,27 @@ internal class FrontendReader(private val context: Context, private val tree: Sa
     }
 
     companion object {
+        /** Lectura tolerante: <game ...>...</game> y <game .../> con expresiones, aunque el XML no sea válido. */
+        fun parseLoose(xml: String): List<Map<String, String>> {
+            val opts = setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+            val attr = Regex("""([\w:.-]+)\s*=\s*"([^"]*)""")
+            val field = Regex("""<([\w:.-]+)(?:\s[^>]*)?>(.*?)</\1\s*>""", opts)
+            val out = mutableListOf<Map<String, String>>()
+            Regex("""<game\b([^>]*?)(?:/>|>(.*?)</game\s*>)""", opts).findAll(xml).forEach { m ->
+                val f = mutableMapOf<String, String>()
+                attr.findAll(m.groupValues[1]).forEach { f[it.groupValues[1].lowercase()] = unescape(it.groupValues[2]) }
+                field.findAll(m.groupValues[2]).forEach {
+                    val v = unescape(it.groupValues[2].replace(Regex("""^\s*<!\[CDATA\[(.*)]]>\s*$""", opts), "$1")).trim()
+                    if (v.isNotEmpty()) f.putIfAbsent(it.groupValues[1].lowercase(), v)
+                }
+                if (f.isNotEmpty()) out += f
+            }
+            return out
+        }
+
+        fun unescape(s: String) = s.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"")
+            .replace("&apos;", "'").replace("&#39;", "'").replace("&amp;", "&")
+
         /** Etiquetas de tiempo de juego que usan distintos frontends (en minúsculas). */
         val playtimeFields = listOf("playtime", "gametime", "timeplayed", "totalplaytime", "playedtime", "play_time",
             "playtimeseconds", "playtime_seconds", "totaltime", "total_time", "timeplayedseconds")

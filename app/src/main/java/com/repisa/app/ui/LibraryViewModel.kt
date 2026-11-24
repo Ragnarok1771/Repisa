@@ -66,7 +66,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     val launcher = Launcher(app, settings)
     val epic = EpicSource(settings)
     val coverSearch = com.repisa.app.sources.CoverSearch(app, settings)
-    private val metadata = Metadata(settings, coverSearch)
+    private val metadata = Metadata(settings, coverSearch, coverSearch.gameTdb)
     private val mutex = Mutex()
 
     private val _games = MutableStateFlow<List<Game>>(emptyList())

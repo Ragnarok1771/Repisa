@@ -11,7 +11,7 @@ import android.provider.DocumentsContract.Document
  */
 class SafTree(private val context: Context, val treeUri: Uri) {
 
-    data class Doc(val id: String, val name: String, val isDir: Boolean, val uri: Uri)
+    data class Doc(val id: String, val name: String, val isDir: Boolean, val uri: Uri, val size: Long = -1)
 
     val root: Doc by lazy {
         val id = DocumentsContract.getTreeDocumentId(treeUri)
@@ -25,14 +25,15 @@ class SafTree(private val context: Context, val treeUri: Uri) {
         runCatching {
             context.contentResolver.query(
                 childrenUri,
-                arrayOf(Document.COLUMN_DOCUMENT_ID, Document.COLUMN_DISPLAY_NAME, Document.COLUMN_MIME_TYPE),
+                arrayOf(Document.COLUMN_DOCUMENT_ID, Document.COLUMN_DISPLAY_NAME, Document.COLUMN_MIME_TYPE, Document.COLUMN_SIZE),
                 null, null, null,
             )?.use { c ->
                 while (c.moveToNext()) {
                     val id = c.getString(0) ?: continue
                     val name = c.getString(1) ?: continue
                     out += Doc(id, name, c.getString(2) == Document.MIME_TYPE_DIR,
-                        DocumentsContract.buildDocumentUriUsingTree(treeUri, id))
+                        DocumentsContract.buildDocumentUriUsingTree(treeUri, id),
+                        if (c.isNull(3)) -1 else c.getLong(3))
                 }
             }
         }
@@ -49,7 +50,7 @@ class SafTree(private val context: Context, val treeUri: Uri) {
     }
 
     fun readText(doc: Doc): String? = runCatching {
-        context.contentResolver.openInputStream(doc.uri)?.bufferedReader()?.use { it.readText() }
+        context.contentResolver.openInputStream(doc.uri)?.bufferedReader()?.use { it.readText() }?.removePrefix("\uFEFF")
     }.getOrNull()
 
     /**

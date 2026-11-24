@@ -77,6 +77,8 @@ data class Game(
     val extFetchedAt: Long? = null,
     /** Ya se buscaron metadatos online para este juego. */
     val metaFetched: Boolean = false,
+    /** Ya se buscaron género, estudio y año en GameTDB/Wikidata (juegos de emulador). */
+    val factsFetched: Boolean = false,
     /** El usuario editó los datos a mano: no sobrescribir con metadatos automáticos. */
     val userEdited: Boolean = false,
 ) {

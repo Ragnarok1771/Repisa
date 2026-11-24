@@ -22,7 +22,10 @@ import java.util.zip.ZipInputStream
  */
 class GameTdb(private val context: Context) {
 
-    data class Entry(val id: String, val region: String, val title: String, val type: String)
+    data class Entry(
+        val id: String, val region: String, val title: String, val type: String,
+        val developer: String? = null, val year: Int? = null, val genre: String? = null, val synopsis: String? = null,
+    )
 
     private data class Platform(val db: String, val art: String, val idFilter: (String) -> Boolean)
 
@@ -45,20 +48,22 @@ class GameTdb(private val context: Context) {
     private suspend fun entries(db: String): List<Entry> = mutex.withLock {
         memory[db]?.let { return@withLock it }
         val list = withContext(Dispatchers.IO) {
-            val cache = File(context.cacheDir, "gametdb/$db.tsv")
+            val cache = File(context.cacheDir, "gametdb/$db.v2.tsv")
             val fresh = cache.exists() && System.currentTimeMillis() - cache.lastModified() < 30L * 86_400_000
             if (!fresh) runCatching { download(db, cache) }
             if (!cache.exists()) return@withContext emptyList()
             cache.readLines().mapNotNull { line ->
                 val p = line.split('\t')
-                if (p.size >= 4) Entry(p[0], p[1], p[2], p[3]) else null
+                if (p.size >= 4) Entry(p[0], p[1], p[2], p[3],
+                    p.getOrNull(4)?.ifBlank { null }, p.getOrNull(5)?.toIntOrNull(),
+                    p.getOrNull(6)?.ifBlank { null }, p.getOrNull(7)?.ifBlank { null }) else null
             }
         }
-        memory[db] = list
+        if (list.isNotEmpty()) memory[db] = list
         list
     }
 
-    /** Descarga el zip de GameTDB y guarda solo id, región, título en inglés y tipo. */
+    /** Descarga el zip de GameTDB y guarda id, región, título en inglés, tipo, estudio, año, género y sinopsis. */
     private fun download(db: String, cache: File) {
         val req = Request.Builder().url("https://www.gametdb.com/$db.zip?LANG=EN").build()
         Http.client.newCall(req).execute().use { resp ->
@@ -71,14 +76,20 @@ class GameTdb(private val context: Context) {
                 val parser = Xml.newPullParser()
                 parser.setInput(zip, "UTF-8")
                 var id: String? = null; var region = ""; var type = ""; var title: String? = null
+                var dev = ""; var genre = ""; var synopsis = ""; var year = 9999
                 var inGame = false; var lang: String? = null; var tag: String? = null
                 while (true) {
                     when (parser.next()) {
                         XmlPullParser.START_TAG -> {
                             tag = parser.name
                             when (parser.name) {
-                                "game" -> { inGame = true; id = null; region = ""; type = ""; title = null }
+                                "game" -> { inGame = true; id = null; region = ""; type = ""; title = null
+                                    dev = ""; genre = ""; synopsis = ""; year = 9999 }
                                 "locale" -> lang = parser.getAttributeValue(null, "lang")
+                                else -> if (parser.name.startsWith("date")) {
+                                    // <date year=".."/>, <date_JPN year=".."/>...: el año más antiguo
+                                    parser.getAttributeValue(null, "year")?.toIntOrNull()?.let { if (it in 1970 until year) year = it }
+                                }
                             }
                         }
                         XmlPullParser.TEXT -> if (inGame) {
@@ -88,14 +99,20 @@ class GameTdb(private val context: Context) {
                                 "region" -> region = t
                                 "type" -> type = t
                                 "title" -> if (lang == "EN" || title == null) title = t
+                                "developer" -> dev = t
+                                "genre" -> genre = t
+                                "synopsis" -> if (lang == "EN" || synopsis.isEmpty()) synopsis = t
                             }
                         }
                         XmlPullParser.END_TAG -> {
                             if (parser.name == "game") {
                                 inGame = false
                                 val i = id; val ti = title
+                                fun clean(v: String) = v.replace(Regex("[\\t\\r\\n]+"), " ").trim()
                                 if (i != null && ti != null) out.append(i).append('\t').append(region).append('\t')
-                                    .append(ti.replace('\t', ' ')).append('\t').append(type).append('\n')
+                                    .append(clean(ti)).append('\t').append(type).append('\t').append(clean(dev)).append('\t')
+                                    .append(if (year == 9999) "" else year.toString()).append('\t').append(clean(genre))
+                                    .append('\t').append(clean(synopsis).take(500)).append('\n')
                             }
                             if (parser.name == "locale") lang = null
                             tag = null
@@ -127,6 +144,22 @@ class GameTdb(private val context: Context) {
             .distinctBy { it.first.title.lowercase() } // una por título (la de mejor región)
             .take(limit)
             .toList()
+    }
+
+    /** Estudio, año, géneros y sinopsis del juego que más se parece (para juegos de emulador sin datos). */
+    suspend fun facts(consoleId: String, title: String): Entry? {
+        val p = platforms[consoleId] ?: return null
+        val wanted = CoverSearch.tokens(title)
+        if (wanted.isEmpty()) return null
+        val all = entries(p.db)
+        if (all.isEmpty()) error("GameTDB no disponible") // sin red: se reintentará
+        return all.asSequence()
+            .filter { p.idFilter(it.id) && !it.title.contains("demo", true) }
+            .map { it to CoverSearch.similarity(wanted, CoverSearch.tokens(it.title)) }
+            .filter { it.second >= 0.85 }
+            // a igualdad de parecido, la entrada con más datos
+            .maxByOrNull { it.second + (if (it.first.developer != null) 0.01 else 0.0) + (if (it.first.genre != null) 0.01 else 0.0) }
+            ?.first
     }
 
     /** Primera URL de carátula que exista para ese juego (prueba calidad y región). */

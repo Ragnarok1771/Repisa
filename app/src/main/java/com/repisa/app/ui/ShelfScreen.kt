@@ -139,15 +139,13 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
                             }
                         },
                     )
-                    IconButton(onClick = { vm.setQuery(""); searching = false }) {
-                        Icon(Icons.Default.Clear, stringResource(R.string.close_search), tint = Color.White)
-                    }
+                    TopIcon(Icons.Default.Clear, stringResource(R.string.close_search)) { vm.setQuery(""); searching = false }
                 } else {
-                    IconButton(onClick = { searching = true }) { Icon(Icons.Default.Search, stringResource(R.string.search), tint = Color.White) }
+                    TopIcon(Icons.Default.Search, stringResource(R.string.search)) { searching = true }
                 }
-                IconButton(onClick = onOpenRated) { Icon(Icons.Default.Star, stringResource(R.string.my_ratings), tint = Color(0xFFFFC94D)) }
-                IconButton(onClick = { vm.syncAll() }) { Icon(Icons.Default.Refresh, stringResource(R.string.sync), tint = Color.White) }
-                IconButton(onClick = onOpenSettings) { Icon(Icons.Default.Settings, stringResource(R.string.settings), tint = Color.White) }
+                TopIcon(Icons.Default.Star, stringResource(R.string.my_ratings), Color(0xFFFFC94D), onClick = onOpenRated)
+                TopIcon(Icons.Default.Refresh, stringResource(R.string.sync)) { vm.syncAll() }
+                TopIcon(Icons.Default.Settings, stringResource(R.string.settings), onClick = onOpenSettings)
             }
         }
         // Fila 2: filtros a la izquierda; ordenar y repisas al fondo a la derecha.
@@ -162,6 +160,29 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
             Picker(stringResource(R.string.sort_label), options.sort.label, SortMode.entries.map { it.label }) { vm.setSort(SortMode.entries[it]) }
             Picker(stringResource(R.string.group_label), options.group.label, GroupMode.entries.map { it.label }) { vm.setGroup(GroupMode.entries[it]) }
         }
+    }
+}
+
+/**
+ * Icono de la barra superior. Con el mando, el que tiene el foco se ve claramente: círculo dorado con borde
+ * y el icono en oscuro (antes el resaltado por defecto de Material era casi invisible sobre la madera).
+ */
+@Composable
+private fun TopIcon(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    tint: Color = Color.White,
+    onClick: () -> Unit,
+) {
+    var focused by remember { mutableStateOf(false) }
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .onFocusChanged { focused = it.isFocused }
+            .then(if (focused) Modifier.background(Color(0xFFFFD27A), androidx.compose.foundation.shape.CircleShape)
+                .border(2.dp, Color.White, androidx.compose.foundation.shape.CircleShape) else Modifier),
+    ) {
+        Icon(icon, label, tint = if (focused) Color(0xFF2A1C14) else tint)
     }
 }
 

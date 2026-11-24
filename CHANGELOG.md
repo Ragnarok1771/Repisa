@@ -2,6 +2,17 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.11.0]
+
+- **Género, estudio y año en los juegos de emulador**: se buscan solos en segundo plano en **GameTDB** (Switch, 3DS,
+  DS, Wii, GameCube y Wii U, con sinopsis) y en **Wikidata** (cualquier consola, también juegos que no están en
+  Steam). Ya funcionan las repisas por género, por estudio y por década con los juegos de emulador.
+- **Cocoon**: lectura tolerante de los `gamelist.xml` (BOM, «&» sin escapar, datos como atributos, CDATA).
+- **Diagnóstico** en Ajustes → Emuladores: botones *Copiar* y *Compartir* con qué archivos encontró Repisa en la
+  carpeta de Cocoon/ES-DE y qué leyó de cada uno.
+- **Mando**: el icono seleccionado de la barra superior (buscar, calificaciones, sincronizar, ajustes) se ve con un
+  círculo dorado; **B en la repisa principal ya no cierra la app**.
+
 ## [0.10.0]
 
 - **Jugar directo, sin preguntar**: Repisa detecta los emuladores instalados y abre cada juego con el adecuado
