@@ -80,6 +80,27 @@ class SteamSource private constructor(
          * Géneros, estudio y año desde la tienda de Steam (no necesita clave).
          * La tienda limita a ~200 peticiones cada 5 minutos, así que se llama con pausas.
          */
+        data class Facts(val genres: List<String>, val developer: String?, val publisher: String?, val year: Int?,
+                         val description: String?, val header: String?)
+
+        /**
+         * Género, estudio, editora, año y descripción de la ficha de la tienda de Steam. Devuelve null si el juego ya
+         * no está en la tienda; lanza una excepción si Steam no responde (límite de peticiones), para reintentarlo.
+         */
+        suspend fun appFacts(appId: String): Facts? {
+            val data = Http.getJson("https://store.steampowered.com/api/appdetails?appids=$appId&l=spanish")[appId]
+            if (data["success"].str != "true") return null
+            val d = data["data"]
+            return Facts(
+                genres = d["genres"].arr.mapNotNull { it["description"].str },
+                developer = d["developers"].arr.mapNotNull { it.str }.take(2).joinToString(", ").ifEmpty { null },
+                publisher = d["publishers"][0].str,
+                year = d["release_date"]["date"].str?.let { Regex("""(19|20)\d{2}""").find(it)?.value?.toInt() },
+                description = d["short_description"].str,
+                header = d["header_image"].str,
+            )
+        }
+
         suspend fun storeDetails(game: Game): Game? {
             val appId = game.id.removePrefix("steam:")
             val data = Http.getJson("https://store.steampowered.com/api/appdetails?appids=$appId&l=spanish")[appId]

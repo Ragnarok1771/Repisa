@@ -35,7 +35,7 @@ class Settings(context: Context) {
         val SECRET_KEYS = setOf("steam_key", "epic_access", "epic_refresh", "sgdb_key", "ra_api_key")
         /** Carpetas: los permisos de Android no sobreviven a reinstalar, así que no se exportan. */
         val DEVICE_KEYS = setOf("rom_folders", "esde_folder", "ra_folder", "cocoon_folder", "session_game", "session_pkg",
-            "session_start", "last_auto_sync", "frontend_report", "cover_pass", "last_update_check", "onboarding_step")
+            "session_start", "last_auto_sync", "frontend_report", "cover_pass", "facts_pass", "last_update_check", "onboarding_step")
     }
 
     val prefsForBackup: android.content.SharedPreferences get() = prefs
@@ -132,6 +132,9 @@ class Settings(context: Context) {
     /** Clave gratuita de https://www.steamgriddb.com/profile/preferences/api (buscador de carátulas). */
     var steamGridDbKey: String? get() = secret("sgdb_key"); set(v) = putSecret("sgdb_key", v?.trim())
     /** Última "pasada" automática de búsqueda de carátulas que faltan (ver LibraryViewModel.COVER_PASS). */
+    var factsPass: Int
+        get() = prefs.getInt("facts_pass", 0)
+        set(v) = prefs.edit { putInt("facts_pass", v) }
     var coverPass: Int
         get() = prefs.getInt("cover_pass", 0)
         set(v) = prefs.edit { putInt("cover_pass", v) }

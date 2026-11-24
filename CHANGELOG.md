@@ -39,6 +39,17 @@ con la proporción real de la caja de ese sistema. Va dentro de la copia de segu
 **Guía de primera vez** — importar una copia, vincular Steam/Epic, carpeta de ROMs, permiso de tiempo de juego y
 cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y versión.
 
+**Género, estudio y año en todos los juegos**
+- **Steam y Epic**: si la tienda de Steam limitaba las peticiones, el juego se quedaba sin género ni año para siempre;
+  ahora se reintenta. Los juegos de **Epic** (que no da géneros) los toman de la ficha del mismo juego en Steam, y si no
+  está, de Wikidata.
+- **Emuladores**: Wikidata también busca en español («Pokémon Mundo Misterioso…») y por nombres alternativos.
+- Al actualizar, Repisa repasa una vez todos los juegos a los que les falta género, estudio o año.
+- **Años imposibles fuera**: la «fecha cero» de las exportaciones de Cocoon/ES-DE (31/12/1969 o 01/01/1970, p. ej.
+  *Kirby 64* en 1969) ya no cuenta como año; se busca el real.
+- **Estudios unificados** en «Repisas por estudio»: «ATLUS», «Atlus» y «Atlus Co., Ltd.» son el mismo estudio (sin
+  mayúsculas, signos ni forma jurídica), y un juego de dos estudios aparece en los dos.
+
 **Seguridad** — clave de firma privada (fuera del repositorio); la de prueba se ha quitado.
 
 ## [0.12.0]

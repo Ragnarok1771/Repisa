@@ -121,7 +121,7 @@ class EmulatorSource(private val context: Context, private val settings: Setting
         genres = Genres.normalize(m.genre?.split(Regex("""\s*[,/;]\s*""")).orEmpty()).ifEmpty { g.genres },
         developer = m.developer ?: g.developer,
         publisher = m.publisher ?: g.publisher,
-        releaseYear = m.year ?: g.releaseYear,
+        releaseYear = Years.valid(m.year) ?: Years.valid(g.releaseYear),
         description = m.desc ?: g.description,
         lastPlayed = listOfNotNull(m.lastPlayed, g.lastPlayed).maxOrNull(),
         coverUrl = m.cover ?: g.coverUrl,

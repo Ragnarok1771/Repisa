@@ -19,41 +19,49 @@ class Metadata(private val settings: Settings, private val covers: CoverSearch, 
     fun needsWork(g: Game): Boolean = (!g.metaFetched && !g.userEdited && !g.customCover &&
         (g.coverUrl == null || g.genres.isEmpty() || g.developer == null)) || needsFacts(g)
 
-    /** Juego de emulador sin género, estudio o año al que aún no se le han buscado. */
-    private fun needsFacts(g: Game) = g.source == Source.EMULATOR && !g.factsFetched && !g.userEdited &&
+    /** Juego (de cualquier tienda o emulador) sin género, estudio o año al que aún no se le han buscado. */
+    private fun needsFacts(g: Game) = !g.factsFetched && !g.userEdited &&
         (g.genres.isEmpty() || g.developer == null || g.releaseYear == null)
 
     /**
-     * Género, estudio, año y descripción para juegos de emulador: GameTDB (Nintendo, con sinopsis) y, para lo que
-     * falte o para el resto de consolas, Wikidata. Solo rellena lo que está vacío.
+     * Género, estudio, año y descripción, rellenando solo lo que falta:
+     *  - Steam: la ficha de la tienda de Steam.
+     *  - Epic: la ficha del mismo juego en la tienda de Steam (Epic no da géneros).
+     *  - Emuladores: GameTDB (Nintendo, con sinopsis).
+     *  - Para lo que aún falte, en cualquier caso: Wikidata (en inglés y en español).
+     * Si una consulta falla por la red o por límite de peticiones, no se marca como hecho: se reintenta más tarde.
      */
     private suspend fun facts(g: Game): Game {
         var out = g
-        // Si una consulta falla por la red, no se marca como hecho: se reintenta en la próxima pasada.
         var complete = true
-        if (tdb.supports(g.consoleId)) {
-            val r = runCatching { tdb.facts(g.consoleId, g.title) }
-            if (r.isFailure) complete = false
-            r.getOrNull()?.let { e ->
-                out = out.copy(
-                    genres = out.genres.ifEmpty { Genres.normalize(listOfNotNull(e.genre)) },
-                    developer = out.developer ?: e.developer,
-                    releaseYear = out.releaseYear ?: e.year,
-                    description = out.description ?: e.synopsis,
-                )
-            }
+        fun missing() = out.genres.isEmpty() || out.developer == null || out.releaseYear == null
+        fun fill(genres: List<String>, dev: String?, pub: String?, year: Int?, desc: String?) {
+            out = out.copy(
+                genres = out.genres.ifEmpty { Genres.normalize(genres) },
+                developer = out.developer ?: dev?.takeIf { it.isNotBlank() },
+                publisher = out.publisher ?: pub?.takeIf { it.isNotBlank() },
+                releaseYear = out.releaseYear ?: Years.valid(year),
+                description = out.description ?: desc,
+            )
         }
-        if (out.genres.isEmpty() || out.developer == null || out.releaseYear == null) {
-            val r = runCatching { Wikidata.facts(g.title) }
-            if (r.isFailure) complete = false
-            r.getOrNull()?.let { f ->
-                out = out.copy(
-                    genres = out.genres.ifEmpty { Genres.normalize(f.genres) },
-                    developer = out.developer ?: f.developer,
-                    publisher = out.publisher ?: f.publisher,
-                    releaseYear = out.releaseYear ?: f.year,
-                )
+        if (g.source == Source.STEAM || g.source == Source.EPIC) {
+            val r = runCatching {
+                val appId = if (g.source == Source.STEAM) g.id.removePrefix("steam:") else Achievements.steamAppId(g)?.toString()
+                appId?.let { SteamSource.appFacts(it) }
             }
+            delay(1600) // límite de la tienda de Steam
+            if (r.isFailure) complete = false
+            r.getOrNull()?.let { f -> fill(f.genres, f.developer, f.publisher, f.year, f.description) }
+        }
+        if (g.source == Source.EMULATOR && tdb.supports(g.consoleId)) {
+            val r = runCatching { tdb.facts(g.consoleId, g.originalTitle ?: g.title) }
+            if (r.isFailure) complete = false
+            r.getOrNull()?.let { e -> fill(listOfNotNull(e.genre), e.developer, null, e.year, e.synopsis) }
+        }
+        if (missing()) {
+            val r = runCatching { Wikidata.facts(g.originalTitle ?: g.title) }
+            if (r.isFailure) complete = false
+            r.getOrNull()?.let { f -> fill(f.genres, f.developer, f.publisher, f.year, null) }
         }
         return out.copy(factsFetched = complete)
     }
@@ -62,9 +70,7 @@ class Metadata(private val settings: Settings, private val covers: CoverSearch, 
         if (g.metaFetched && needsFacts(g)) return facts(g) // solo faltan los datos del juego
         var out = g
         if (needsFacts(g)) out = facts(out)
-        if (g.source == Source.STEAM && (g.genres.isEmpty() || g.developer == null)) {
-            runCatching { SteamSource.storeDetails(g) }.getOrNull()?.let { out = it }
-            delay(1600) // límite de la tienda de Steam
+        if (g.source == Source.STEAM && !g.metaFetched) {
             // Si no hay carátula vertical, que la busque el buscador (abajo) en vez de estirar la cabecera.
             if (out.coverUrl != null && !Http.exists(out.coverUrl!!)) out = out.copy(coverUrl = null)
         }

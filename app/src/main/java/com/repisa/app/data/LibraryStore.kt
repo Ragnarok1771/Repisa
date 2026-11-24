@@ -15,6 +15,8 @@ class LibraryStore(context: Context) {
     suspend fun load(): List<Game> = withContext(Dispatchers.IO) {
         if (!file.exists()) return@withContext emptyList()
         runCatching { Http.json.decodeFromString(serializer, file.readText()) }.getOrDefault(emptyList())
+            // Años imposibles guardados por versiones anteriores (la «fecha cero» de Cocoon: 1969/1970) → desconocido.
+            .map { g -> if (g.releaseYear != null && com.repisa.app.sources.Years.valid(g.releaseYear) == null) g.copy(releaseYear = null, factsFetched = false) else g }
     }
 
     suspend fun save(games: List<Game>) = withContext(Dispatchers.IO) {
@@ -35,7 +37,7 @@ fun mergeGame(old: Game?, new: Game): Game {
         genres = if (old.userEdited || new.genres.isEmpty()) old.genres else new.genres,
         developer = if (old.userEdited) old.developer else new.developer ?: old.developer,
         publisher = new.publisher ?: old.publisher,
-        releaseYear = if (old.userEdited) old.releaseYear else new.releaseYear ?: old.releaseYear,
+        releaseYear = if (old.userEdited) old.releaseYear else com.repisa.app.sources.Years.valid(new.releaseYear) ?: com.repisa.app.sources.Years.valid(old.releaseYear),
         description = new.description ?: old.description,
         playtimeMinutes = maxOf(new.playtimeMinutes, if (new.source == old.source) 0 else old.playtimeMinutes),
         trackedMinutes = old.trackedMinutes,

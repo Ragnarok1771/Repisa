@@ -58,27 +58,31 @@ object Wikidata {
     suspend fun facts(title: String): Facts? {
         val clean = EmulatorSource.cleanTitle(title).trim().ifEmpty { return null }
         // Los nombres de archivo usan " - " donde el título lleva ":" ("Persona 2 - Eternal Punishment").
-        for (query in listOf(clean, clean.replace(" - ", ": ")).distinct()) {
-            factsFor(query)?.let { return it }
+        val queries = listOf(clean, clean.replace(" - ", ": ")).distinct()
+        // Primero en inglés; luego en español (Cocoon y las ROMs traducidas usan «Pokémon Mundo Misterioso»...).
+        for (lang in listOf("en", "es")) for (query in queries) {
+            factsFor(query, lang)?.let { return it }
         }
         return null
     }
 
-    private suspend fun factsFor(query: String): Facts? {
-        val found = call(mapOf("action" to "wbsearchentities", "search" to query, "language" to "en",
-            "type" to "item", "limit" to "7"))["search"].arr
+    private suspend fun factsFor(query: String, lang: String): Facts? {
+        val found = call(mapOf("action" to "wbsearchentities", "search" to query, "language" to lang,
+            "uselang" to lang, "type" to "item", "limit" to "7"))["search"].arr
         if (found.isEmpty()) return null
-        val ids = found.mapNotNull { it["id"].str }
-        val entities = call(mapOf("action" to "wbgetentities", "ids" to ids.joinToString("|"),
-            "props" to "claims|labels", "languages" to "en"))["entities"] as? JsonObject ?: return null
-
         val wanted = CoverSearch.tokens(query)
-        val best = ids.mapNotNull { id ->
-            val e = entities[id] ?: return@mapNotNull null
-            if (claimIds(e, "P31").none { it in GAME_CLASSES }) return@mapNotNull null
-            val label = e["labels"]["en"]["value"].str ?: return@mapNotNull null
-            Triple(id, e, CoverSearch.similarity(wanted, CoverSearch.tokens(label)))
-        }.filter { it.third >= 0.8 }.maxByOrNull { it.third }?.second ?: return null
+        // Parecido con el nombre principal o con el nombre alternativo por el que lo encontró la búsqueda.
+        val scoreById = found.mapNotNull { r ->
+            val id = r["id"].str ?: return@mapNotNull null
+            val names = listOfNotNull(r["label"].str, r["match"]["text"].str)
+            id to (names.maxOfOrNull { CoverSearch.similarity(wanted, CoverSearch.tokens(it)) } ?: 0.0)
+        }.filter { it.second >= 0.8 }
+        if (scoreById.isEmpty()) return null
+        val entities = call(mapOf("action" to "wbgetentities", "ids" to scoreById.joinToString("|") { it.first },
+            "props" to "claims", "languages" to "en"))["entities"] as? JsonObject ?: return null
+
+        val best = scoreById.filter { (id, _) -> entities[id]?.let { e -> claimIds(e, "P31").any { it in GAME_CLASSES } } == true }
+            .maxByOrNull { it.second }?.let { entities[it.first] } ?: return null
 
         val genreIds = claimIds(best, "P136")
         val devIds = claimIds(best, "P178").take(2)
@@ -93,7 +97,7 @@ object Wikidata {
             genres = genreIds.mapNotNull { labels[it] },
             developer = devIds.mapNotNull { labels[it] }.joinToString(", ").ifEmpty { null },
             publisher = pubIds.firstNotNullOfOrNull { labels[it] },
-            year = years(best).minOrNull(),
+            year = years(best).mapNotNull { Years.valid(it) }.minOrNull(),
         )
     }
 }

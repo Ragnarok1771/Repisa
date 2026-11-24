@@ -166,7 +166,7 @@ internal class FrontendReader(private val context: Context, private val tree: Sa
                     genre = f["genre"] ?: f["genres"] ?: f["category"],
                     developer = f["developer"],
                     publisher = f["publisher"],
-                    year = (f["releasedate"] ?: f["release"] ?: f["year"])?.take(4)?.toIntOrNull()?.takeIf { it > 1950 },
+                    year = Years.valid((f["releasedate"] ?: f["release"] ?: f["year"])?.take(4)?.toIntOrNull()),
                     desc = f["desc"] ?: f["description"],
                     lastPlayed = f["lastplayed"]?.let(::parseDate),
                     cover = fileKey?.let { covers[it] }

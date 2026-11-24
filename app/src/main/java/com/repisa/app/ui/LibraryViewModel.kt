@@ -363,10 +363,24 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 .sortedWith(compareBy({ Consoles.byId(it.key).year }, { Consoles.byId(it.key).name }))
                 .map { group(Consoles.byId(it.key).let { c -> if (c.id == "pc") "PC" else if (c.id == "other") c.label else "${c.maker} · ${c.name}" }, it.value) }
             GroupMode.DEVELOPER -> {
-                val unknown = L10n.s(R.string.shelf_unknown_studio)
-                sorted.groupBy { it.developer?.trim()?.ifBlank { null } ?: unknown }.entries
-                    .sortedWith(compareBy<Map.Entry<String, List<Game>>> { it.key == unknown }.thenByDescending { it.value.size }.thenBy { it.key })
-                    .map { group(it.key, it.value) }
+                // Estudios unificados (ATLUS = Atlus = Atlus Co., Ltd.); un juego de dos estudios va en los dos.
+                val unknownKey = "\u0000"
+                val byKey = linkedMapOf<String, MutableList<Game>>()
+                val names = hashMapOf<String, MutableList<String>>()
+                sorted.forEach { g ->
+                    val studios = com.repisa.app.model.Studios.split(g.developer)
+                    if (studios.isEmpty()) byKey.getOrPut(unknownKey) { mutableListOf() } += g
+                    studios.forEach { st ->
+                        val k = com.repisa.app.model.Studios.key(st)
+                        byKey.getOrPut(k) { mutableListOf() } += g
+                        names.getOrPut(k) { mutableListOf() } += st
+                    }
+                }
+                byKey.entries.sortedWith(compareBy<Map.Entry<String, MutableList<Game>>> { it.key == unknownKey }
+                    .thenByDescending { it.value.size }.thenBy { it.key })
+                    .map { (k, games) ->
+                        group(if (k == unknownKey) L10n.s(R.string.shelf_unknown_studio) else com.repisa.app.model.Studios.display(names.getValue(k)), games)
+                    }
             }
             GroupMode.SOURCE -> sorted.groupBy { it.source }.entries.sortedBy { it.key.ordinal }
                 .map { group(it.key.label, it.value) }
@@ -524,6 +538,15 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         if (enrichJob?.isActive == true) return
         enrichJob = viewModelScope.launch {
             if (force) mutex.withLock { _games.update { list -> list.map { if (it.userEdited) it else it.copy(metaFetched = false) } } }
+            // Tras mejorar la búsqueda de género, estudio y año, repasar una vez los juegos a los que les falta algo.
+            if (settings.factsPass < FACTS_PASS) {
+                mutex.withLock {
+                    _games.update { list -> list.map { g ->
+                        if (g.genres.isEmpty() || g.developer == null || g.releaseYear == null) g.copy(factsFetched = false) else g
+                    } }
+                }
+                settings.factsPass = FACTS_PASS
+            }
             val pending = _games.value.filter { metadata.needsWork(it) }
             pending.forEachIndexed { i, g ->
                 status.value = L10n.s(R.string.status_metadata, i + 1, pending.size)
@@ -544,6 +567,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         val MY_COLLECTION get() = L10n.s(R.string.shelf_my_collection)
         /** Súbelo cuando se añada una fuente de carátulas nueva para que se repasen los juegos sin carátula. */
         const val COVER_PASS = 2
+        /** Súbelo cuando mejore la búsqueda de género/estudio/año para que se repasen los juegos sin esos datos. */
+        const val FACTS_PASS = 2
     }
 
     private suspend fun replace(game: Game, save: Boolean = true) = mutex.withLock {
