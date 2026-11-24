@@ -30,6 +30,8 @@ data class Game(
     val playtimeMinutes: Int = 0,
     /** Minutos medidos por Repisa al lanzar el juego desde la app. */
     val trackedMinutes: Int = 0,
+    /** Tiempo jugado fuera de Repisa que el usuario escribe a mano (se suma al resto). */
+    val manualMinutes: Int = 0,
     /** Fecha (epoch ms) de la última partida. */
     val lastPlayed: Long? = null,
     val coverUrl: String? = null,
@@ -82,7 +84,7 @@ data class Game(
     /** El usuario editó los datos a mano: no sobrescribir con metadatos automáticos. */
     val userEdited: Boolean = false,
 ) {
-    val totalMinutes: Int get() = groupMinutes ?: (playtimeMinutes + trackedMinutes)
+    val totalMinutes: Int get() = groupMinutes ?: (playtimeMinutes + trackedMinutes + manualMinutes)
     /** Última partida (de cualquiera de las copias si están unidas). */
     val lastPlayedAny: Long? get() = groupLastPlayed ?: lastPlayed
     /** Quita lo que solo existe en memoria antes de guardar. */

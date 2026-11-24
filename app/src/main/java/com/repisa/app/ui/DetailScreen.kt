@@ -74,6 +74,7 @@ import java.util.Date
 @Composable
 fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     var editing by remember { mutableStateOf(false) }
+    var hiding by remember { mutableStateOf(false) }
     var searchingCover by remember { mutableStateOf(false) }
     var rating by remember { mutableStateOf(false) }
     var showCopies by remember { mutableStateOf(false) }
@@ -139,6 +140,11 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                     game.publisher?.takeIf { it != game.developer }?.let { Stat(stringResource(R.string.stat_publisher), it) }
                     Stat(stringResource(R.string.stat_year), game.releaseYear?.toString() ?: "—")
                     game.romName?.let { Stat(stringResource(R.string.stat_file), it) }
+                    if (game.source == com.repisa.app.model.Source.EMULATOR) Stat(stringResource(R.string.stat_origin), stringResource(when {
+                        game.romUri != null -> R.string.origin_rom_folder
+                        game.corePath != null || game.romPath != null -> R.string.origin_retroarch
+                        else -> R.string.origin_frontend
+                    }))
                     game.description?.let {
                         Spacer(Modifier.height(10.dp))
                         Text(it.replace(Regex("<[^>]+>"), "").take(600), color = Color(0xFFD9C8AE), fontSize = 13.sp, lineHeight = 18.sp)
@@ -171,6 +177,9 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         OutlinedButton(onClick = { editing = true }) {
                             Icon(Icons.Default.Edit, null, tint = Color.White); Text(" " + stringResource(R.string.edit_data), color = Color.White)
                         }
+                        OutlinedButton(onClick = { hiding = true }) {
+                            Text("✕ " + stringResource(R.string.hide_game), color = Color(0xFFFFB4A8))
+                        }
                     }
                 }
             }
@@ -180,6 +189,13 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     if (showCopies) CopiesDialog(game, vm, onDismiss = { showCopies = false })
     if (searchingCover) CoverSearchDialog(game, vm, onDismiss = { searchingCover = false })
     if (editing) EditDialog(game, onDismiss = { editing = false }) { vm.updateGame(it); editing = false }
+    if (hiding) androidx.compose.material3.AlertDialog(
+        onDismissRequest = { hiding = false },
+        title = { Text(stringResource(R.string.hide_game)) },
+        text = { Text(stringResource(R.string.hide_game_confirm, game.title)) },
+        confirmButton = { androidx.compose.material3.TextButton(onClick = { hiding = false; vm.hideGame(game) }) { Text(stringResource(R.string.hide_game)) } },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = { hiding = false }) { Text(stringResource(R.string.cancel)) } },
+    )
 }
 
 @Composable
@@ -203,7 +219,8 @@ private fun EditDialog(game: Game, onDismiss: () -> Unit, onSave: (Game) -> Unit
     var dev by remember { mutableStateOf(game.developer.orEmpty()) }
     var year by remember { mutableStateOf(game.releaseYear?.toString().orEmpty()) }
     var cover by remember { mutableStateOf(game.coverUrl.orEmpty()) }
-    var hours by remember { mutableStateOf(((game.trackedMinutes) / 60.0).let { if (it == 0.0) "" else L10n.decimal(it) }) }
+    var hours by remember { mutableStateOf((game.manualMinutes / 60).takeIf { game.manualMinutes > 0 }?.toString().orEmpty()) }
+    var minutes by remember { mutableStateOf((game.manualMinutes % 60).takeIf { game.manualMinutes > 0 }?.toString().orEmpty()) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.edit_title, game.title)) },
@@ -214,13 +231,24 @@ private fun EditDialog(game: Game, onDismiss: () -> Unit, onSave: (Game) -> Unit
                 OutlinedTextField(dev, { dev = it }, label = { Text(stringResource(R.string.stat_studio)) }, singleLine = true)
                 OutlinedTextField(year, { year = it.filter(Char::isDigit).take(4) }, label = { Text(stringResource(R.string.stat_year)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(hours, { hours = it }, label = { Text(stringResource(R.string.field_extra_hours)) }, singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                // Tiempo jugado fuera de Repisa en horas y minutos (17 h 52 min), no en decimales.
+                Text(stringResource(R.string.field_extra_time), fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(hours, { hours = it.filter(Char::isDigit).take(5) }, label = { Text(stringResource(R.string.field_hours)) },
+                        singleLine = true, modifier = Modifier.weight(1f), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                    OutlinedTextField(minutes, { minutes = it.filter(Char::isDigit).take(2) }, label = { Text(stringResource(R.string.field_minutes)) },
+                        singleLine = true, modifier = Modifier.weight(1f), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                }
                 OutlinedTextField(cover, { cover = it }, label = { Text(stringResource(R.string.field_cover_url)) }, singleLine = true)
             }
         },
         confirmButton = {
             TextButton(onClick = {
+                val manual = (hours.toIntOrNull() ?: 0) * 60 + (minutes.toIntOrNull() ?: 0).coerceAtMost(59)
+                // Solo cambiar el tiempo no «congela» el resto de datos del juego.
+                val onlyTime = title == game.title && genres == game.genres.joinToString(", ") &&
+                    dev == game.developer.orEmpty() && year == game.releaseYear?.toString().orEmpty() && cover == game.coverUrl.orEmpty()
+                if (onlyTime) { onSave(game.copy(manualMinutes = manual)); return@TextButton }
                 onSave(game.copy(
                     title = title.ifBlank { game.title },
                     // Si el usuario cambió el nombre, se guarda el suyo y no el de la copia.
@@ -230,7 +258,7 @@ private fun EditDialog(game: Game, onDismiss: () -> Unit, onSave: (Game) -> Unit
                     releaseYear = year.toIntOrNull(),
                     coverUrl = cover.ifBlank { null },
                     coverAspect = if (cover.ifBlank { null } == game.coverUrl) game.coverAspect else null,
-                    trackedMinutes = ((hours.replace(',', '.').toDoubleOrNull() ?: 0.0) * 60).toInt(),
+                    manualMinutes = manual,
                     userEdited = true,
                 ))
             }) { Text(stringResource(R.string.save)) }

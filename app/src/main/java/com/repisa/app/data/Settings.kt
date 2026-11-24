@@ -44,6 +44,10 @@ class Settings(context: Context) {
     var retroarchFolder: String? get() = str("ra_folder"); set(v) = put("ra_folder", v)
     /** Carpeta de datos de Cocoon (o cualquier carpeta con gamelist.xml exportados). */
     var cocoonFolder: String? get() = str("cocoon_folder"); set(v) = put("cocoon_folder", v)
+    /** Juegos que el usuario quitó de la repisa (no vuelven al sincronizar). */
+    var hiddenGames: Set<String>
+        get() = prefs.getStringSet("hidden_games", emptySet()) ?: emptySet()
+        set(v) = prefs.edit { putStringSet("hidden_games", v) }
     /** Resumen de la última lectura de ES-DE/Cocoon (ver FrontendReport). */
     var frontendReport: String? get() = str("frontend_report"); set(v) = put("frontend_report", v)
     val hasEmulatorSources: Boolean

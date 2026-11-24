@@ -395,6 +395,12 @@ private fun DisplayPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
         Hint(stringResource(R.string.box_size_hint))
         Slider(value = h, onValueChange = { h = it }, onValueChangeFinished = { s.shelfHeightDp = h.toInt() },
             valueRange = 90f..240f, modifier = Modifier.widthIn(max = 560.dp))
+        val hidden by vm.hidden.collectAsState()
+        if (hidden.isNotEmpty()) {
+            HorizontalDivider(color = Color(0x33FFFFFF))
+            Text(stringResource(R.string.hidden_count, hidden.size), color = Color.White)
+            OutlinedButton(onClick = { vm.unhideAll() }) { Text(stringResource(R.string.unhide_all), color = Color.White) }
+        }
     }
 }
 

@@ -2,6 +2,17 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.11.3]
+
+- **Tiempo a mano en horas y minutos**: Editar datos → «Tiempo jugado fuera de Repisa» con dos casillas (17 h 52 min),
+  en lugar de horas con decimales. Se guarda aparte de lo que mide Repisa y se suma al resto.
+- Cambiar solo el tiempo ya no «congela» el resto de datos del juego (título, género, carátula siguen
+  actualizándose).
+- **Quitar de la repisa**: botón en la ficha de cada juego para quitar duplicados o lo que no quieras ver; no vuelve
+  al sincronizar. Ajustes → Pantalla → «Volver a mostrarlos».
+- La ficha de los juegos de emulador dice su **origen**: tu carpeta de ROMs, una playlist de RetroArch o
+  ES-DE/Cocoon.
+
 ## [0.11.2]
 
 - **Fuera los juegos de Steam/PC que salían como emulados** (Bravely Default Flying Fairy, Persona 5 Royal,

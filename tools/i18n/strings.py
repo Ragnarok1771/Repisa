@@ -481,6 +481,33 @@ s("frontend_report_no_match",
   "Keines dieser Spiele passt zu deiner Bibliothek. Prüfe, ob deine ROM-Ordner oben hinzugefügt sind.",
   "Nessuno di questi giochi corrisponde alla tua libreria. Controlla che le cartelle ROM siano aggiunte qui sopra.",
   "Nenhum destes jogos corresponde à sua biblioteca. Verifique se as pastas de ROMs estão adicionadas acima.")
+s("hide_game", "Remove from shelf", "Quitar de la repisa", "Retirer de l’étagère", "Aus dem Regal entfernen",
+  "Togli dallo scaffale", "Tirar da estante", ptPT="Retirar da estante")
+s("hide_game_confirm", "“%1$s” will no longer appear, even after syncing. You can bring it back in Settings → Display.",
+  "«%1$s» dejará de aparecer, también al sincronizar. Puedes volver a mostrarlo en Ajustes → Pantalla.",
+  "« %1$s » n’apparaîtra plus, même après synchronisation. Vous pouvez le rétablir dans Paramètres → Affichage.",
+  "„%1$s“ wird nicht mehr angezeigt, auch nach dem Synchronisieren. Wiederherstellen unter Einstellungen → Anzeige.",
+  "«%1$s» non apparirà più, anche dopo la sincronizzazione. Puoi ripristinarlo in Impostazioni → Schermo.",
+  "\"%1$s\" não vai mais aparecer, mesmo ao sincronizar. Você pode mostrá-lo de novo em Ajustes → Tela.",
+  ptPT="\"%1$s\" deixa de aparecer, mesmo ao sincronizar. Pode mostrá-lo de novo em Definições → Ecrã.")
+s("msg_hidden", "Removed from the shelf: %1$s", "Quitado de la repisa: %1$s", "Retiré de l’étagère : %1$s",
+  "Aus dem Regal entfernt: %1$s", "Tolto dallo scaffale: %1$s", "Tirado da estante: %1$s", ptPT="Retirado da estante: %1$s")
+s("hidden_count", "Games removed from the shelf: %1$d", "Juegos quitados de la repisa: %1$d", "Jeux retirés de l’étagère : %1$d",
+  "Aus dem Regal entfernte Spiele: %1$d", "Giochi tolti dallo scaffale: %1$d", "Jogos tirados da estante: %1$d",
+  ptPT="Jogos retirados da estante: %1$d")
+s("unhide_all", "Show them again", "Volver a mostrarlos", "Les réafficher", "Wieder anzeigen", "Mostrali di nuovo", "Mostrar de novo")
+s("field_hours", "Hours", "Horas", "Heures", "Stunden", "Ore", "Horas")
+s("field_minutes", "Minutes", "Minutos", "Minutes", "Minuten", "Minuti", "Minutos")
+s("field_extra_time", "Time played outside Repisa (added to the rest)", "Tiempo jugado fuera de Repisa (se suma al resto)",
+  "Temps joué hors de Repisa (s’ajoute au reste)", "Außerhalb von Repisa gespielte Zeit (wird addiert)",
+  "Tempo giocato fuori da Repisa (si somma al resto)", "Tempo jogado fora do Repisa (soma-se ao resto)")
+s("stat_origin", "Comes from", "Origen", "Provenance", "Herkunft", "Origine", "Origem")
+s("origin_rom_folder", "your ROM folder", "tu carpeta de ROMs", "votre dossier de ROM", "deinem ROM-Ordner", "la tua cartella ROM",
+  "sua pasta de ROMs", ptPT="a sua pasta de ROMs")
+s("origin_retroarch", "a RetroArch playlist", "una playlist de RetroArch", "une playlist RetroArch", "einer RetroArch-Playlist",
+  "una playlist di RetroArch", "uma playlist do RetroArch")
+s("origin_frontend", "ES-DE / Cocoon (no file)", "ES-DE / Cocoon (sin archivo)", "ES-DE / Cocoon (sans fichier)",
+  "ES-DE / Cocoon (ohne Datei)", "ES-DE / Cocoon (senza file)", "ES-DE / Cocoon (sem arquivo)", ptPT="ES-DE / Cocoon (sem ficheiro)")
 s("diag_copy", "Copy diagnostics", "Copiar diagnóstico", "Copier le diagnostic", "Diagnose kopieren", "Copia diagnostica", "Copiar diagnóstico")
 s("diag_copied", "Copied ✓", "Copiado ✓", "Copié ✓", "Kopiert ✓", "Copiato ✓", "Copiado ✓")
 s("diag_share", "Share diagnostics", "Compartir diagnóstico", "Partager le diagnostic", "Diagnose teilen", "Condividi diagnostica", "Compartilhar diagnóstico",

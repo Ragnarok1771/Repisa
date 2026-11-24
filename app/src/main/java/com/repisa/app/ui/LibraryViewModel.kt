@@ -89,10 +89,26 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     val selectedId = MutableStateFlow<String?>(null)
     val inSettings = MutableStateFlow(false)
 
+    /** Juegos quitados de la repisa por el usuario. */
+    val hidden = MutableStateFlow(settings.hiddenGames)
+
+    /** Quita el juego (y sus copias) de la repisa; no vuelve al sincronizar. */
+    fun hideGame(game: Game) {
+        settings.hiddenGames = settings.hiddenGames + game.id + game.copyIds
+        hidden.value = settings.hiddenGames
+        selectedId.value = null
+        message.value = L10n.s(R.string.msg_hidden, game.title)
+    }
+
+    fun unhideAll() {
+        settings.hiddenGames = emptySet()
+        hidden.value = emptySet()
+    }
+
     /** Biblioteca tal como se muestra: copias del mismo juego unidas en una sola caja. */
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val displayGames: StateFlow<List<Game>> = _games
-        .mapLatest { Copies.merge(it) }
+    val displayGames: StateFlow<List<Game>> = combine(_games, hidden) { g, h -> g to h }
+        .mapLatest { (g, h) -> Copies.merge(if (h.isEmpty()) g else g.filter { it.id !in h }) }
         .flowOn(kotlinx.coroutines.Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -350,6 +366,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         else enriched.copy(
             favorite = current.favorite,
             trackedMinutes = current.trackedMinutes,
+            manualMinutes = current.manualMinutes,
             coverUrl = if (current.customCover) current.coverUrl else enriched.coverUrl,
             customCover = current.customCover,
             rating = current.rating,

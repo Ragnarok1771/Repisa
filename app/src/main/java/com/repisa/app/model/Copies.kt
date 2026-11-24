@@ -53,7 +53,7 @@ object Copies {
                 title = name,
                 originalTitle = main.title,
                 copyIds = group.map { it.id }.filter { it != main.id },
-                groupMinutes = group.sumOf { it.playtimeMinutes + it.trackedMinutes },
+                groupMinutes = group.sumOf { it.playtimeMinutes + it.trackedMinutes + it.manualMinutes },
                 groupLastPlayed = group.mapNotNull { it.lastPlayed }.maxOrNull(),
                 groupSources = group.map { it.source }.distinct(),
             )
