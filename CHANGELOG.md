@@ -2,6 +2,15 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.11.2]
+
+- **Fuera los juegos de Steam/PC que salían como emulados** (Bravely Default Flying Fairy, Persona 5 Royal,
+  Xenonia…): Cocoon exporta también tus juegos de PC, y Repisa los añadía como juegos de emulador. Ahora, si tienes
+  carpetas de ROMs, solo aparecen los juegos de esas carpetas; Cocoon/ES-DE solo aportan datos (género, estudio,
+  última partida…). Los juegos de PC nunca se añaden desde Cocoon: vienen de Steam y Epic.
+- Con eso desaparece también el Pokémon Esmeralda repetido (el que venía solo de Cocoon); el de tu carpeta se
+  queda y busca su género, estudio y año en Wikidata.
+
 ## [0.11.1]
 
 - **Fuera los juegos fantasma de Cocoon**: lo que Cocoon conoce pero no está en tus carpetas (DLC, packs, entradas

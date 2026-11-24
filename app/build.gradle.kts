@@ -13,8 +13,8 @@ android {
         applicationId = "com.repisa.app"
         minSdk = 30
         targetSdk = 35
-        versionCode = 13
-        versionName = "0.11.1"
+        versionCode = 14
+        versionName = "0.11.2"
     }
 
     buildTypes {

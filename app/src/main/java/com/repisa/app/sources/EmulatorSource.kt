@@ -89,15 +89,18 @@ class EmulatorSource(private val context: Context, private val settings: Setting
             out
         }.toMutableList()
 
-        // Juegos que el frontend conoce pero que no salieron en las carpetas escaneadas. Solo para sistemas de los
-        // que no hay ningún archivo en tus carpetas: si tienes la carpeta de Switch, manda esa carpeta, y lo que
-        // Cocoon tenga de más (DLC, packs, entradas viejas, juegos que ya no están) no aparece como juego.
-        val withFiles = result.map { it.consoleId }.toSet()
+        // Juegos que el frontend conoce pero que no salieron en las carpetas escaneadas. Solo si Repisa no tiene
+        // ninguna carpeta de ROMs ni RetroArch (el frontend es tu única lista): si tienes carpetas, mandan ellas, y lo
+        // que Cocoon tenga de más (juegos de PC/Steam, DLC, packs, entradas viejas) no aparece como juego de emulador.
+        // Los juegos de PC nunca se añaden desde aquí: vienen de Steam y Epic.
+        val frontendIsTheList = settings.romFolders.isEmpty() && settings.retroarchFolder == null
         val skipped = mutableListOf<String>()
         index.unused().forEach { (consoleId, fileKey, m) ->
             val key = fileKey ?: romKey(m.name ?: return@forEach)
             val title = m.name ?: cleanTitle(key)
-            if (consoleId in withFiles || isAddOn(title)) { skipped += "$consoleId:$title"; return@forEach }
+            if (!frontendIsTheList || consoleId in setOf("pc", "dos", "other") || isAddOn(title)) {
+                skipped += "$consoleId:$title [$key]"; return@forEach
+            }
             val id = "emu:$consoleId:$key"
             if (result.none { it.id == id }) result += applyMeta(Game(id, Source.EMULATOR, title, consoleId, romName = key), m)
         }
