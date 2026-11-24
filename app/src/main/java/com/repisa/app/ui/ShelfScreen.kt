@@ -188,7 +188,18 @@ private fun TopIcon(
 
 @Composable
 private fun SourceChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    FilterChip(selected = selected, onClick = onClick, label = { Text(label, fontSize = 12.sp) })
+    // Con el mando, el chip enfocado se aclara (dorado) y lleva borde: antes solo se oscurecía un poco.
+    var focused by remember { mutableStateOf(false) }
+    FilterChip(
+        selected = selected, onClick = onClick,
+        label = { Text(label, fontSize = 12.sp, color = if (focused) Color(0xFF2A1C14) else Color.Unspecified) },
+        modifier = Modifier.onFocusChanged { focused = it.isFocused },
+        colors = if (focused) androidx.compose.material3.FilterChipDefaults.filterChipColors(
+            containerColor = Color(0xFFFFD27A), selectedContainerColor = Color(0xFFFFE3A8),
+        ) else androidx.compose.material3.FilterChipDefaults.filterChipColors(),
+        border = if (focused) androidx.compose.foundation.BorderStroke(2.dp, Color.White)
+            else androidx.compose.material3.FilterChipDefaults.filterChipBorder(enabled = true, selected = selected),
+    )
 }
 
 @Composable

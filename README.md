@@ -117,12 +117,22 @@ Las versiones nuevas se instalan encima de la anterior sin perder tu biblioteca 
 | Metacritic | Nota de prensa y de usuarios | Nada |
 | HowLongToBeat | Duración del juego | Nada |
 
+## Copia de seguridad y versiones nuevas
+
+- **Ajustes → Copia de seguridad y versión → Exportar mis datos** guarda un archivo con tus calificaciones, tiempo
+  a mano, favoritos, juegos quitados, copias preferentes, carátulas elegidas y ajustes. **Importar una copia** lo
+  recupera (por ejemplo, al cambiar de consola). Las sesiones de Steam/Epic, las claves y las carpetas no se
+  guardan en la copia.
+- Al abrir, Repisa busca versiones nuevas en las releases de este repositorio y, si hay una, muestra sus notas del
+  parche y la instala encima (Android pide confirmación). Se puede desactivar en Ajustes.
+
 ## Privacidad
 
 - Todo se guarda **en tu dispositivo**. Repisa no tiene servidores ni cuentas propias.
 - Tus contraseñas de Steam y Epic se escriben en sus **páginas oficiales**; Repisa solo recibe el permiso para leer tu
   biblioteca y tus horas.
-- Las claves (SteamGridDB, Steam API) se guardan en el almacenamiento privado de la app.
+- Las sesiones de Steam y Epic y las claves (SteamGridDB, Steam API) se guardan **cifradas** con el almacén seguro de
+  Android y no entran en las copias de seguridad de Google ni en la de Repisa.
 
 ## Compilar
 
@@ -152,6 +162,11 @@ app/src/main/java/com/repisa/app/
 tools/i18n/   textos de todos los idiomas
 docs/         capturas y logo
 ```
+
+## Licencia
+
+Repisa es software libre bajo la [GNU GPL v3](LICENSE): puedes usarla, estudiarla, compartirla y modificarla, y
+las versiones modificadas deben compartirse con la misma licencia.
 
 ## Créditos
 

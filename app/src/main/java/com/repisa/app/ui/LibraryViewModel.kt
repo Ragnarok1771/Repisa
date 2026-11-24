@@ -89,6 +89,87 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     val selectedId = MutableStateFlow<String?>(null)
     val inSettings = MutableStateFlow(false)
 
+    // ------------------------------------------------------------------ Actualizaciones
+
+    /** Versión nueva disponible (se muestra un aviso con sus notas). */
+    val update = MutableStateFlow<com.repisa.app.data.Updater.Release?>(null)
+    /** Progreso de la descarga de la actualización (0..1), o null si no se está descargando. */
+    val updateProgress = MutableStateFlow<Float?>(null)
+
+    /** [quiet]: al abrir la app, como mucho cada 6 h y sin mensajes si no hay nada nuevo. */
+    fun checkForUpdate(quiet: Boolean) = viewModelScope.launch {
+        if (quiet && (!settings.checkUpdates || System.currentTimeMillis() - settings.lastUpdateCheck < 6 * 3_600_000L)) return@launch
+        settings.lastUpdateCheck = System.currentTimeMillis()
+        val r = runCatching { com.repisa.app.data.Updater.latest() }.getOrNull()
+        when {
+            r == null -> if (!quiet) message.value = L10n.s(R.string.update_check_failed)
+            !com.repisa.app.data.Updater.isNewer(r.version, com.repisa.app.BuildConfig.VERSION_NAME) ->
+                if (!quiet) message.value = L10n.s(R.string.update_none, com.repisa.app.BuildConfig.VERSION_NAME)
+            quiet && r.version == settings.skippedVersion -> Unit
+            else -> update.value = r
+        }
+    }
+
+    fun skipUpdate() { settings.skippedVersion = update.value?.version; update.value = null }
+
+    fun installUpdate() = viewModelScope.launch {
+        val r = update.value ?: return@launch
+        val app = getApplication<android.app.Application>()
+        if (!com.repisa.app.data.Updater.canInstall(app)) {
+            message.value = L10n.s(R.string.update_allow_install)
+            runCatching { app.startActivity(com.repisa.app.data.Updater.permissionIntent(app)) }
+            return@launch
+        }
+        updateProgress.value = 0f
+        runCatching { com.repisa.app.data.Updater.download(app, r) { updateProgress.value = it } }
+            .onSuccess { com.repisa.app.data.Updater.install(app, it); update.value = null }
+            .onFailure { message.value = L10n.s(R.string.update_failed, it.message ?: "") }
+        updateProgress.value = null
+    }
+
+    // ------------------------------------------------------------------ Copia de seguridad
+
+    /** Guarda la copia de seguridad en el archivo que eligió el usuario. */
+    fun exportBackup(uri: android.net.Uri) = viewModelScope.launch {
+        val app = getApplication<android.app.Application>()
+        runCatching {
+            val text = com.repisa.app.data.Backup.export(_games.value, settings.prefsForBackup, com.repisa.app.BuildConfig.VERSION_NAME)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                app.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(text.toByteArray()) }
+            }
+        }.onSuccess { message.value = L10n.s(R.string.backup_saved, _games.value.size) }
+            .onFailure { message.value = L10n.s(R.string.backup_failed, it.message ?: "") }
+    }
+
+    /** Lee una copia de seguridad: une la biblioteca y restaura los ajustes. */
+    fun importBackup(uri: android.net.Uri) = viewModelScope.launch {
+        val app = getApplication<android.app.Application>()
+        runCatching {
+            val text = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                app.contentResolver.openInputStream(uri)!!.use { it.readBytes().toString(Charsets.UTF_8) }
+            }
+            val parsed = com.repisa.app.data.Backup.parse(text)
+            com.repisa.app.data.Backup.restoreSettings(parsed.settings, settings.prefsForBackup)
+            mutex.withLock {
+                _games.value = com.repisa.app.data.Backup.mergeLibrary(_games.value, parsed.games)
+                store.save(_games.value)
+            }
+            // Refrescar lo que depende de los ajustes recién restaurados.
+            hidden.value = settings.hiddenGames
+            ratingScale.value = runCatching { com.repisa.app.model.RatingScale.valueOf(settings.ratingScale) }.getOrDefault(ratingScale.value)
+            _options.update { it.copy(
+                sort = runCatching { SortMode.valueOf(settings.sortMode) }.getOrDefault(it.sort),
+                group = runCatching { GroupMode.valueOf(settings.groupMode) }.getOrDefault(it.group),
+            ) }
+            parsed.settings["language"]?.let { el ->
+                val tag = runCatching { (el as kotlinx.serialization.json.JsonObject)["v"]?.let { (it as kotlinx.serialization.json.JsonPrimitive).content } }.getOrNull()
+                com.repisa.app.i18n.AppLanguage.fromTag(tag)?.takeIf { it != L10n.current }?.let { L10n.setLanguage(app, it) }
+            }
+            parsed.games.size
+        }.onSuccess { message.value = L10n.s(R.string.backup_restored, it) }
+            .onFailure { message.value = L10n.s(R.string.backup_failed, it.message ?: "") }
+    }
+
     /** Juegos quitados de la repisa por el usuario. */
     val hidden = MutableStateFlow(settings.hiddenGames)
 

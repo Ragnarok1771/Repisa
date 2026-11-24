@@ -531,6 +531,81 @@ s("origin_retroarch", "a RetroArch playlist", "una playlist de RetroArch", "une 
   "una playlist di RetroArch", "uma playlist do RetroArch")
 s("origin_frontend", "ES-DE / Cocoon (no file)", "ES-DE / Cocoon (sin archivo)", "ES-DE / Cocoon (sans fichier)",
   "ES-DE / Cocoon (ohne Datei)", "ES-DE / Cocoon (senza file)", "ES-DE / Cocoon (sem arquivo)", ptPT="ES-DE / Cocoon (sem ficheiro)")
+s("menu_data", "Backup and updates", "Copia de seguridad y versión", "Sauvegarde et mises à jour", "Sicherung und Updates",
+  "Backup e aggiornamenti", "Backup e atualizações", ptPT="Cópia de segurança e atualizações")
+s("menu_data_sub", "Export or import your data, new versions", "Exportar o importar tus datos, versiones nuevas",
+  "Exporter ou importer vos données, nouvelles versions", "Daten exportieren oder importieren, neue Versionen",
+  "Esporta o importa i tuoi dati, nuove versioni", "Exportar ou importar seus dados, novas versões",
+  ptPT="Exportar ou importar os seus dados, novas versões")
+s("backup_title", "Backup", "Copia de seguridad", "Sauvegarde", "Sicherung", "Backup", "Backup", ptPT="Cópia de segurança")
+s("backup_hint",
+  "Saves a file with your ratings, manual time, favourites, removed games, preferred copies, chosen covers, edited data and settings. Steam/Epic sessions, keys and folders are not included: after importing, link your accounts and choose your folders again.",
+  "Guarda un archivo con tus calificaciones, tiempo a mano, favoritos, juegos quitados, copias preferentes, carátulas elegidas, datos editados y ajustes. No incluye las sesiones de Steam/Epic, las claves ni las carpetas: tras importar, vuelve a vincular tus cuentas y a elegir tus carpetas.",
+  "Enregistre un fichier avec vos notes, temps manuel, favoris, jeux retirés, copies préférées, jaquettes choisies, données modifiées et réglages. Les sessions Steam/Epic, clés et dossiers ne sont pas inclus : après l’import, reliez vos comptes et choisissez vos dossiers.",
+  "Speichert eine Datei mit Bewertungen, manueller Zeit, Favoriten, entfernten Spielen, bevorzugten Kopien, gewählten Covern, bearbeiteten Daten und Einstellungen. Steam/Epic-Sitzungen, Schlüssel und Ordner sind nicht enthalten: Nach dem Import Konten neu verknüpfen und Ordner wählen.",
+  "Salva un file con valutazioni, tempo manuale, preferiti, giochi tolti, copie preferite, copertine scelte, dati modificati e impostazioni. Sessioni Steam/Epic, chiavi e cartelle non sono incluse: dopo l’importazione ricollega gli account e scegli le cartelle.",
+  "Salva um arquivo com suas notas, tempo manual, favoritos, jogos tirados, cópias preferidas, capas escolhidas, dados editados e ajustes. Não inclui as sessões do Steam/Epic, chaves nem pastas: depois de importar, vincule suas contas e escolha suas pastas de novo.",
+  ptPT="Guarda um ficheiro com as suas notas, tempo manual, favoritos, jogos retirados, cópias preferidas, capas escolhidas, dados editados e definições. Não inclui as sessões do Steam/Epic, chaves nem pastas: depois de importar, volte a ligar as contas e a escolher as pastas.")
+s("backup_export", "Export my data", "Exportar mis datos", "Exporter mes données", "Meine Daten exportieren", "Esporta i miei dati",
+  "Exportar meus dados", ptPT="Exportar os meus dados")
+s("backup_import", "Import a backup", "Importar una copia", "Importer une sauvegarde", "Sicherung importieren", "Importa un backup",
+  "Importar um backup", ptPT="Importar uma cópia")
+s("backup_saved", "Backup saved (%1$d games).", "Copia guardada (%1$d juegos).", "Sauvegarde enregistrée (%1$d jeux).",
+  "Sicherung gespeichert (%1$d Spiele).", "Backup salvato (%1$d giochi).", "Backup salvo (%1$d jogos).", ptPT="Cópia guardada (%1$d jogos).")
+s("backup_restored", "Backup imported (%1$d games). Link Steam/Epic and choose your folders if needed.",
+  "Copia importada (%1$d juegos). Vincula Steam/Epic y elige tus carpetas si hace falta.",
+  "Sauvegarde importée (%1$d jeux). Reliez Steam/Epic et choisissez vos dossiers si besoin.",
+  "Sicherung importiert (%1$d Spiele). Verknüpfe Steam/Epic und wähle deine Ordner, falls nötig.",
+  "Backup importato (%1$d giochi). Collega Steam/Epic e scegli le cartelle se serve.",
+  "Backup importado (%1$d jogos). Vincule Steam/Epic e escolha suas pastas se precisar.",
+  ptPT="Cópia importada (%1$d jogos). Ligue o Steam/Epic e escolha as pastas se for preciso.")
+s("backup_failed", "Couldn't complete the backup: %1$s", "No se pudo completar la copia: %1$s", "Échec de la sauvegarde : %1$s",
+  "Sicherung fehlgeschlagen: %1$s", "Backup non riuscito: %1$s", "Não foi possível concluir o backup: %1$s",
+  ptPT="Não foi possível concluir a cópia: %1$s")
+s("updates_title", "Version", "Versión", "Version", "Version", "Versione", "Versão")
+s("updates_auto", "Check for new versions when opening", "Buscar versiones nuevas al abrir", "Chercher les nouvelles versions à l’ouverture",
+  "Beim Öffnen nach neuen Versionen suchen", "Cerca nuove versioni all’apertura", "Procurar novas versões ao abrir")
+s("updates_hint", "Repisa looks at the project's releases on GitHub and, if there is a newer one, shows its patch notes and installs it over this one.",
+  "Repisa mira las releases del proyecto en GitHub y, si hay una más nueva, te muestra sus notas del parche y la instala encima de esta.",
+  "Repisa consulte les versions du projet sur GitHub et, s’il y en a une plus récente, affiche ses notes et l’installe par-dessus.",
+  "Repisa prüft die Releases des Projekts auf GitHub und zeigt bei einer neueren die Patchnotes und installiert sie darüber.",
+  "Repisa controlla le release del progetto su GitHub e, se ce n’è una più nuova, mostra le note e la installa sopra questa.",
+  "O Repisa verifica as releases do projeto no GitHub e, se houver uma mais nova, mostra as notas e instala por cima desta.")
+s("updates_check_now", "Check now", "Buscar ahora", "Vérifier maintenant", "Jetzt prüfen", "Controlla ora", "Verificar agora")
+s("update_none", "You have the latest version (%1$s).", "Tienes la última versión (%1$s).", "Vous avez la dernière version (%1$s).",
+  "Du hast die neueste Version (%1$s).", "Hai l’ultima versione (%1$s).", "Você tem a versão mais recente (%1$s).",
+  ptPT="Tem a versão mais recente (%1$s).")
+s("update_check_failed", "Couldn't check for new versions (no connection, or the project isn't public).",
+  "No se pudo buscar versiones nuevas (sin conexión o el proyecto no es público).",
+  "Impossible de vérifier (pas de connexion, ou le projet n’est pas public).",
+  "Prüfung nicht möglich (keine Verbindung oder das Projekt ist nicht öffentlich).",
+  "Impossibile controllare (nessuna connessione o il progetto non è pubblico).",
+  "Não foi possível verificar (sem conexão ou o projeto não é público).")
+s("update_title", "Repisa %1$s is available", "Repisa %1$s está disponible", "Repisa %1$s est disponible", "Repisa %1$s ist verfügbar",
+  "Repisa %1$s è disponibile", "Repisa %1$s está disponível")
+s("update_no_notes", "No patch notes.", "Sin notas del parche.", "Pas de notes.", "Keine Patchnotes.", "Nessuna nota.", "Sem notas.")
+s("update_now", "Update", "Actualizar", "Mettre à jour", "Aktualisieren", "Aggiorna", "Atualizar")
+s("update_later", "Later", "Más tarde", "Plus tard", "Später", "Più tardi", "Mais tarde")
+s("update_skip", "Skip this version", "Omitir esta versión", "Ignorer cette version", "Diese Version überspringen", "Salta questa versione",
+  "Pular esta versão", ptPT="Ignorar esta versão")
+s("update_downloading", "Downloading… %1$d%%", "Descargando… %1$d%%", "Téléchargement… %1$d%%", "Wird heruntergeladen… %1$d%%",
+  "Download… %1$d%%", "Baixando… %1$d%%", ptPT="A transferir… %1$d%%")
+s("update_allow_install", "Allow Repisa to install apps (Android will open the setting), then tap Update again.",
+  "Permite que Repisa instale apps (Android abrirá el ajuste) y vuelve a pulsar Actualizar.",
+  "Autorisez Repisa à installer des apps (Android ouvre le réglage), puis touchez à nouveau Mettre à jour.",
+  "Erlaube Repisa, Apps zu installieren (Android öffnet die Einstellung), und tippe dann erneut auf Aktualisieren.",
+  "Consenti a Repisa di installare app (Android apre l’impostazione), poi tocca di nuovo Aggiorna.",
+  "Permita que o Repisa instale apps (o Android abre o ajuste) e toque em Atualizar de novo.")
+s("update_failed", "Couldn't download the update: %1$s", "No se pudo descargar la actualización: %1$s",
+  "Échec du téléchargement : %1$s", "Download fehlgeschlagen: %1$s", "Download non riuscito: %1$s",
+  "Não foi possível baixar a atualização: %1$s", ptPT="Não foi possível transferir a atualização: %1$s")
+s("license_hint", "Repisa is free software under the GNU GPL v3 licence: you can use, study, share and modify it; modified versions must also be shared under the same licence.",
+  "Repisa es software libre con licencia GNU GPL v3: puedes usarla, estudiarla, compartirla y modificarla; las versiones modificadas también deben compartirse con la misma licencia.",
+  "Repisa est un logiciel libre sous licence GNU GPL v3 : vous pouvez l’utiliser, l’étudier, le partager et le modifier ; les versions modifiées doivent rester sous la même licence.",
+  "Repisa ist freie Software unter der GNU GPL v3: Du darfst sie nutzen, untersuchen, teilen und ändern; geänderte Versionen müssen unter derselben Lizenz geteilt werden.",
+  "Repisa è software libero con licenza GNU GPL v3: puoi usarlo, studiarlo, condividerlo e modificarlo; le versioni modificate vanno condivise con la stessa licenza.",
+  "O Repisa é software livre sob a licença GNU GPL v3: você pode usar, estudar, compartilhar e modificar; versões modificadas também devem ser compartilhadas com a mesma licença.",
+  ptPT="O Repisa é software livre com a licença GNU GPL v3: pode usá-lo, estudá-lo, partilhá-lo e modificá-lo; as versões modificadas também têm de ser partilhadas com a mesma licença.")
 s("diag_copy", "Copy diagnostics", "Copiar diagnóstico", "Copier le diagnostic", "Diagnose kopieren", "Copia diagnostica", "Copiar diagnóstico")
 s("diag_copied", "Copied ✓", "Copiado ✓", "Copié ✓", "Kopiert ✓", "Copiato ✓", "Copiado ✓")
 s("diag_share", "Share diagnostics", "Compartir diagnóstico", "Partager le diagnostic", "Diagnose teilen", "Condividi diagnostica", "Compartilhar diagnóstico",

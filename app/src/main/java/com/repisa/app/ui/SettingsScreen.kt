@@ -92,6 +92,7 @@ private enum class Page(val titleRes: Int, val subRes: Int?, val emoji: String) 
     PLAYTIME(R.string.menu_playtime, R.string.menu_playtime_sub, "⏰"),
     DISPLAY(R.string.menu_display, R.string.menu_display_sub, "📺"),
     LANGUAGE(R.string.menu_language, null, "🌐"),
+    DATA(R.string.menu_data, R.string.menu_data_sub, "💾"),
 }
 
 /**
@@ -130,6 +131,7 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit, onLanguageChanged: 
                 Page.COVERS -> CoversPage(vm, tick, changed, onBack)
                 Page.PLAYTIME -> PlaytimePage(vm, tick)
                 Page.DISPLAY -> DisplayPage(vm, tick, changed)
+                Page.DATA -> DataPage(vm)
                 Page.LANGUAGE -> LanguageList(L10n.current) { lang ->
                     L10n.setLanguage(vm.getApplication<android.app.Application>(), lang); onLanguageChanged()
                 }
@@ -652,5 +654,44 @@ private fun DiagnosticsButtons() {
                 ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }
         }) { Text(stringResource(R.string.diag_share), color = Color.White) }
+    }
+}
+
+// ---------------------------------------------------------------------------- Copia de seguridad y versión
+
+@Composable
+private fun DataPage(vm: LibraryViewModel) {
+    val s = vm.settings
+    val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) vm.exportBackup(uri)
+    }
+    val importFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) vm.importBackup(uri)
+    }
+    Section(stringResource(R.string.backup_title)) {
+        Hint(stringResource(R.string.backup_hint))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = {
+                val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.ROOT).format(java.util.Date())
+                exportFile.launch("repisa-copia-$date.json")
+            }) { Text(stringResource(R.string.backup_export)) }
+            OutlinedButton(onClick = { importFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) {
+                Text(stringResource(R.string.backup_import), color = Color.White)
+            }
+        }
+    }
+    Section(stringResource(R.string.updates_title)) {
+        Text("Repisa v${com.repisa.app.BuildConfig.VERSION_NAME}", color = Color.White)
+        var auto by remember { mutableStateOf(s.checkUpdates) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.updates_auto), color = Color.White)
+                Hint(stringResource(R.string.updates_hint))
+            }
+            Switch(checked = auto, onCheckedChange = { auto = it; s.checkUpdates = it })
+        }
+        OutlinedButton(onClick = { vm.checkForUpdate(quiet = false) }) { Text(stringResource(R.string.updates_check_now), color = Color.White) }
+        HorizontalDivider(color = Color(0x33FFFFFF))
+        Hint(stringResource(R.string.license_hint))
     }
 }

@@ -2,6 +2,19 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.12.0]
+
+- **Copia de seguridad**: Ajustes → Copia de seguridad y versión → *Exportar mis datos* / *Importar una copia*.
+  Guarda calificaciones, tiempo a mano, favoritos, juegos quitados, copias preferentes, carátulas elegidas, datos
+  editados y ajustes. Nunca incluye sesiones, claves ni carpetas.
+- **Aviso de versiones nuevas**: al abrir, Repisa mira las releases de GitHub; si hay una nueva muestra sus notas
+  del parche y, con *Actualizar*, la descarga y abre el instalador de Android. *Más tarde* / *Omitir esta versión*.
+  Se puede desactivar o buscar a mano en Ajustes. (Necesita que el repositorio sea público.)
+- **Sesiones de Steam/Epic y claves cifradas** con el almacén seguro de Android; fuera de las copias de Google.
+- **Mando**: resaltado dorado claro en todos los botones, chips, opciones y ventanas; los chips de plataforma
+  (Todo, Steam, Epic, Emuladores) se ven dorados con borde blanco al seleccionarlos.
+- **Licencia GNU GPL v3**.
+
 ## [0.11.4]
 
 - **Corregir el tiempo jugado**: Ajustes → Tiempo de juego → «Al escribir el tiempo de un juego a mano»:

@@ -119,6 +119,11 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
     val snackbar = remember { SnackbarHostState() }
     val message by vm.message.collectAsState()
 
+    // Al abrir: ¿hay una versión nueva de Repisa? (como mucho cada 6 h; se puede desactivar en Ajustes)
+    LaunchedEffect(Unit) { vm.checkForUpdate(quiet = true) }
+    val update by vm.update.collectAsState()
+    val updateProgress by vm.updateProgress.collectAsState()
+
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); vm.message.value = null }
     }
@@ -159,5 +164,7 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
             selected?.let { DetailScreen(it, vm, onClose = { vm.selectedId.value = null }) }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp))
+        update?.let { r -> com.repisa.app.ui.UpdateDialog(r, updateProgress, onUpdate = { vm.installUpdate() },
+            onLater = { vm.update.value = null }, onSkip = { vm.skipUpdate() }) }
     }
 }

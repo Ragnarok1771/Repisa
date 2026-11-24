@@ -10,8 +10,38 @@ class Settings(context: Context) {
     private fun str(key: String) = prefs.getString(key, null)?.takeIf { it.isNotBlank() }
     private fun put(key: String, value: String?) = prefs.edit { if (value == null) remove(key) else putString(key, value) }
 
+    /** Datos sensibles: cifrados con el almacén seguro de Android (ver [SecureStore]). */
+    private val secure = SecureStore(context)
+
+    private val secretCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    private fun secret(key: String): String? {
+        secretCache[key]?.let { return it.ifEmpty { null } }
+        secure.get(key)?.takeIf { it.isNotBlank() }?.let { secretCache[key] = it; return it }
+        // Versiones anteriores los guardaban sin cifrar: se pasan al almacén cifrado y se borran de aquí.
+        val old = str(key) ?: return null
+        runCatching { secure.put(key, old) }.onSuccess { prefs.edit { remove(key) } }
+        return old
+    }
+
+    private fun putSecret(key: String, value: String?) {
+        secretCache[key] = value.orEmpty()
+        runCatching { secure.put(key, value) }.onFailure { put(key, value); return }
+        prefs.edit { remove(key) }
+    }
+
+    /** Claves de las preferencias que nunca salen de la app (ni en la copia de seguridad de Repisa). */
+    companion object {
+        val SECRET_KEYS = setOf("steam_key", "epic_access", "epic_refresh", "sgdb_key", "ra_api_key")
+        /** Carpetas: los permisos de Android no sobreviven a reinstalar, así que no se exportan. */
+        val DEVICE_KEYS = setOf("rom_folders", "esde_folder", "ra_folder", "cocoon_folder", "session_game", "session_pkg",
+            "session_start", "last_auto_sync", "frontend_report", "cover_pass", "last_update_check")
+    }
+
+    val prefsForBackup: android.content.SharedPreferences get() = prefs
+
     // --- Steam ---
-    var steamApiKey: String? get() = str("steam_key"); set(v) = put("steam_key", v?.trim())
+    var steamApiKey: String? get() = secret("steam_key"); set(v) = putSecret("steam_key", v?.trim())
     /** Lo que escribió el usuario: SteamID64, nombre personalizado o URL del perfil. */
     var steamUser: String? get() = str("steam_user"); set(v) = put("steam_user", v?.trim())
 
@@ -21,8 +51,8 @@ class Settings(context: Context) {
     val steamConfigured: Boolean get() = steamLinkedId != null || (steamApiKey != null && steamUser != null)
 
     // --- Epic ---
-    var epicAccessToken: String? get() = str("epic_access"); set(v) = put("epic_access", v)
-    var epicRefreshToken: String? get() = str("epic_refresh"); set(v) = put("epic_refresh", v)
+    var epicAccessToken: String? get() = secret("epic_access"); set(v) = putSecret("epic_access", v)
+    var epicRefreshToken: String? get() = secret("epic_refresh"); set(v) = putSecret("epic_refresh", v)
     var epicAccountId: String? get() = str("epic_account"); set(v) = put("epic_account", v)
     var epicDisplayName: String? get() = str("epic_name"); set(v) = put("epic_name", v)
     /** Cliente de Epic con el que se obtuvo la sesión: "launcher" (lanzador) o "device" (vinculación con código). */
@@ -48,6 +78,15 @@ class Settings(context: Context) {
     var manualTimeIsTotal: Boolean
         get() = prefs.getBoolean("manual_time_total", false)
         set(v) = prefs.edit { putBoolean("manual_time_total", v) }
+    /** Buscar versiones nuevas de Repisa al abrir la app. */
+    var checkUpdates: Boolean
+        get() = prefs.getBoolean("check_updates", true)
+        set(v) = prefs.edit { putBoolean("check_updates", v) }
+    var lastUpdateCheck: Long
+        get() = prefs.getLong("last_update_check", 0)
+        set(v) = prefs.edit { putLong("last_update_check", v) }
+    /** Versión que el usuario pidió no volver a avisar. */
+    var skippedVersion: String? get() = str("skipped_version"); set(v) = put("skipped_version", v)
     /** Juegos que el usuario quitó de la repisa (no vuelven al sincronizar). */
     var hiddenGames: Set<String>
         get() = prefs.getStringSet("hidden_games", emptySet()) ?: emptySet()
@@ -63,7 +102,7 @@ class Settings(context: Context) {
 
     // --- Metadatos ---
     /** Clave gratuita de https://www.steamgriddb.com/profile/preferences/api (buscador de carátulas). */
-    var steamGridDbKey: String? get() = str("sgdb_key"); set(v) = put("sgdb_key", v?.trim())
+    var steamGridDbKey: String? get() = secret("sgdb_key"); set(v) = putSecret("sgdb_key", v?.trim())
     /** Última "pasada" automática de búsqueda de carátulas que faltan (ver LibraryViewModel.COVER_PASS). */
     var coverPass: Int
         get() = prefs.getInt("cover_pass", 0)

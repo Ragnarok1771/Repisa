@@ -49,6 +49,23 @@ private val typography = Typography().run {
     )
 }
 
+/**
+ * Resaltado de foco y pulsación de todos los componentes (chips, botones, casillas, opciones de las ventanas):
+ * dorado claro y bien visible con el mando. El de Material por defecto oscurecía apenas y no se distinguía.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+private val focusRipple = androidx.compose.material3.RippleConfiguration(
+    color = Color(0xFFFFD27A),
+    rippleAlpha = androidx.compose.material.ripple.RippleAlpha(
+        draggedAlpha = 0.24f, focusedAlpha = 0.42f, hoveredAlpha = 0.16f, pressedAlpha = 0.32f,
+    ),
+)
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun RepisaTheme(content: @Composable () -> Unit) =
-    MaterialTheme(colorScheme = colors, typography = typography, content = content)
+    MaterialTheme(colorScheme = colors, typography = typography) {
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.material3.LocalRippleConfiguration provides focusRipple, content = content,
+        )
+    }
