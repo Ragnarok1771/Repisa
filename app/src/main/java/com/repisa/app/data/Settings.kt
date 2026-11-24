@@ -78,6 +78,10 @@ class Settings(context: Context) {
     var manualTimeIsTotal: Boolean
         get() = prefs.getBoolean("manual_time_total", false)
         set(v) = prefs.edit { putBoolean("manual_time_total", v) }
+    /** Al jugar, panel del juego en la pantalla de abajo (salvo DS/3DS). */
+    var companionPanel: Boolean
+        get() = prefs.getBoolean("companion_panel", true)
+        set(v) = prefs.edit { putBoolean("companion_panel", v) }
     /** Buscar versiones nuevas de Repisa al abrir la app. */
     var checkUpdates: Boolean
         get() = prefs.getBoolean("check_updates", true)

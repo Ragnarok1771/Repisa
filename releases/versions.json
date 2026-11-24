@@ -62,5 +62,9 @@
   {
     "version": "0.11.4",
     "commit": "4aec5f598d277dd7cd65af7f1a4808e5a1f44b37"
+  },
+  {
+    "version": "0.12.0",
+    "commit": "HEAD"
   }
 ]

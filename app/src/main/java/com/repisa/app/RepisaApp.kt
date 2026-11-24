@@ -13,7 +13,17 @@ import coil3.request.crossfade
 import com.repisa.app.data.Http
 import com.repisa.app.i18n.L10n
 
-class RepisaApp : Application(), SingletonImageLoader.Factory {
+class RepisaApp : Application(), SingletonImageLoader.Factory, androidx.lifecycle.ViewModelStoreOwner {
+    /**
+     * Una sola biblioteca para toda la app: la repisa y el panel de la pantalla de abajo durante la partida
+     * (otra actividad) comparten los mismos datos y no se pisan al guardar.
+     */
+    override val viewModelStore = androidx.lifecycle.ViewModelStore()
+
+    fun library(): com.repisa.app.ui.LibraryViewModel = androidx.lifecycle.ViewModelProvider(
+        this, androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(this),
+    )[com.repisa.app.ui.LibraryViewModel::class.java]
+
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(L10n.wrap(base))
     }

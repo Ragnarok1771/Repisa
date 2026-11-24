@@ -75,6 +75,7 @@ import java.util.Date
 fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     var editing by remember { mutableStateOf(false) }
     var hiding by remember { mutableStateOf(false) }
+    var editingNotes by remember { mutableStateOf(false) }
     var resetting by remember { mutableStateOf(false) }
     var searchingCover by remember { mutableStateOf(false) }
     var rating by remember { mutableStateOf(false) }
@@ -140,6 +141,7 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                     Stat(stringResource(R.string.stat_studio), game.developer ?: "—")
                     game.publisher?.takeIf { it != game.developer }?.let { Stat(stringResource(R.string.stat_publisher), it) }
                     Stat(stringResource(R.string.stat_year), game.releaseYear?.toString() ?: "—")
+                    game.notes?.takeIf { it.isNotBlank() }?.let { Stat(stringResource(R.string.notes), it) }
                     game.romName?.let { Stat(stringResource(R.string.stat_file), it) }
                     if (game.source == com.repisa.app.model.Source.EMULATOR) Stat(stringResource(R.string.stat_origin), stringResource(when {
                         game.romUri != null -> R.string.origin_rom_folder
@@ -175,6 +177,9 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         if (game.copyIds.isNotEmpty()) OutlinedButton(onClick = { showCopies = true }) {
                             Text("⧉ " + stringResource(R.string.copies_button, game.copyIds.size + 1), color = Color.White)
                         }
+                        OutlinedButton(onClick = { editingNotes = true }) {
+                            Text("✎ " + stringResource(R.string.notes), color = Color.White)
+                        }
                         OutlinedButton(onClick = { editing = true }) {
                             Icon(Icons.Default.Edit, null, tint = Color.White); Text(" " + stringResource(R.string.edit_data), color = Color.White)
                         }
@@ -193,6 +198,9 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     if (showCopies) CopiesDialog(game, vm, onDismiss = { showCopies = false })
     if (searchingCover) CoverSearchDialog(game, vm, onDismiss = { searchingCover = false })
     if (editing) EditDialog(game, vm.settings.manualTimeIsTotal, onDismiss = { editing = false }) { vm.updateGame(it); editing = false }
+    if (editingNotes) com.repisa.app.NotesDialog(game.notes.orEmpty(), onDismiss = { editingNotes = false }) {
+        vm.updateGame(game.copy(notes = it.ifBlank { null })); editingNotes = false
+    }
     if (resetting) androidx.compose.material3.AlertDialog(
         onDismissRequest = { resetting = false },
         title = { Text(stringResource(R.string.reset_time)) },

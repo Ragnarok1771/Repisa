@@ -32,6 +32,8 @@ data class Game(
     val trackedMinutes: Int = 0,
     /** Tiempo jugado fuera de Repisa que el usuario escribe a mano (se suma al resto). */
     val manualMinutes: Int = 0,
+    /** Notas personales del juego (dónde lo dejaste, trucos, lo que quieras). */
+    val notes: String? = null,
     /** Fecha (epoch ms) de la última partida. */
     val lastPlayed: Long? = null,
     val coverUrl: String? = null,

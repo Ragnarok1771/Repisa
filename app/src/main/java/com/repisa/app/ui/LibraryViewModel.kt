@@ -448,6 +448,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             favorite = current.favorite,
             trackedMinutes = current.trackedMinutes,
             manualMinutes = current.manualMinutes,
+            notes = current.notes,
             coverUrl = if (current.customCover) current.coverUrl else enriched.coverUrl,
             customCover = current.customCover,
             rating = current.rating,
@@ -532,11 +533,40 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Juego que se está jugando con el panel de la pantalla de abajo abierto (null = ninguno). */
+    val playing = MutableStateFlow<String?>(null)
+
     fun play(game: Game) {
-        launcher.launch(game)?.let { message.value = it }
+        val app = getApplication<android.app.Application>()
+        // DS y 3DS usan las dos pantallas: para ellos no hay panel.
+        val companion = settings.companionPanel && game.consoleId !in setOf("nds", "3ds")
+        val bottom = if (companion) secondDisplayId(app) else null
+        if (bottom == null) {
+            launcher.launch(game)?.let { message.value = it }
+            return
+        }
+        // Panel en la pantalla de abajo y el juego en la de arriba: las dos siguen activas a la vez.
+        playing.value = game.id
+        runCatching {
+            app.startActivity(
+                android.content.Intent(app, com.repisa.app.CompanionActivity::class.java)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK),
+                android.app.ActivityOptions.makeBasic().setLaunchDisplayId(bottom).toBundle(),
+            )
+        }
+        val top = android.app.ActivityOptions.makeBasic().setLaunchDisplayId(android.view.Display.DEFAULT_DISPLAY).toBundle()
+        launcher.launch(game, top)?.let { message.value = it; playing.value = null }
+    }
+
+    /** La pantalla secundaria (la de abajo en la AYN Thor), si hay. */
+    private fun secondDisplayId(context: android.content.Context): Int? {
+        val dm = context.getSystemService(android.content.Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager
+        val candidates = dm.getDisplays(android.hardware.display.DisplayManager.DISPLAY_CATEGORY_PRESENTATION).toList() + dm.displays.toList()
+        return candidates.firstOrNull { it.displayId != android.view.Display.DEFAULT_DISPLAY && it.state != android.view.Display.STATE_OFF }?.displayId
     }
 
     fun onResume() = viewModelScope.launch {
+        playing.value = null // de vuelta en Repisa: se cierra el panel de la partida
         // Si Android cerró Repisa mientras jugabas, hay que esperar a cargar la biblioteca
         // antes de anotar la sesión; si no, se perdería.
         libraryLoaded.await()

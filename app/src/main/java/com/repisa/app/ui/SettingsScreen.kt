@@ -401,6 +401,14 @@ private fun DisplayPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
             }
             Switch(checked = s.secondScreen, onCheckedChange = { s.secondScreen = it; changed() })
         }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.companion_setting), color = Color.White)
+                Hint(stringResource(R.string.companion_setting_hint))
+            }
+            var comp by remember { mutableStateOf(s.companionPanel) }
+            Switch(checked = comp, onCheckedChange = { comp = it; s.companionPanel = it })
+        }
         HorizontalDivider(color = Color(0x33FFFFFF))
         // El valor se ve mientras se arrastra; se guarda al soltar.
         var h by remember { mutableFloatStateOf(s.shelfHeightDp.toFloat()) }

@@ -5,7 +5,6 @@ import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -45,7 +44,7 @@ import com.repisa.app.ui.SettingsScreen
 import com.repisa.app.ui.ShelfScreen
 
 class MainActivity : ComponentActivity() {
-    private val vm: LibraryViewModel by viewModels()
+    private val vm: LibraryViewModel by lazy { (application as RepisaApp).library() }
     private lateinit var secondScreen: SecondScreen
 
     override fun attachBaseContext(newBase: android.content.Context) {

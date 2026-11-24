@@ -44,7 +44,7 @@ class Launcher(private val context: Context, private val settings: Settings) {
         consoleIds.mapNotNull { id -> emulatorFor(id)?.let { id to it } }.toMap()
 
     /** Lanza el juego directamente en su emulador. Devuelve un mensaje de error o null si todo fue bien. */
-    fun launch(g: Game): String? {
+    fun launch(g: Game, options: android.os.Bundle? = null): String? {
         val pkg = emulatorFor(g.consoleId)
         val intent: Intent = when {
             // Juego de una playlist de RetroArch: arrancar RetroArch con su core.
@@ -57,7 +57,7 @@ class Launcher(private val context: Context, private val settings: Settings) {
         }
         return try {
             settings.pendingSessionStart = System.currentTimeMillis()
-            context.startActivity(intent)
+            context.startActivity(intent, options)
             settings.pendingSessionGame = g.id
             settings.pendingSessionPackage = intent.component?.packageName ?: intent.`package` ?: pkg
             null

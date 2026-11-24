@@ -606,6 +606,27 @@ s("license_hint", "Repisa is free software under the GNU GPL v3 licence: you can
   "Repisa è software libero con licenza GNU GPL v3: puoi usarlo, studiarlo, condividerlo e modificarlo; le versioni modificate vanno condivise con la stessa licenza.",
   "O Repisa é software livre sob a licença GNU GPL v3: você pode usar, estudar, compartilhar e modificar; versões modificadas também devem ser compartilhadas com a mesma licença.",
   ptPT="O Repisa é software livre com a licença GNU GPL v3: pode usá-lo, estudá-lo, partilhá-lo e modificá-lo; as versões modificadas também têm de ser partilhadas com a mesma licença.")
+s("companion_session", "this session", "esta sesión", "cette session", "diese Sitzung", "questa sessione", "esta sessão")
+s("companion_close", "Close panel", "Cerrar panel", "Fermer le panneau", "Panel schließen", "Chiudi pannello", "Fechar painel")
+s("notes", "Notes", "Notas", "Notes", "Notizen", "Note", "Notas")
+s("notes_empty", "No notes yet. Write where you left off, tips, anything.", "Sin notas. Apunta dónde lo dejaste, pistas, lo que quieras.",
+  "Pas encore de notes. Notez où vous en êtes, des astuces…", "Noch keine Notizen. Notiere, wo du aufgehört hast, Tipps…",
+  "Nessuna nota. Scrivi dove eri rimasto, consigli, quello che vuoi.", "Sem notas. Anote onde parou, dicas, o que quiser.")
+s("notes_hint", "Where you left off, what to do next, tips…", "Dónde lo dejaste, qué hacer después, pistas…",
+  "Où vous en êtes, la suite, des astuces…", "Wo du aufgehört hast, was als Nächstes kommt, Tipps…",
+  "Dove eri rimasto, cosa fare dopo, consigli…", "Onde parou, o que fazer depois, dicas…")
+s("companion_setting", "Game panel on the bottom screen while playing", "Panel del juego en la pantalla de abajo al jugar",
+  "Panneau du jeu sur l’écran du bas pendant la partie", "Spiel-Panel auf dem unteren Bildschirm beim Spielen",
+  "Pannello del gioco sullo schermo inferiore mentre giochi", "Painel do jogo na tela de baixo ao jogar",
+  ptPT="Painel do jogo no ecrã de baixo ao jogar")
+s("companion_setting_hint",
+  "When you press Play, the game opens on the top screen and the bottom one keeps Repisa with a live timer, the clock, rating, favourite and notes. Not for DS and 3DS (they use both screens).",
+  "Al pulsar Jugar, el juego se abre arriba y abajo se queda Repisa con el tiempo de la sesión en vivo, la hora, calificar, favorito y notas. No en DS ni 3DS (usan las dos pantallas).",
+  "Avec Jouer, le jeu s’ouvre en haut et l’écran du bas garde Repisa avec le chrono, l’heure, la note, favori et notes. Pas pour DS et 3DS (deux écrans).",
+  "Bei Spielen öffnet sich das Spiel oben, unten bleibt Repisa mit Live-Timer, Uhr, Bewertung, Favorit und Notizen. Nicht bei DS und 3DS (beide Bildschirme).",
+  "Con Gioca il gioco si apre sopra e sotto resta Repisa con cronometro, ora, valutazione, preferito e note. Non per DS e 3DS (usano entrambi gli schermi).",
+  "Ao tocar em Jogar, o jogo abre em cima e embaixo fica o Repisa com o tempo da sessão, a hora, avaliar, favorito e notas. Não no DS nem no 3DS (usam as duas telas).",
+  ptPT="Ao tocar em Jogar, o jogo abre em cima e em baixo fica o Repisa com o tempo da sessão, a hora, avaliar, favorito e notas. Não no DS nem no 3DS (usam os dois ecrãs).")
 s("diag_copy", "Copy diagnostics", "Copiar diagnóstico", "Copier le diagnostic", "Diagnose kopieren", "Copia diagnostica", "Copiar diagnóstico")
 s("diag_copied", "Copied ✓", "Copiado ✓", "Copié ✓", "Kopiert ✓", "Copiato ✓", "Copiado ✓")
 s("diag_share", "Share diagnostics", "Compartir diagnóstico", "Partager le diagnostic", "Diagnose teilen", "Condividi diagnostica", "Compartilhar diagnóstico",

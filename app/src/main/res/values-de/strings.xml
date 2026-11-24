@@ -216,6 +216,13 @@
     <string name="update_allow_install">Erlaube Repisa, Apps zu installieren (Android öffnet die Einstellung), und tippe dann erneut auf Aktualisieren.</string>
     <string name="update_failed">Download fehlgeschlagen: %1$s</string>
     <string name="license_hint">Repisa ist freie Software unter der GNU GPL v3: Du darfst sie nutzen, untersuchen, teilen und ändern; geänderte Versionen müssen unter derselben Lizenz geteilt werden.</string>
+    <string name="companion_session">diese Sitzung</string>
+    <string name="companion_close">Panel schließen</string>
+    <string name="notes">Notizen</string>
+    <string name="notes_empty">Noch keine Notizen. Notiere, wo du aufgehört hast, Tipps…</string>
+    <string name="notes_hint">Wo du aufgehört hast, was als Nächstes kommt, Tipps…</string>
+    <string name="companion_setting">Spiel-Panel auf dem unteren Bildschirm beim Spielen</string>
+    <string name="companion_setting_hint">Bei Spielen öffnet sich das Spiel oben, unten bleibt Repisa mit Live-Timer, Uhr, Bewertung, Favorit und Notizen. Nicht bei DS und 3DS (beide Bildschirme).</string>
     <string name="diag_copy">Diagnose kopieren</string>
     <string name="diag_copied">Kopiert ✓</string>
     <string name="diag_share">Diagnose teilen</string>

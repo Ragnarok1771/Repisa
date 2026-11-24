@@ -13,6 +13,12 @@ Cada versión se publica en la pestaña **Releases** con su APK listo para insta
 - **Sesiones de Steam/Epic y claves cifradas** con el almacén seguro de Android; fuera de las copias de Google.
 - **Mando**: resaltado dorado claro en todos los botones, chips, opciones y ventanas; los chips de plataforma
   (Todo, Steam, Epic, Emuladores) se ven dorados con borde blanco al seleccionarlos.
+- **Panel del juego en la pantalla de abajo mientras juegas**: al pulsar *Jugar*, el juego se abre arriba y abajo
+  se queda Repisa con el tiempo de la sesión en vivo, la hora, Mi nota/Metacritic/HowLongToBeat, *Calificar*,
+  *Favorito* y *Notas*. Se cierra solo al volver a Repisa. No en DS ni 3DS (usan las dos pantallas). Se puede
+  desactivar en Ajustes → Pantalla.
+- **Notas personales** por juego (dónde lo dejaste, pistas…): botón *Notas* en la ficha y en el panel; entran en la
+  copia de seguridad.
 - **Licencia GNU GPL v3**.
 
 ## [0.11.4]

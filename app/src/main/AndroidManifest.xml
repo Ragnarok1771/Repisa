@@ -50,6 +50,16 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Panel de la partida en la pantalla de abajo (se abre en la pantalla secundaria al jugar). -->
+        <activity
+            android:name=".CompanionActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity="com.repisa.app.companion"
+            android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboardHidden|keyboard|navigation"
+            android:theme="@style/Theme.Repisa" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files"
