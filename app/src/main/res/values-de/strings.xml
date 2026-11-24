@@ -276,6 +276,8 @@
     <string name="ach_hidden">Versteckter Erfolg</string>
     <string name="ach_manual">selbst abgehakt</string>
     <string name="ach_loading">Suche Erfolge…</string>
+    <string name="ach_retry">Neu laden</string>
+    <string name="ach_error">Erfolge konnten nicht abgerufen werden (Dienst evtl. überlastet). Gleich „Neu laden“ antippen.</string>
     <string name="ach_none">Keine Erfolge für dieses Spiel gefunden.</string>
     <string name="ach_no_ra_system">%1$s hat keine Erfolge bei RetroAchievements. Unten findest du die Repisa-Erfolge.</string>
     <string name="ach_link_ra">Verknüpfe RetroAchievements in den Einstellungen, um die Erfolge zu sehen.</string>
@@ -342,7 +344,7 @@
     <string name="collection_default">Meine Sammlung</string>
     <string name="collection">Sammlung</string>
     <string name="collections">Sammlungen</string>
-    <string name="collection_new">Neue Sammlung…</string>
+    <string name="collection_new">Neue Sammlung</string>
     <string name="collection_rename">Umbenennen</string>
     <string name="collection_hint">z. B. Ausprobieren, Priorität, Mit Freunden…</string>
     <string name="collections_empty">Noch keine Sammlungen. Erstelle eine: Sie erscheint als eigenes Regal oben.</string>
@@ -351,6 +353,18 @@
     <string name="select_many">Auswählen</string>
     <string name="select_all">Alle auswählen</string>
     <string name="selected_count">%1$d ausgewählt · Cover antippen zum Hinzufügen/Entfernen</string>
+    <string name="menu_collections">Sammlungen</string>
+    <string name="menu_collections_sub">Eigene Regale: ansehen, hinzufügen, entfernen, löschen</string>
+    <string name="collection_add_games">Spiele hinzufügen</string>
+    <string name="collection_remove_from">Aus Sammlung entfernen</string>
+    <string name="collection_delete_confirm">„%1$s“ löschen? Die Spiele bleiben in deiner Bibliothek.</string>
+    <string name="collection_no_games">Noch keine Spiele: „Spiele hinzufügen“ verwenden.</string>
+    <string name="collection_pick_title">Spiele in „%1$s“</string>
+    <string name="msg_removed_collection">%1$d Spiel(e) aus „%2$s“ entfernt</string>
+    <string name="status_order">Reihenfolge der Regale nach Status</string>
+    <string name="status_order_hint">Gilt beim Gruppieren nach Status. Mit ▲ ▼ verschieben.</string>
+    <string name="status_order_reset">Reihenfolge zurücksetzen</string>
+    <string name="shelf_fold_hint">Tipp: Tippe auf das goldene Schild eines Regals, um es ein- oder auszuklappen.</string>
     <string name="status_clear">Status entfernen (automatisch)</string>
     <string name="random_platform">Plattform</string>
     <string name="random_any_platform">Alle Plattformen</string>

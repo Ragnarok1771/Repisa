@@ -32,7 +32,7 @@ class Settings(context: Context) {
 
     /** Claves de las preferencias que nunca salen de la app (ni en la copia de seguridad de Repisa). */
     companion object {
-        val SECRET_KEYS = setOf("steam_key", "epic_access", "epic_refresh", "sgdb_key", "ra_api_key")
+        val SECRET_KEYS = setOf("steam_key", "steam_refresh", "epic_access", "epic_refresh", "sgdb_key", "ra_api_key")
         /** Carpetas: los permisos de Android no sobreviven a reinstalar, así que no se exportan. */
         val DEVICE_KEYS = setOf("rom_folders", "esde_folder", "ra_folder", "cocoon_folder", "session_game", "session_pkg",
             "session_start", "last_auto_sync", "frontend_report", "cover_pass", "facts_pass", "ach_pass", "last_update_check", "onboarding_step")
@@ -48,6 +48,8 @@ class Settings(context: Context) {
     /** Cuenta vinculada iniciando sesión (sin clave de API). */
     var steamLinkedId: String? get() = str("steam_linked_id"); set(v) = put("steam_linked_id", v)
     var steamLinkedName: String? get() = str("steam_linked_name"); set(v) = put("steam_linked_name", v)
+    /** Copia del pase largo de renovación de la sesión web de Steam (cifrada). */
+    var steamRefreshCookie: String? get() = secret("steam_refresh"); set(v) = putSecret("steam_refresh", v)
     val steamConfigured: Boolean get() = steamLinkedId != null || (steamApiKey != null && steamUser != null)
 
     // --- Epic ---
@@ -106,6 +108,12 @@ class Settings(context: Context) {
     var continueShelf: Boolean
         get() = prefs.getBoolean("continue_shelf", true)
         set(v) = prefs.edit { putBoolean("continue_shelf", v) }
+    /** Orden de las repisas por estado («PLAYING,BACKLOG,...»). */
+    var statusOrder: String? get() = str("status_order"); set(v) = put("status_order", v)
+    /** Repisas plegadas (solo se ve su placa): «continue», «col:<id>», «grp:<agrupación>:<título>». */
+    var collapsedShelves: Set<String>
+        get() = prefs.getStringSet("collapsed_shelves", emptySet()) ?: emptySet()
+        set(v) = prefs.edit { putStringSet("collapsed_shelves", v) }
     /** Cinta de estado en la esquina de las cajas. */
     var showStatusOnBoxes: Boolean
         get() = prefs.getBoolean("status_on_boxes", true)

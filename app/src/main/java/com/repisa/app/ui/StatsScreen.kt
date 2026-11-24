@@ -72,7 +72,7 @@ fun StatsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
                 s.avgRating?.let { Tile(scale.format(it), stringResource(R.string.stats_avg_rating, s.rated)) }
             }
             Card(stringResource(R.string.stats_by_status)) {
-                PlayStatus.entries.forEach { st ->
+                com.repisa.app.model.StatusRules.order.forEach { st ->
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 3.dp)) {
                         Box(Modifier.size(12.dp).background(Color(st.color), CircleShape))
                         Text("  ${st.icon} ${st.label}", color = Ink, fontSize = 14.sp, modifier = Modifier.weight(1f))

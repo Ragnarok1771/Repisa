@@ -2,6 +2,47 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.14.1]
+
+**Steam: la sesión ya no caduca** ⚠️
+- El pase de sesión que da Steam dura solo unas horas. Antes, al caducar salía «La sesión de Steam venció» y había que
+  volver a vincular. Ahora Repisa **lo renueva sola** con el pase largo de Steam (el de «recordarme», que dura meses),
+  igual que hace un navegador: primero de forma directa y, si no, abriendo la tienda de Steam por detrás sin que lo veas.
+- Repisa guarda una copia cifrada de ese pase largo, por si el navegador interno perdiera sus cookies.
+- **Volver a vincular** funcionaba mal: una cookie vieja y caducada hacía que la ventana de Steam se cerrara sola antes
+  de poder iniciar sesión, y salía «Steam no confirmó la sesión». Ahora la ventana solo se cierra con una sesión buena.
+- El token se obtiene por tres caminos distintos (si Steam cambia uno, quedan los otros), y si algo falla el mensaje
+  dice el motivo.
+- **Epic**: revisado. Su renovación ya era automática; ahora además nunca se renueva dos veces a la vez (eso podía
+  gastar el pase de renovación y obligar a vincular de nuevo).
+- Si ya te salió el aviso: vuelve a vincular Steam una vez en Ajustes; a partir de ahí se mantiene sola.
+
+**Repisas**
+- **Repisas por estado** en este orden: Jugando · Pendiente · Terminado · 100 % · Abandonado · No aplica. Y puedes
+  cambiarlo en **Ajustes → Pantalla → Orden de las repisas por estado** (▲ ▼ y «Restaurar orden»). Las estadísticas y
+  el menú de estado usan el mismo orden.
+- **Plegar repisas**: toca (o pulsa con el mando) la **placa dorada** de una repisa —«Seguir jugando», tus colecciones o
+  cualquier otra— y se queda solo la placa con ▸; vuelve a tocarla para desplegarla. Se recuerda al volver a abrir.
+- Fuera el chip «☑ Seleccionar»: la selección múltiple se empieza **manteniendo pulsada una carátula**.
+
+**Colecciones**
+- Nueva página **Ajustes → 📂 Colecciones**: cada colección con sus juegos, **＋ Añadir juegos** (lista con casillas y
+  buscador, para marcar y desmarcar varios), **✕ Quitar** un juego, **Renombrar** y **Borrar** (pide confirmación;
+  los juegos no se borran). Ahí también se crean colecciones nuevas, aunque estén vacías (como «Persona»).
+- En la barra de selección, **📂 Colección ▾** ahora también tiene **Quitar de colección** (solo muestra las colecciones
+  en las que está alguno de los juegos elegidos).
+
+**Logros**
+- Juegos de Epic con nombre de edición (p. ej. *Batman Arkham City Game of the Year Edition*): se busca el juego en
+  Steam con el nombre entero y, si no sale, con lo esencial («Batman Arkham City»); las demos ya no cuentan.
+- Si Steam no responde (está saturado), ya no se dice «no se encontraron logros»: sale un aviso y el botón
+  **↻ Recargar** (también arriba en la ventana de logros, para pedirlos de nuevo cuando quieras).
+
+**¿A qué juego? 🎲**
+- Gira **más tiempo** (unos 10–12 s) antes de pararse.
+- Arreglado el fallo de las portadas generadas: el texto de la franja de la consola («SWITCH», «PlayStation 2»…)
+  ya no se mueve de lado a lado mientras gira, y siempre cabe centrado en la franja.
+
 ## [0.14.0]
 
 **Estados**
@@ -10,7 +51,7 @@ Cada versión se publica en la pestaña **Releases** con su APK listo para insta
 - **Estado automático** (Ajustes → Pantalla, activado): los juegos que no hayas marcado son *Pendiente* si no tienen
   tiempo jugado y *Jugando* si lo tienen. Un *Pendiente* con horas nuevas (jugado aquí, en el PC, en Steam o en Epic)
   pasa solo a *Jugando*.
-- **Selección múltiple**: mantén pulsada una carátula (o toca el chip «☑ Seleccionar»), toca las demás y usa
+- **Selección múltiple**: mantén pulsada una carátula, toca las demás y usa
   *Estado ▾*, *Colección ▾* o *Seleccionar todo*. Con mando: A o Y marcan; B sale.
 
 **Colecciones propias** (como las de Steam: «Probar», «Prioridad»…) — se crean desde la selección o desde la ficha

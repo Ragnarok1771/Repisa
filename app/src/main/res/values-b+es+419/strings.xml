@@ -276,6 +276,8 @@
     <string name="ach_hidden">Logro oculto</string>
     <string name="ach_manual">marcado a mano</string>
     <string name="ach_loading">Buscando logros…</string>
+    <string name="ach_retry">Recargar</string>
+    <string name="ach_error">No se pudieron consultar los logros (el servicio puede estar saturado). Pulsa «Recargar» en un momento.</string>
     <string name="ach_none">No se encontraron logros para este juego.</string>
     <string name="ach_no_ra_system">%1$s no tiene logros en RetroAchievements. Tienes los logros de Repisa aquí abajo.</string>
     <string name="ach_link_ra">Vincula RetroAchievements en Ajustes para ver los logros de este juego.</string>
@@ -342,7 +344,7 @@
     <string name="collection_default">Mi colección</string>
     <string name="collection">Colección</string>
     <string name="collections">Colecciones</string>
-    <string name="collection_new">Nueva colección…</string>
+    <string name="collection_new">Nueva colección</string>
     <string name="collection_rename">Renombrar</string>
     <string name="collection_hint">p. ej. Probar, Prioridad, Con amigos…</string>
     <string name="collections_empty">Aún no tienes colecciones. Crea una: aparece como una repisa propia arriba del todo.</string>
@@ -351,6 +353,18 @@
     <string name="select_many">Seleccionar</string>
     <string name="select_all">Seleccionar todo</string>
     <string name="selected_count">%1$d seleccionados · toca carátulas para añadir o quitar</string>
+    <string name="menu_collections">Colecciones</string>
+    <string name="menu_collections_sub">Tus repisas propias: ver, añadir, quitar y borrar</string>
+    <string name="collection_add_games">Añadir juegos</string>
+    <string name="collection_remove_from">Quitar de colección</string>
+    <string name="collection_delete_confirm">¿Borrar «%1$s»? Sus juegos siguen en tu biblioteca.</string>
+    <string name="collection_no_games">Aún no tiene juegos: usa «Añadir juegos».</string>
+    <string name="collection_pick_title">Juegos de «%1$s»</string>
+    <string name="msg_removed_collection">%1$d juego(s) quitados de «%2$s»</string>
+    <string name="status_order">Orden de las repisas por estado</string>
+    <string name="status_order_hint">Se usa al agrupar por estado. Mueve cada uno con ▲ ▼.</string>
+    <string name="status_order_reset">Restaurar orden</string>
+    <string name="shelf_fold_hint">Truco: toca la placa dorada de una repisa para plegarla o desplegarla (se queda así).</string>
     <string name="status_clear">Quitar estado (automático)</string>
     <string name="random_platform">Plataforma</string>
     <string name="random_any_platform">Cualquier plataforma</string>

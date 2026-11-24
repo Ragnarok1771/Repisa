@@ -1,6 +1,17 @@
 package com.repisa.app.sources
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Base64
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import com.repisa.app.data.Settings
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
+import okhttp3.FormBody
+import java.net.URLDecoder
 import android.webkit.CookieManager
 import com.repisa.app.R
 import com.repisa.app.data.Http
@@ -248,31 +259,171 @@ class SteamSource private constructor(
 
 /**
  * Vinculación de la cuenta de Steam iniciando sesión en la web oficial (dentro de un WebView).
- * Con la sesión iniciada, la propia tienda entrega un token web de corta duración que sirve para
- * consultar la biblioteca; la contraseña nunca pasa por Repisa.
+ * La contraseña nunca pasa por Repisa: solo se guardan las cookies que deja Steam.
+ *
+ * La sesión de Steam tiene dos partes: un pase corto (cookie `steamLoginSecure`, dura horas) y un pase largo de
+ * renovación (cookie `steamRefresh_steam` de login.steampowered.com, dura meses). Cuando el corto caduca, Repisa lo
+ * renueva sola con el largo, igual que hace un navegador al volver a abrir la tienda; así no hay que volver a vincular.
  */
 object SteamLogin {
     const val LOGIN_URL = "https://store.steampowered.com/login/?redirectDir=account%2F"
     private const val STORE = "https://store.steampowered.com"
+    private const val LOGIN = "https://login.steampowered.com"
+    private const val REFRESH_COOKIE = "steamRefresh_steam"
+    private const val UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
 
-    /** true cuando el WebView ya tiene la cookie de sesión de Steam. */
+    private lateinit var appContext: Context
+    private val lock = Mutex()
+    @Volatile private var cached: String? = null
+
+    /** Último motivo por el que no se pudo obtener la sesión (para el mensaje de error). */
+    @Volatile var lastProblem: String? = null
+        private set
+
+    fun init(context: Context) { appContext = context.applicationContext }
+
+    private fun cookieValue(cookies: String?, name: String): String? =
+        cookies?.split(';')?.map { it.trim() }?.firstOrNull { it.startsWith("$name=") }?.substringAfter('=')?.takeIf { it.isNotBlank() }
+
+    private suspend fun cookies(url: String): String? = withContext(Dispatchers.Main) { CookieManager.getInstance().getCookie(url) }
+
+    /** true cuando el WebView ya tiene la cookie de sesión de Steam (aunque esté caducada). */
     fun isLoggedInWeb(): Boolean =
         CookieManager.getInstance().getCookie(STORE)?.contains("steamLoginSecure=") == true
 
-    /** Pide a la tienda el token web de la sesión. null si la sesión ya no es válida. */
-    suspend fun fetchWebToken(): String? {
-        val cookies = withContext(Dispatchers.Main) { CookieManager.getInstance().getCookie(STORE) } ?: return null
-        if (!cookies.contains("steamLoginSecure=")) return null
-        val req = Request.Builder().url("$STORE/pointssummary/ajaxgetasyncconfig").header("Cookie", cookies).build()
-        return runCatching { Http.getJson(req)["data"]["webapi_token"].str }.getOrNull()?.takeIf { it.isNotBlank() }
+    /** El pase corto que va dentro de `steamLoginSecure` («steamid||jwt»). */
+    private fun accessFromCookie(cookies: String?): String? =
+        cookieValue(cookies, "steamLoginSecure")?.let { URLDecoder.decode(it, "UTF-8") }?.substringAfter("||", "")?.takeIf { it.count { c -> c == '.' } == 2 }
+
+    private fun jwtPayload(token: String): JsonObject? = runCatching {
+        val json = String(Base64.decode(token.split('.')[1], Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP))
+        Http.json.parseToJsonElement(json) as JsonObject
+    }.getOrNull()
+
+    /** true si el token no caduca en los próximos 2 minutos (si no trae fecha, se da por bueno). */
+    private fun fresh(token: String): Boolean {
+        val exp = jwtPayload(token)?.get("exp").long ?: return true
+        return exp * 1000 > System.currentTimeMillis() + 120_000
     }
 
+    /** true si la sesión del WebView es válida ahora mismo (el pase corto no ha caducado). */
+    fun hasFreshWebSession(): Boolean =
+        accessFromCookie(CookieManager.getInstance().getCookie(STORE))?.let(::fresh) == true
+
     /** El token es un JWT; su campo "sub" es el SteamID64 de la cuenta. */
-    fun steamIdFromToken(token: String): String? = runCatching {
-        val payload = token.split('.')[1]
-        val json = String(Base64.decode(payload, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP))
-        (Http.json.parseToJsonElement(json) as JsonObject)["sub"].str
-    }.getOrNull()
+    fun steamIdFromToken(token: String): String? = jwtPayload(token)?.get("sub").str
+
+    /**
+     * Token web válido para las API de Steam, renovando la sesión si hace falta. null si Steam ya no la acepta
+     * (entonces sí hay que volver a vincular; [lastProblem] dice por qué).
+     */
+    suspend fun token(settings: Settings): String? = lock.withLock {
+        cached?.takeIf(::fresh)?.let { return it }
+        restoreRefreshCookie(settings)
+        val problems = mutableListOf<String>()
+        fun found(t: String): String { cached = t; lastProblem = null; return t }
+        tokenFromCookies(problems)?.let { saveRefreshCookie(settings); return found(it) }
+        // El pase corto caducó: se renueva con el largo, primero directamente y si no, abriendo la tienda por detrás.
+        if (refreshDirect(problems)) tokenFromCookies(problems)?.let { saveRefreshCookie(settings); return found(it) }
+        if (refreshWithWebView(problems)) tokenFromCookies(problems)?.let { saveRefreshCookie(settings); return found(it) }
+        lastProblem = problems.distinct().joinToString("; ").ifBlank { null }
+        null
+    }
+
+    /** Saca el token de la sesión actual, por tres caminos (si Steam cambia uno, quedan los otros). */
+    private suspend fun tokenFromCookies(problems: MutableList<String>): String? {
+        val cookies = cookies(STORE)
+        val access = accessFromCookie(cookies)
+        if (access == null) { problems += "sin sesión"; return null }
+        if (!fresh(access)) { problems += "sesión caducada"; return null }
+        // 1) El servicio de la tienda que entrega el token web.
+        runCatching {
+            val req = Request.Builder().url("$STORE/pointssummary/ajaxgetasyncconfig").header("Cookie", cookies!!).header("User-Agent", UA).build()
+            Http.getJson(req)["data"]["webapi_token"].str
+        }.onFailure { problems += "asyncconfig: ${it.message?.take(60)}" }.getOrNull()?.takeIf { it.isNotBlank() && fresh(it) }?.let { return it }
+        // 2) La configuración que la tienda incrusta en sus páginas.
+        runCatching {
+            withContext(Dispatchers.IO) {
+                Http.client.newCall(Request.Builder().url("$STORE/account/").header("Cookie", cookies!!).header("User-Agent", UA).build())
+                    .execute().use { r ->
+                        val html = r.body?.string().orEmpty()
+                        Regex("""webapi_token&quot;:&quot;([A-Za-z0-9_\-.]+)&quot;""").find(html)?.groupValues?.get(1)
+                            ?: Regex(""""webapi_token"\s*:\s*"([A-Za-z0-9_\-.]+)"""").find(html)?.groupValues?.get(1)
+                    }
+            }
+        }.getOrNull()?.takeIf { fresh(it) }?.let { return it }
+        // 3) El propio pase de la cookie, que las API de Steam también aceptan.
+        return access
+    }
+
+    /** Copia cifrada del pase de renovación, por si el WebView pierde sus cookies. */
+    private suspend fun saveRefreshCookie(settings: Settings) {
+        cookieValue(cookies(LOGIN), REFRESH_COOKIE)?.let { if (it != settings.steamRefreshCookie) settings.steamRefreshCookie = it }
+    }
+
+    private suspend fun restoreRefreshCookie(settings: Settings) {
+        val saved = settings.steamRefreshCookie ?: return
+        if (cookieValue(cookies(LOGIN), REFRESH_COOKIE) != null) return
+        withContext(Dispatchers.Main) {
+            CookieManager.getInstance().setCookie(LOGIN, "$REFRESH_COOKIE=$saved; Path=/; Secure; HttpOnly; Max-Age=${200L * 24 * 3600}")
+            CookieManager.getInstance().flush()
+        }
+    }
+
+    /** Renovación directa: lo mismo que hace la web de Steam por dentro (jwt/ajaxrefresh y luego settoken). */
+    private suspend fun refreshDirect(problems: MutableList<String>): Boolean = runCatching {
+        val loginCookies = cookies(LOGIN)
+        if (cookieValue(loginCookies, REFRESH_COOKIE) == null) { problems += "sin pase de renovación"; return false }
+        val r = Http.getJson(Request.Builder().url("$LOGIN/jwt/ajaxrefresh").header("Cookie", loginCookies!!)
+            .header("User-Agent", UA).header("Origin", STORE).header("Referer", "$STORE/")
+            .post(FormBody.Builder().add("redir", "$STORE/").build()).build())
+        if (r["success"]?.toString() != "true") { problems += "Steam no renovó la sesión (${r["error"].str ?: "?"})"; return false }
+        val target = r["login_url"].str ?: "$STORE/login/settoken"
+        val form = FormBody.Builder()
+        listOf("steamID", "nonce", "redir", "auth").forEach { k -> r[k].str?.let { form.add(k, it) } }
+        val setCookies = withContext(Dispatchers.IO) {
+            Http.client.newBuilder().followRedirects(false).build().newCall(
+                Request.Builder().url(target).header("Cookie", cookies(STORE).orEmpty()).header("User-Agent", UA)
+                    .header("Origin", STORE).header("Referer", "$STORE/").post(form.build()).build()
+            ).execute().use { it.headers("Set-Cookie") }
+        }
+        withContext(Dispatchers.Main) {
+            val cm = CookieManager.getInstance()
+            setCookies.forEach { cm.setCookie(STORE, it) }
+            cm.flush()
+        }
+        hasFreshWebSession().also { if (!it) problems += "renovación directa sin efecto" }
+    }.getOrElse { problems += "renovación: ${it.message?.take(60)}"; false }
+
+    /** Renovación como un navegador: abre la tienda en un WebView invisible y deja que Steam renueve la cookie. */
+    @SuppressLint("SetJavaScriptEnabled")
+    private suspend fun refreshWithWebView(problems: MutableList<String>): Boolean {
+        if (!::appContext.isInitialized) return false
+        val ok = withContext(Dispatchers.Main) {
+            val web = runCatching {
+                WebView(appContext).apply {
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.userAgentString = settings.userAgentString.replace("; wv", "").replace(Regex("""Version/\d+\.\d+\s*"""), "")
+                    CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                    webViewClient = WebViewClient()
+                    loadUrl("$STORE/account/")
+                }
+            }.getOrElse { problems += "WebView: ${it.message?.take(60)}"; return@withContext false }
+            try {
+                withTimeoutOrNull(25_000) {
+                    while (!hasFreshWebSession()) delay(700)
+                    true
+                } ?: false
+            } finally {
+                CookieManager.getInstance().flush()
+                web.stopLoading()
+                web.destroy()
+            }
+        }
+        if (!ok) problems += "la tienda no renovó la sesión"
+        return ok
+    }
 
     /** Nombre público del perfil (solo para mostrarlo en Ajustes). */
     suspend fun profileName(steamId: String): String? = withContext(Dispatchers.IO) {
@@ -284,7 +435,10 @@ object SteamLogin {
         }.getOrNull()
     }
 
-    fun clearSession() {
+    /** Olvida la sesión de Steam (cookies de Steam y copia del pase de renovación). */
+    fun clearSession(settings: Settings? = null) {
+        cached = null
+        settings?.steamRefreshCookie = null
         CookieManager.getInstance().removeAllCookies(null)
         CookieManager.getInstance().flush()
     }

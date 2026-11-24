@@ -81,6 +81,7 @@ import com.repisa.app.i18n.AppLanguage
 import com.repisa.app.i18n.L10n
 import com.repisa.app.launch.AppInfo
 import com.repisa.app.model.Consoles
+import com.repisa.app.model.label
 import com.repisa.app.model.Source
 import com.repisa.app.sources.EpicSource
 import com.repisa.app.sources.SteamLogin
@@ -91,6 +92,7 @@ private enum class Page(val titleRes: Int, val subRes: Int?, val emoji: String) 
     COVERS(R.string.menu_covers, R.string.menu_covers_sub, "🖼"),
     PLAYTIME(R.string.menu_playtime, R.string.menu_playtime_sub, "⏰"),
     DISPLAY(R.string.menu_display, R.string.menu_display_sub, "📺"),
+    COLLECTIONS(R.string.menu_collections, R.string.menu_collections_sub, "📂"),
     LANGUAGE(R.string.menu_language, null, "🌐"),
     DATA(R.string.menu_data, R.string.menu_data_sub, "💾"),
 }
@@ -132,6 +134,7 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit, onLanguageChanged: 
                 Page.PLAYTIME -> PlaytimePage(vm, tick)
                 Page.DISPLAY -> DisplayPage(vm, tick, changed)
                 Page.DATA -> DataPage(vm)
+                Page.COLLECTIONS -> CollectionsPage(vm)
                 Page.LANGUAGE -> LanguageList(L10n.current) { lang ->
                     L10n.setLanguage(vm.getApplication<android.app.Application>(), lang); onLanguageChanged()
                 }
@@ -268,10 +271,107 @@ private fun MainPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit, open:
             onDismiss = { vm.epicCancelLink(); changed() })
     }
     if (steamWeb) {
-        LoginWebDialog(stringResource(R.string.steam_link), SteamLogin.LOGIN_URL, onDismiss = { steamWeb = false }) { _, _, done ->
-            if (SteamLogin.isLoggedInWeb()) { done(); steamWeb = false; vm.steamLinked(); changed() }
+        LoginWebDialog(stringResource(R.string.steam_link), SteamLogin.LOGIN_URL, onDismiss = { steamWeb = false }) { _, url, done ->
+            // Solo cuando la sesión es buena de verdad: una cookie vieja y caducada no cuenta (si no, el diálogo se
+            // cerraba solo antes de poder iniciar sesión y salía «Steam no confirmó la sesión»).
+            if (!url.contains("/login") && SteamLogin.hasFreshWebSession()) { done(); steamWeb = false; vm.steamLinked(); changed() }
         }
     }
+}
+
+// ---------------------------------------------------------------------------- Colecciones
+
+/**
+ * Colecciones propias: cada una con sus juegos, para añadir o quitar juegos, renombrarla o borrarla.
+ * Borrar una colección no borra sus juegos.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun CollectionsPage(vm: LibraryViewModel) {
+    val collections by vm.collections.collectAsState()
+    val games by vm.displayGames.collectAsState()
+    var creating by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf<GameCollection?>(null) }
+    var deleting by remember { mutableStateOf<GameCollection?>(null) }
+    var picking by remember { mutableStateOf<GameCollection?>(null) }
+    Section(stringResource(R.string.menu_collections)) {
+        Hint(stringResource(R.string.collections_hint))
+        Button(onClick = { creating = true }) { Text("＋ " + stringResource(R.string.collection_new)) }
+        if (collections.isEmpty()) Hint(stringResource(R.string.collections_empty))
+    }
+    collections.forEach { c ->
+        val inside = games.filter { c.id in it.collections }.sortedBy { it.sortKey }
+        Section("📂 " + c.name + "  ·  " + L10n.games(inside.size)) {
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Button(onClick = { picking = c }) { Text("＋ " + stringResource(R.string.collection_add_games)) }
+                OutlinedButton(onClick = { renaming = c }) { Text("✎ " + stringResource(R.string.collection_rename), color = Color.White) }
+                OutlinedButton(onClick = { deleting = c }) { Text("🗑 " + stringResource(R.string.delete), color = Color(0xFFFF8A80)) }
+            }
+            if (inside.isEmpty()) Hint(stringResource(R.string.collection_no_games))
+            inside.forEach { g ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(g.title, color = Color(0xFFE8D9C0), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f))
+                    Text(g.console.label, color = Color(0xFF9C8A70), fontSize = 12.sp)
+                    TextButton(onClick = { vm.removeFromCollection(setOf(g.id), c.id) }) { Text("✕ " + stringResource(R.string.remove)) }
+                }
+            }
+        }
+    }
+    if (creating) CollectionNameDialog(onDismiss = { creating = false }) { vm.createCollection(it); creating = false }
+    renaming?.let { c -> CollectionNameDialog(c.name, onDismiss = { renaming = null }) { vm.renameCollection(c.id, it); renaming = null } }
+    deleting?.let { c ->
+        AlertDialog(
+            onDismissRequest = { deleting = null },
+            text = { Text(stringResource(R.string.collection_delete_confirm, c.name)) },
+            confirmButton = { TextButton(onClick = { vm.deleteCollection(c.id); deleting = null }) { Text(stringResource(R.string.delete)) } },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
+    picking?.let { c -> CollectionGamesDialog(c, games, vm, onDismiss = { picking = null }) }
+}
+
+/** Elegir con casillas qué juegos van en la colección (con buscador). */
+@Composable
+private fun CollectionGamesDialog(c: GameCollection, games: List<com.repisa.app.model.Game>, vm: LibraryViewModel, onDismiss: () -> Unit) {
+    val before = remember(c.id) { games.filter { c.id in it.collections }.map { it.id }.toSet() }
+    var chosen by remember(c.id) { mutableStateOf(before) }
+    var query by remember { mutableStateOf("") }
+    val list = remember(games, query) {
+        val q = query.trim().lowercase()
+        games.filter { q.isEmpty() || it.title.lowercase().contains(q) }
+            .sortedWith(compareByDescending<com.repisa.app.model.Game> { it.id in before }.thenBy { it.sortKey })
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.collection_pick_title, c.name)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                OutlinedTextField(query, { query = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.search)) })
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
+                    items(list.size, key = { list[it].id }) { i ->
+                        val g = list[i]
+                        val on = g.id in chosen
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
+                            .clickable { chosen = if (on) chosen - g.id else chosen + g.id }) {
+                            androidx.compose.material3.Checkbox(on, { chosen = if (on) chosen - g.id else chosen + g.id })
+                            Text(g.title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                            Text(g.console.label, fontSize = 12.sp, color = Color.Gray)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                (chosen - before).takeIf { it.isNotEmpty() }?.let { vm.addToCollection(it, c.id) }
+                (before - chosen).takeIf { it.isNotEmpty() }?.let { vm.removeFromCollection(it, c.id) }
+                onDismiss()
+            }) { Text(stringResource(R.string.save)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
 }
 
 // ---------------------------------------------------------------------------- Emuladores
@@ -429,7 +529,10 @@ private fun DisplayPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
             Switch(checked = comp, onCheckedChange = { comp = it; s.companionPanel = it })
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.setting_continue_shelf), color = Color.White, modifier = Modifier.weight(1f))
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.setting_continue_shelf), color = Color.White)
+                Hint(stringResource(R.string.shelf_fold_hint))
+            }
             var c by remember { mutableStateOf(s.continueShelf) }
             Switch(checked = c, onCheckedChange = { c = it; vm.setContinueShelf(it) })
         }
@@ -453,20 +556,24 @@ private fun DisplayPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
         Hint(stringResource(R.string.box_size_hint))
         Slider(value = h, onValueChange = { h = it }, onValueChangeFinished = { s.shelfHeightDp = h.toInt() },
             valueRange = 90f..240f, modifier = Modifier.widthIn(max = 560.dp))
-        // Colecciones propias: renombrar o borrar (los juegos no se borran, solo salen de la colección).
-        val collections by vm.collections.collectAsState()
-        var renaming by remember { mutableStateOf<GameCollection?>(null) }
+        // Orden de las repisas cuando se agrupa por estado.
         HorizontalDivider(color = Color(0x33FFFFFF))
-        Text(stringResource(R.string.collections), color = Color.White)
-        Hint(stringResource(R.string.collections_hint))
-        collections.forEach { c ->
+        Text(stringResource(R.string.status_order), color = Color.White)
+        Hint(stringResource(R.string.status_order_hint))
+        val order = com.repisa.app.model.StatusRules.order
+        order.forEachIndexed { i, st ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("📂 " + c.name, color = Color(0xFFE8D9C0), modifier = Modifier.weight(1f))
-                TextButton(onClick = { renaming = c }) { Text(stringResource(R.string.collection_rename)) }
-                TextButton(onClick = { vm.deleteCollection(c.id) }) { Text(stringResource(R.string.delete)) }
+                Text("${i + 1}.  ${st.icon} ${st.label}", color = Color(st.color), fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                TextButton(enabled = i > 0, onClick = {
+                    vm.setStatusOrder(order.toMutableList().apply { add(i - 1, removeAt(i)) })
+                }) { Text("▲") }
+                TextButton(enabled = i < order.lastIndex, onClick = {
+                    vm.setStatusOrder(order.toMutableList().apply { add(i + 1, removeAt(i)) })
+                }) { Text("▼") }
             }
         }
-        renaming?.let { c -> CollectionNameDialog(c.name, onDismiss = { renaming = null }) { vm.renameCollection(c.id, it); renaming = null } }
+        if (order != com.repisa.app.model.StatusRules.DEFAULT_ORDER)
+            TextButton(onClick = { vm.setStatusOrder(com.repisa.app.model.StatusRules.DEFAULT_ORDER) }) { Text(stringResource(R.string.status_order_reset)) }
         val hidden by vm.hidden.collectAsState()
         if (hidden.isNotEmpty()) {
             HorizontalDivider(color = Color(0x33FFFFFF))

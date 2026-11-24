@@ -276,6 +276,8 @@
     <string name="ach_hidden">Hidden achievement</string>
     <string name="ach_manual">marked by you</string>
     <string name="ach_loading">Looking for achievements…</string>
+    <string name="ach_retry">Reload</string>
+    <string name="ach_error">Couldn\'t reach the achievements service (it may be busy). Tap “Reload” in a moment.</string>
     <string name="ach_none">No achievements found for this game.</string>
     <string name="ach_no_ra_system">%1$s has no achievements on RetroAchievements. You have the Repisa achievements below.</string>
     <string name="ach_link_ra">Link RetroAchievements in Settings to see this game\'s achievements.</string>
@@ -342,7 +344,7 @@
     <string name="collection_default">My collection</string>
     <string name="collection">Collection</string>
     <string name="collections">Collections</string>
-    <string name="collection_new">New collection…</string>
+    <string name="collection_new">New collection</string>
     <string name="collection_rename">Rename</string>
     <string name="collection_hint">e.g. Try out, Priority, With friends…</string>
     <string name="collections_empty">You don\'t have collections yet. Create one: it appears as its own shelf at the top.</string>
@@ -351,6 +353,18 @@
     <string name="select_many">Select</string>
     <string name="select_all">Select all</string>
     <string name="selected_count">%1$d selected · tap covers to add or remove</string>
+    <string name="menu_collections">Collections</string>
+    <string name="menu_collections_sub">Your own shelves: see, add, remove, delete</string>
+    <string name="collection_add_games">Add games</string>
+    <string name="collection_remove_from">Remove from collection</string>
+    <string name="collection_delete_confirm">Delete “%1$s”? Its games stay in your library.</string>
+    <string name="collection_no_games">No games yet: use “Add games”.</string>
+    <string name="collection_pick_title">Games in “%1$s”</string>
+    <string name="msg_removed_collection">%1$d game(s) removed from “%2$s”</string>
+    <string name="status_order">Order of the shelves by status</string>
+    <string name="status_order_hint">Used when grouping by status. Move each one with ▲ ▼.</string>
+    <string name="status_order_reset">Restore order</string>
+    <string name="shelf_fold_hint">Tip: tap a shelf\'s golden plaque to fold or unfold it (it stays that way).</string>
     <string name="status_clear">Remove status (automatic)</string>
     <string name="random_platform">Platform</string>
     <string name="random_any_platform">Any platform</string>

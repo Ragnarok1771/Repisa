@@ -61,6 +61,7 @@ fun AchievementsDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) 
     LaunchedEffect(game.id) { vm.loadAchievements(game) }
     val all by vm.achievements.collectAsState()
     val loading by vm.achievementsLoading.collectAsState()
+    val errors by vm.achievementErrors.collectAsState()
     val set = all[game.id]
     val known = game.id in all
     val repisa = remember(game) { vm.repisaAchievements(game) }
@@ -84,6 +85,7 @@ fun AchievementsDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) 
                     }
                 }
                 if (game.id in loading) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
+                else TextButton(onClick = { vm.loadAchievements(game, force = true) }) { Text("↻ " + stringResource(R.string.ach_retry)) }
                 set?.url?.let { u -> TextButton(onClick = { vm.launcher.openUrl(u) }) { Text(stringResource(R.string.open_web)) } }
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
             }
@@ -96,7 +98,8 @@ fun AchievementsDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) 
                 if (set == null) item {
                     Text(
                         when {
-                            !known || game.id in loading -> stringResource(R.string.ach_loading)
+                            game.id in loading || (!known && game.id !in errors) -> stringResource(R.string.ach_loading)
+                            game.id in errors -> stringResource(R.string.ach_error)
                             game.source == Source.EMULATOR && game.consoleId !in Achievements.raConsoles ->
                                 stringResource(R.string.ach_no_ra_system, game.console.name)
                             game.source == Source.EMULATOR && vm.settings.raUser == null -> stringResource(R.string.ach_link_ra)

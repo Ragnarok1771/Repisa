@@ -123,7 +123,7 @@ fun RandomPicker(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (Game) -> Un
             offset.snapTo(0f)
             // Arranca rápido y se frena poco a poco; se para cerca del centro de la carátula, no siempre exacto.
             val target = winnerAt * slotPx + slotPx * (0.2f + Random.nextFloat() * 0.6f) - slotPx / 2
-            offset.animateTo(target, tween(6200 + laps * 600, easing = CubicBezierEasing(0.05f, 0.85f, 0.15f, 1f)))
+            offset.animateTo(target, tween(9000 + laps * 700, easing = CubicBezierEasing(0.05f, 0.85f, 0.15f, 1f)))
             offset.animateTo(winnerAt * slotPx, tween(350))
             winner = w
             rolling = false
@@ -187,11 +187,15 @@ fun RandomPicker(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (Game) -> Un
                     val first = floor((offset.value - centerPx) / slotPx).toInt().coerceAtLeast(0)
                     val last = (first + (widthPx / slotPx).toInt() + 3).coerceAtMost(strip.lastIndex)
                     for (i in first..last) {
-                        val g = strip[i]
-                        val x = centerPx - slotPx / 2 + i * slotPx - offset.value
-                        Box(Modifier.offset { IntOffset(x.roundToInt(), 0) }.width(slot).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                            val h = minOf(boxH, slot * 0.9f / frontAspect(g))
-                            GameBox(g, h, lifted = !rolling && i == winnerAt && winner != null, showStatus = false)
+                        // key(i): cada carátula conserva su propio dibujo mientras avanza (sin key, al girar un hueco
+                        // pasaba a mostrar otro juego y la franja de la consola parpadeaba y se desplazaba).
+                        androidx.compose.runtime.key(i) {
+                            val g = strip[i]
+                            Box(Modifier.offset { IntOffset((centerPx - slotPx / 2 + i * slotPx - offset.value).roundToInt(), 0) }
+                                .width(slot).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                                val h = minOf(boxH, slot * 0.9f / frontAspect(g))
+                                GameBox(g, h, lifted = !rolling && i == winnerAt && winner != null, showStatus = false)
+                            }
                         }
                     }
                 }

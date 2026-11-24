@@ -718,6 +718,13 @@ s("ach_manual", "marked by you", "marcado a mano", "coché par vous", "selbst ab
   ptPT="marcada por si")
 s("ach_loading", "Looking for achievements…", "Buscando logros…", "Recherche des succès…", "Suche Erfolge…", "Cerco gli obiettivi…",
   "Procurando conquistas…", ptPT="A procurar conquistas…")
+s("ach_retry", "Reload", "Recargar", "Recharger", "Neu laden", "Ricarica", "Recarregar")
+s("ach_error", "Couldn't reach the achievements service (it may be busy). Tap “Reload” in a moment.",
+  "No se pudieron consultar los logros (el servicio puede estar saturado). Pulsa «Recargar» en un momento.",
+  "Impossible de consulter les succès (service peut-être saturé). Touchez « Recharger » dans un instant.",
+  "Erfolge konnten nicht abgerufen werden (Dienst evtl. überlastet). Gleich „Neu laden“ antippen.",
+  "Impossibile leggere gli obiettivi (servizio forse sovraccarico). Tocca «Ricarica» tra poco.",
+  "Não foi possível consultar as conquistas (serviço talvez ocupado). Toque em \"Recarregar\" daqui a pouco.")
 s("ach_none", "No achievements found for this game.", "No se encontraron logros para este juego.", "Aucun succès trouvé pour ce jeu.",
   "Keine Erfolge für dieses Spiel gefunden.", "Nessun obiettivo trovato per questo gioco.", "Nenhuma conquista encontrada para este jogo.")
 s("ach_no_ra_system", "%1$s has no achievements on RetroAchievements. You have the Repisa achievements below.",
@@ -905,6 +912,35 @@ s("select_all", "Select all", "Seleccionar todo", "Tout sélectionner", "Alle au
 s("selected_count", "%1$d selected · tap covers to add or remove", "%1$d seleccionados · toca carátulas para añadir o quitar",
   "%1$d sélectionnés · touchez les jaquettes", "%1$d ausgewählt · Cover antippen zum Hinzufügen/Entfernen",
   "%1$d selezionati · tocca le copertine", "%1$d selecionados · toque nas capas para adicionar ou tirar")
+s("menu_collections", "Collections", "Colecciones", "Collections", "Sammlungen", "Collezioni", "Coleções")
+s("menu_collections_sub", "Your own shelves: see, add, remove, delete", "Tus repisas propias: ver, añadir, quitar y borrar",
+  "Vos étagères : voir, ajouter, retirer, supprimer", "Eigene Regale: ansehen, hinzufügen, entfernen, löschen",
+  "I tuoi scaffali: vedi, aggiungi, togli, elimina", "Suas prateleiras: ver, adicionar, tirar, apagar")
+s("collection_new", "New collection", "Nueva colección", "Nouvelle collection", "Neue Sammlung", "Nuova collezione", "Nova coleção")
+s("collection_add_games", "Add games", "Añadir juegos", "Ajouter des jeux", "Spiele hinzufügen", "Aggiungi giochi", "Adicionar jogos")
+s("collection_remove_from", "Remove from collection", "Quitar de colección", "Retirer de la collection", "Aus Sammlung entfernen",
+  "Togli dalla collezione", "Tirar da coleção", ptPT="Retirar da coleção")
+s("collection_delete_confirm", "Delete “%1$s”? Its games stay in your library.", "¿Borrar «%1$s»? Sus juegos siguen en tu biblioteca.",
+  "Supprimer « %1$s » ? Ses jeux restent dans votre bibliothèque.", "„%1$s“ löschen? Die Spiele bleiben in deiner Bibliothek.",
+  "Eliminare «%1$s»? I giochi restano nella tua libreria.", "Apagar \"%1$s\"? Os jogos continuam na sua biblioteca.")
+s("collection_no_games", "No games yet: use “Add games”.", "Aún no tiene juegos: usa «Añadir juegos».",
+  "Pas encore de jeux : utilisez « Ajouter des jeux ».", "Noch keine Spiele: „Spiele hinzufügen“ verwenden.",
+  "Ancora nessun gioco: usa «Aggiungi giochi».", "Ainda sem jogos: use \"Adicionar jogos\".")
+s("collection_pick_title", "Games in “%1$s”", "Juegos de «%1$s»", "Jeux de « %1$s »", "Spiele in „%1$s“", "Giochi in «%1$s»", "Jogos de \"%1$s\"")
+s("msg_removed_collection", "%1$d game(s) removed from “%2$s”", "%1$d juego(s) quitados de «%2$s»", "%1$d jeu(x) retiré(s) de « %2$s »",
+  "%1$d Spiel(e) aus „%2$s“ entfernt", "%1$d gioco/i tolti da «%2$s»", "%1$d jogo(s) tirados de \"%2$s\"")
+s("status_order", "Order of the shelves by status", "Orden de las repisas por estado", "Ordre des étagères par statut",
+  "Reihenfolge der Regale nach Status", "Ordine degli scaffali per stato", "Ordem das prateleiras por status", ptPT="Ordem das prateleiras por estado")
+s("status_order_hint", "Used when grouping by status. Move each one with ▲ ▼.", "Se usa al agrupar por estado. Mueve cada uno con ▲ ▼.",
+  "Utilisé pour le regroupement par statut. Déplacez avec ▲ ▼.", "Gilt beim Gruppieren nach Status. Mit ▲ ▼ verschieben.",
+  "Usato quando raggruppi per stato. Sposta con ▲ ▼.", "Usado ao agrupar por status. Mova com ▲ ▼.")
+s("status_order_reset", "Restore order", "Restaurar orden", "Rétablir l'ordre", "Reihenfolge zurücksetzen", "Ripristina ordine", "Restaurar ordem")
+s("shelf_fold_hint", "Tip: tap a shelf's golden plaque to fold or unfold it (it stays that way).",
+  "Truco: toca la placa dorada de una repisa para plegarla o desplegarla (se queda así).",
+  "Astuce : touchez la plaque dorée d'une étagère pour la replier ou la déplier.",
+  "Tipp: Tippe auf das goldene Schild eines Regals, um es ein- oder auszuklappen.",
+  "Suggerimento: tocca la targhetta dorata di uno scaffale per chiuderlo o aprirlo.",
+  "Dica: toque na placa dourada de uma prateleira para recolhê-la ou abri-la.")
 s("status_clear", "Remove status (automatic)", "Quitar estado (automático)", "Retirer le statut (automatique)", "Status entfernen (automatisch)",
   "Togli stato (automatico)", "Tirar status (automático)", ptPT="Retirar estado (automático)")
 s("random_platform", "Platform", "Plataforma", "Plateforme", "Plattform", "Piattaforma", "Plataforma")

@@ -9,6 +9,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -111,7 +112,8 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
             } else {
                 val selState = SelectionState(selecting, selection, toggle = { vm.toggleSelected(it) }, start = { vm.startSelection(it) })
                 androidx.compose.runtime.CompositionLocalProvider(LocalSelection provides selState) {
-                Shelves(shelves, boxHeight, focused?.id, onFocus = { vm.focused.value = it }, onOpen = onOpenGame,
+                val collapsed by vm.collapsed.collectAsState()
+                Shelves(shelves, collapsed, { vm.toggleCollapsed(it) }, boxHeight, focused?.id, onFocus = { vm.focused.value = it }, onOpen = onOpenGame,
                     onPlay = { vm.play(it) }, onFavorite = { vm.toggleFavorite(it) },
                     onAspect = { g, a -> vm.setCoverAspect(g.id, a) })
                 }
@@ -175,7 +177,6 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
                     val count = all.count { it.source == s || s in it.groupSources }
                     if (count > 0) SourceChip("${s.label} ($count)", options.source == s) { vm.setSource(s) }
                 }
-                item { SourceChip("☑ " + stringResource(R.string.select_many), false) { vm.startSelection() } }
             }
             Picker(stringResource(R.string.sort_label), options.sort.label, SortMode.entries.map { it.label }) { vm.setSort(SortMode.entries[it]) }
             Picker(stringResource(R.string.group_label), options.group.label, GroupMode.entries.map { it.label }) { vm.setGroup(GroupMode.entries[it]) }
@@ -260,6 +261,8 @@ private fun Picker(title: String, value: String, choices: List<String>, onPick: 
 @Composable
 private fun Shelves(
     shelves: List<ShelfGroup>,
+    collapsed: Set<String>,
+    onToggle: (String) -> Unit,
     boxHeight: Dp,
     focusedId: String?,
     onFocus: (Game) -> Unit,
@@ -273,10 +276,13 @@ private fun Shelves(
         val gap = 14.dp
         val usable = maxWidth - sidePad * 2
         // Reparte las cajas en baldas según el ancho real de cada una.
-        val items = remember(shelves, usable, boxHeight) {
+        val items = remember(shelves, collapsed, usable, boxHeight) {
             buildList<ShelfItem> {
                 shelves.forEachIndexed { gi, group ->
-                    if (shelves.size > 1 || group.title != L10n.s(R.string.shelf_my_collection)) add(ShelfItem.Header(group, "h$gi:${group.title}"))
+                    val alone = shelves.size == 1 && group.title == L10n.s(R.string.shelf_my_collection)
+                    if (!alone) add(ShelfItem.Header(group, "h$gi:${group.title}"))
+                    // Plegada: solo la placa (una repisa sola no se puede plegar, se quedaría la sala vacía).
+                    if (!alone && group.key in collapsed) return@forEachIndexed
                     var row = mutableListOf<Game>()
                     var used = 0.dp
                     group.games.forEach { g ->
@@ -293,7 +299,7 @@ private fun Shelves(
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
             items(items, key = { it.key }) { item ->
                 when (item) {
-                    is ShelfItem.Header -> GroupPlaque(item.group)
+                    is ShelfItem.Header -> GroupPlaque(item.group, item.group.key in collapsed) { onToggle(item.group.key) }
                     is ShelfItem.Row -> ShelfRow(item.games, boxHeight, sidePad, gap, focusedId, onFocus, onOpen, onPlay, onFavorite, onAspect)
                 }
             }
@@ -303,15 +309,20 @@ private fun Shelves(
 }
 
 @Composable
-private fun GroupPlaque(group: ShelfGroup) {
+private fun GroupPlaque(group: ShelfGroup, isCollapsed: Boolean, onToggle: () -> Unit) {
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val focusedPlaque by interaction.collectIsFocusedAsState()
     Row(Modifier.fillMaxWidth().padding(start = 28.dp, top = 14.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        // La placa se toca (o se pulsa con el mando) para plegar o desplegar la repisa.
         Box(
             Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .clickable(interactionSource = interaction, indication = null, onClick = onToggle)
                 .background(Brush.verticalGradient(listOf(Color(0xFFE9C46A), Color(0xFFB08436))), RoundedCornerShape(4.dp))
-                .border(1.dp, Color(0xFF6E4F1E), RoundedCornerShape(4.dp))
+                .border(if (focusedPlaque) 3.dp else 1.dp, if (focusedPlaque) Color.White else Color(0xFF6E4F1E), RoundedCornerShape(4.dp))
                 .padding(horizontal = 12.dp, vertical = 3.dp),
         ) {
-            Text(group.title, color = Color(0xFF2B1A08), fontWeight = FontWeight.Bold, fontSize = 14.sp, fontFamily = DisplayFont)
+            Text((if (isCollapsed) "▸ " else "▾ ") + group.title, color = Color(0xFF2B1A08), fontWeight = FontWeight.Bold, fontSize = 14.sp, fontFamily = DisplayFont)
         }
         Spacer(Modifier.width(10.dp))
         Text(group.subtitle, color = Color(0xFFBFA98A), fontSize = 11.sp)
@@ -531,7 +542,7 @@ private fun SelectionBar(vm: LibraryViewModel, selection: Set<String>, visible: 
                 Text(stringResource(R.string.group_status) + " ▾", color = Color.White)
             }
             androidx.compose.material3.DropdownMenu(statusMenu, { statusMenu = false }) {
-                com.repisa.app.model.PlayStatus.entries.forEach { st ->
+                com.repisa.app.model.StatusRules.order.forEach { st ->
                     androidx.compose.material3.DropdownMenuItem(text = { Text("${st.icon} ${st.label}") },
                         onClick = { statusMenu = false; vm.setStatusFor(selection, st); vm.endSelection() })
                 }
@@ -550,6 +561,18 @@ private fun SelectionBar(vm: LibraryViewModel, selection: Set<String>, visible: 
                 }
                 androidx.compose.material3.DropdownMenuItem(text = { Text("＋ " + stringResource(R.string.collection_new)) },
                     onClick = { collMenu = false; newColl = true })
+                // Quitar: solo las colecciones en las que está alguno de los seleccionados.
+                val inUse = visible.filter { it.id in selection }.flatMap { it.collections }.toSet()
+                val removable = collections.filter { it.id in inUse }
+                if (removable.isNotEmpty()) {
+                    androidx.compose.material3.HorizontalDivider()
+                    Text("  " + stringResource(R.string.collection_remove_from), color = Color.Gray, fontSize = 12.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                    removable.forEach { c ->
+                        androidx.compose.material3.DropdownMenuItem(text = { Text("➖ " + c.name) },
+                            onClick = { collMenu = false; vm.removeFromCollection(selection, c.id); vm.endSelection() })
+                    }
+                }
             }
         }
         androidx.compose.material3.TextButton(onClick = { vm.selectAll(visible) }) { Text(stringResource(R.string.select_all)) }

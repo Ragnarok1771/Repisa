@@ -276,6 +276,8 @@
     <string name="ach_hidden">Succès caché</string>
     <string name="ach_manual">coché par vous</string>
     <string name="ach_loading">Recherche des succès…</string>
+    <string name="ach_retry">Recharger</string>
+    <string name="ach_error">Impossible de consulter les succès (service peut-être saturé). Touchez « Recharger » dans un instant.</string>
     <string name="ach_none">Aucun succès trouvé pour ce jeu.</string>
     <string name="ach_no_ra_system">%1$s n’a pas de succès sur RetroAchievements. Vous avez les succès Repisa ci-dessous.</string>
     <string name="ach_link_ra">Reliez RetroAchievements dans Paramètres pour voir les succès de ce jeu.</string>
@@ -342,7 +344,7 @@
     <string name="collection_default">Ma collection</string>
     <string name="collection">Collection</string>
     <string name="collections">Collections</string>
-    <string name="collection_new">Nouvelle collection…</string>
+    <string name="collection_new">Nouvelle collection</string>
     <string name="collection_rename">Renommer</string>
     <string name="collection_hint">ex. À essayer, Priorité, Entre amis…</string>
     <string name="collections_empty">Pas encore de collection. Créez-en une : elle apparaît comme une étagère en haut.</string>
@@ -351,6 +353,18 @@
     <string name="select_many">Sélectionner</string>
     <string name="select_all">Tout sélectionner</string>
     <string name="selected_count">%1$d sélectionnés · touchez les jaquettes</string>
+    <string name="menu_collections">Collections</string>
+    <string name="menu_collections_sub">Vos étagères : voir, ajouter, retirer, supprimer</string>
+    <string name="collection_add_games">Ajouter des jeux</string>
+    <string name="collection_remove_from">Retirer de la collection</string>
+    <string name="collection_delete_confirm">Supprimer « %1$s » ? Ses jeux restent dans votre bibliothèque.</string>
+    <string name="collection_no_games">Pas encore de jeux : utilisez « Ajouter des jeux ».</string>
+    <string name="collection_pick_title">Jeux de « %1$s »</string>
+    <string name="msg_removed_collection">%1$d jeu(x) retiré(s) de « %2$s »</string>
+    <string name="status_order">Ordre des étagères par statut</string>
+    <string name="status_order_hint">Utilisé pour le regroupement par statut. Déplacez avec ▲ ▼.</string>
+    <string name="status_order_reset">Rétablir l\'ordre</string>
+    <string name="shelf_fold_hint">Astuce : touchez la plaque dorée d\'une étagère pour la replier ou la déplier.</string>
     <string name="status_clear">Retirer le statut (automatique)</string>
     <string name="random_platform">Plateforme</string>
     <string name="random_any_platform">Toutes les plateformes</string>

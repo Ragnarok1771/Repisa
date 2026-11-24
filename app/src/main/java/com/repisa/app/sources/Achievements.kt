@@ -79,19 +79,31 @@ object Achievements {
     suspend fun steamAppId(game: Game): Int? {
         if (game.source == Source.STEAM) return game.id.removePrefix("steam:").toIntOrNull()
         val title = game.originalTitle ?: game.title
-        val url = "https://store.steampowered.com/api/storesearch/".toHttpUrl().newBuilder()
-            .addQueryParameter("term", title).addQueryParameter("l", "english").addQueryParameter("cc", "US").build()
-        val (code, body) = get(url.toString())
-        if (code != 200) return null
         // Sin palabras de edición («Game of the Year», «Definitive Edition»...) ni DLC del mismo juego.
         fun core(t: String) = CoverSearch.tokens(t) - edition
         val wanted = core(title)
         if (wanted.isEmpty()) return null
-        return Http.json.parseToJsonElement(body)["items"].arr
-            .filter { !Regex("(?i)\\b(soundtrack|dlc|season pass|pack|bundle)\\b").containsMatchIn(it["name"].str.orEmpty()) }
-            .map { it to CoverSearch.similarity(wanted, core(it["name"].str.orEmpty())) }
-            .filter { it.second >= 0.85 }.maxByOrNull { it.second }?.first?.get("id")?.long?.toInt()
+        steamIdCache[wanted]?.let { return it }
+        // Se busca con el nombre entero y, si no sale, solo con lo esencial («Batman Arkham City»).
+        val terms = listOf(title, CoverSearch.norm(title).split(' ').filter { it.isNotEmpty() && it !in edition }.joinToString(" ")).distinct()
+        for (term in terms) {
+            val url = "https://store.steampowered.com/api/storesearch/".toHttpUrl().newBuilder()
+                .addQueryParameter("term", term).addQueryParameter("l", "english").addQueryParameter("cc", "US").build()
+            var (code, body) = get(url.toString())
+            if (code == 429 || code >= 500) { kotlinx.coroutines.delay(3000); get(url.toString()).let { code = it.first; body = it.second } }
+            // Steam no respondió: es un fallo (se reintenta), no «el juego no tiene logros».
+            if (code == 429 || code >= 500) error("Steam $code")
+            if (code != 200) continue
+            val id = Http.json.parseToJsonElement(body)["items"].arr
+                .filter { !Regex("(?i)\\b(soundtrack|dlc|season pass|pack|bundle|demo)\\b").containsMatchIn(it["name"].str.orEmpty()) }
+                .map { it to CoverSearch.similarity(wanted, core(it["name"].str.orEmpty())) }
+                .filter { it.second >= 0.85 }.maxByOrNull { it.second }?.first?.get("id")?.long?.toInt()
+            if (id != null) { steamIdCache[wanted] = id; return id }
+        }
+        return null
     }
+
+    private val steamIdCache = java.util.concurrent.ConcurrentHashMap<Set<String>, Int>()
 
     /** Lista de logros de un juego de Steam (API pública): nombre y descripción traducidos, icono y % de jugadores. */
     private class SteamSchema(val items: List<Achievement>, val byKey: Map<Long, String>)
@@ -126,7 +138,7 @@ object Achievements {
      */
     private suspend fun steamUnlocks(settings: Settings, appId: Int, schema: SteamSchema): Map<String, Long?>? {
         val steamId = settings.steamLinkedId ?: settings.steamUser ?: return null
-        val token = runCatching { SteamLogin.fetchWebToken() }.getOrNull()
+        val token = runCatching { if (settings.steamLinkedId != null) SteamLogin.token(settings) else null }.getOrNull()
         val auth = buildString {
             token?.let { append("&access_token=").append(it) }
             if (token == null) settings.steamApiKey?.let { append("&key=").append(it) }

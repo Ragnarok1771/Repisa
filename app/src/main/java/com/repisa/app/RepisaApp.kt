@@ -31,6 +31,7 @@ class RepisaApp : Application(), SingletonImageLoader.Factory, androidx.lifecycl
     override fun onCreate() {
         super.onCreate()
         L10n.init(this)
+        com.repisa.app.sources.SteamLogin.init(this)
     }
 
     /**

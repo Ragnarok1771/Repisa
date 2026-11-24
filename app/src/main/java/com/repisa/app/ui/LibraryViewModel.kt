@@ -53,7 +53,8 @@ enum class GroupMode(private val labelRes: Int) {
     val label: String get() = L10n.s(labelRes)
 }
 
-data class ShelfGroup(val title: String, val subtitle: String, val games: List<Game>)
+/** Una repisa. [key] identifica la repisa para poder plegarla (y que siga plegada al volver). */
+data class ShelfGroup(val title: String, val subtitle: String, val games: List<Game>, val key: String = "grp:$title")
 
 data class ViewOptions(
     val sort: SortMode = SortMode.ALPHA,
@@ -174,8 +175,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         message.value = L10n.s(R.string.msg_added_collection, ids.size, collections.value.firstOrNull { it.id == collectionId }?.name ?: "")
     }
 
-    fun removeFromCollection(ids: Set<String>, collectionId: String) =
+    fun removeFromCollection(ids: Set<String>, collectionId: String) {
         updateMany(ids) { g -> g.copy(collections = g.collections - collectionId) }
+        message.value = L10n.s(R.string.msg_removed_collection, ids.size, collections.value.firstOrNull { it.id == collectionId }?.name ?: "")
+    }
 
     // ------------------------------------------------------------------ Logros
 
@@ -183,6 +186,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     /** Logros cargados por juego (null = el juego no tiene logros conocidos). */
     val achievements = MutableStateFlow<Map<String, com.repisa.app.sources.AchievementSet?>>(emptyMap())
     val achievementsLoading = MutableStateFlow<Set<String>>(emptySet())
+    val achievementErrors = MutableStateFlow<Set<String>>(emptySet())
 
     private suspend fun fetchAchievements(game: Game): com.repisa.app.sources.AchievementSet? = when (game.source) {
         Source.STEAM, Source.EPIC -> com.repisa.app.sources.Achievements.steam(game, settings, achievementStore.manual(game.id))
@@ -205,7 +209,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         if (!force && cached != null && System.currentTimeMillis() - cached.fetchedAt < 86_400_000L) return@launch
         if (game.id in achievementsLoading.value) return@launch
         achievementsLoading.update { it + game.id }
-        val fresh = runCatching { fetchAchievements(game) }.getOrNull()
+        val result = runCatching { fetchAchievements(game) }
+        val fresh = result.getOrNull()
+        // Si el servicio no respondió, se avisa con «Reintentar» en vez de decir que el juego no tiene logros.
+        achievementErrors.update { if (result.isFailure) it + game.id else it - game.id }
         if (fresh != null) achievementStore.save(game.id, fresh)
         publishAchievements(game, fresh ?: cached)
         achievementsLoading.update { it - game.id }
@@ -349,7 +356,25 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             .onFailure { message.value = L10n.s(R.string.backup_failed, it.message ?: "") }
     }
 
-    init { com.repisa.app.model.StatusRules.auto = settings.autoStatus }
+    init {
+        com.repisa.app.model.StatusRules.auto = settings.autoStatus
+        com.repisa.app.model.StatusRules.order = com.repisa.app.model.StatusRules.parseOrder(settings.statusOrder)
+    }
+
+    /** Cambia el orden de las repisas por estado. */
+    fun setStatusOrder(order: List<com.repisa.app.model.PlayStatus>) {
+        com.repisa.app.model.StatusRules.order = order
+        settings.statusOrder = order.joinToString(",") { it.name }
+        _options.update { it.copy(rev = it.rev + 1) }
+    }
+
+    /** Repisas plegadas: solo se ve la placa con el nombre; se despliegan tocándola. */
+    val collapsed = MutableStateFlow(settings.collapsedShelves)
+    fun toggleCollapsed(key: String) {
+        val now = collapsed.value.let { if (key in it) it - key else it + key }
+        settings.collapsedShelves = now
+        collapsed.value = now
+    }
 
     /** Activa o desactiva el estado automático y vuelve a dibujar las repisas. */
     fun setAutoStatus(on: Boolean) {
@@ -431,19 +456,19 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 g.achTotal?.takeIf { it > 0 }?.let { (g.achUnlocked ?: 0).toFloat() / it } ?: -1f
             }.thenBy { it.sortKey })
         }
-        fun group(title: String, games: List<Game>) =
-            ShelfGroup(title, "${L10n.games(games.size)} · ${hours(games)}", games)
+        fun group(title: String, games: List<Game>, key: String = "grp:${o.group.name}:$title") =
+            ShelfGroup(title, "${L10n.games(games.size)} · ${hours(games)}", games, key)
 
         // «Seguir jugando»: los últimos jugados (90 días), arriba del todo, sin buscar.
         val cont = if (o.continueShelf && q.isEmpty()) {
             val since = System.currentTimeMillis() - 90L * 86_400_000
             sorted.filter { (it.lastPlayedAny ?: 0) > since }.sortedByDescending { it.lastPlayedAny }.take(8)
         } else emptyList()
-        val head = if (cont.isEmpty()) emptyList() else listOf(ShelfGroup(L10n.s(R.string.shelf_continue), L10n.s(R.string.shelf_continue_sub), cont))
+        val head = if (cont.isEmpty()) emptyList() else listOf(ShelfGroup(L10n.s(R.string.shelf_continue), L10n.s(R.string.shelf_continue_sub), cont, "continue"))
 
         // Colecciones propias («Probar», «Prioridad»...), como en la biblioteca de Steam: arriba, tras «Seguir jugando».
         val own = if (q.isEmpty()) o.collections.mapNotNull { c ->
-            sorted.filter { c.id in it.collections }.takeIf { it.isNotEmpty() }?.let { group("📂 " + c.name, it) }
+            sorted.filter { c.id in it.collections }.takeIf { it.isNotEmpty() }?.let { group("📂 " + c.name, it, "col:${c.id}") }
         } else emptyList()
 
         return head + own + when (o.group) {
@@ -484,7 +509,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 .sortedBy { it.key }
                 .map { group(if (it.key == 9999) L10n.s(R.string.shelf_unknown_year) else L10n.s(R.string.shelf_decade, it.key), it.value) }
             GroupMode.STATUS -> sorted.groupBy { it.playStatus }.entries
-                .sortedBy { it.key?.ordinal ?: 99 }
+                .sortedBy { e -> e.key?.let { com.repisa.app.model.StatusRules.order.indexOf(it) } ?: 99 }
                 .map { group(it.key?.let { st -> "${st.icon} ${st.label}" } ?: L10n.s(R.string.shelf_no_status), it.value) }
             GroupMode.FAVORITES -> sorted.partition { it.favorite }.let { (fav, rest) ->
                 listOfNotNull(fav.takeIf { it.isNotEmpty() }?.let { group(L10n.s(R.string.shelf_favorites), it) },
@@ -599,8 +624,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         val user = settings.steamUser
         if (key != null && user != null) return SteamSource.withApiKey(key, user)
         val id = settings.steamLinkedId ?: error("No hay ninguna cuenta de Steam vinculada")
-        val token = SteamLogin.fetchWebToken()
-            ?: error(L10n.s(R.string.err_steam_session))
+        val token = SteamLogin.token(settings)
+            ?: error(L10n.s(R.string.err_steam_session) + (SteamLogin.lastProblem?.let { " ($it)" } ?: ""))
         return SteamSource.withToken(token, id)
     }
 
@@ -608,7 +633,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     fun steamLinked() = viewModelScope.launch {
         status.value = L10n.s(R.string.status_linking_steam)
         try {
-            val token = SteamLogin.fetchWebToken() ?: error("Steam no confirmó la sesión")
+            val token = SteamLogin.token(settings)
+                ?: error("Steam no confirmó la sesión" + (SteamLogin.lastProblem?.let { " ($it)" } ?: ""))
             val id = SteamLogin.steamIdFromToken(token) ?: error("no se pudo leer el SteamID")
             settings.steamLinkedId = id
             settings.steamLinkedName = SteamLogin.profileName(id)
@@ -627,7 +653,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         settings.steamLinkedName = null
         settings.steamApiKey = null
         settings.steamUser = null
-        SteamLogin.clearSession()
+        SteamLogin.clearSession(settings)
         mutex.withLock {
             _games.update { list -> list.filter { it.source != Source.STEAM } }
             store.save(_games.value)

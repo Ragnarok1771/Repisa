@@ -30,6 +30,17 @@ object StatusRules {
     /** Sin estado puesto a mano: sin tiempo jugado = Pendiente; con tiempo = Jugando. */
     // Estado de Compose: al cambiar el ajuste, las cajas que lo usan se vuelven a dibujar solas.
     var auto: Boolean by androidx.compose.runtime.mutableStateOf(true)
+
+    /** Orden de las repisas por estado (se puede cambiar en Ajustes → Pantalla). */
+    val DEFAULT_ORDER = listOf(PlayStatus.PLAYING, PlayStatus.BACKLOG, PlayStatus.FINISHED, PlayStatus.COMPLETED,
+        PlayStatus.ABANDONED, PlayStatus.NOT_APPLICABLE)
+    var order: List<PlayStatus> by androidx.compose.runtime.mutableStateOf(DEFAULT_ORDER)
+
+    /** Lee el orden guardado («PLAYING,BACKLOG,...»); los estados que falten van al final en su orden normal. */
+    fun parseOrder(saved: String?): List<PlayStatus> {
+        val list = saved?.split(',')?.mapNotNull { PlayStatus.of(it.trim()) }?.distinct().orEmpty()
+        return list + DEFAULT_ORDER.filter { it !in list }
+    }
 }
 
 /** El estado puesto a mano o, si no hay y el estado automático está activo, el que corresponde por tiempo jugado. */

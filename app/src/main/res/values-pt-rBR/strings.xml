@@ -276,6 +276,8 @@
     <string name="ach_hidden">Conquista oculta</string>
     <string name="ach_manual">marcada por você</string>
     <string name="ach_loading">Procurando conquistas…</string>
+    <string name="ach_retry">Recarregar</string>
+    <string name="ach_error">Não foi possível consultar as conquistas (serviço talvez ocupado). Toque em \"Recarregar\" daqui a pouco.</string>
     <string name="ach_none">Nenhuma conquista encontrada para este jogo.</string>
     <string name="ach_no_ra_system">%1$s não tem conquistas no RetroAchievements. As conquistas do Repisa estão abaixo.</string>
     <string name="ach_link_ra">Vincule o RetroAchievements em Ajustes para ver as conquistas deste jogo.</string>
@@ -342,7 +344,7 @@
     <string name="collection_default">Minha coleção</string>
     <string name="collection">Coleção</string>
     <string name="collections">Coleções</string>
-    <string name="collection_new">Nova coleção…</string>
+    <string name="collection_new">Nova coleção</string>
     <string name="collection_rename">Renomear</string>
     <string name="collection_hint">ex. Experimentar, Prioridade, Com amigos…</string>
     <string name="collections_empty">Você ainda não tem coleções. Crie uma: ela aparece como uma estante própria no topo.</string>
@@ -351,6 +353,18 @@
     <string name="select_many">Selecionar</string>
     <string name="select_all">Selecionar tudo</string>
     <string name="selected_count">%1$d selecionados · toque nas capas para adicionar ou tirar</string>
+    <string name="menu_collections">Coleções</string>
+    <string name="menu_collections_sub">Suas prateleiras: ver, adicionar, tirar, apagar</string>
+    <string name="collection_add_games">Adicionar jogos</string>
+    <string name="collection_remove_from">Tirar da coleção</string>
+    <string name="collection_delete_confirm">Apagar \"%1$s\"? Os jogos continuam na sua biblioteca.</string>
+    <string name="collection_no_games">Ainda sem jogos: use \"Adicionar jogos\".</string>
+    <string name="collection_pick_title">Jogos de \"%1$s\"</string>
+    <string name="msg_removed_collection">%1$d jogo(s) tirados de \"%2$s\"</string>
+    <string name="status_order">Ordem das prateleiras por status</string>
+    <string name="status_order_hint">Usado ao agrupar por status. Mova com ▲ ▼.</string>
+    <string name="status_order_reset">Restaurar ordem</string>
+    <string name="shelf_fold_hint">Dica: toque na placa dourada de uma prateleira para recolhê-la ou abri-la.</string>
     <string name="status_clear">Tirar status (automático)</string>
     <string name="random_platform">Plataforma</string>
     <string name="random_any_platform">Qualquer plataforma</string>

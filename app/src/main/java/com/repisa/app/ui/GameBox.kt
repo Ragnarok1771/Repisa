@@ -139,11 +139,14 @@ fun GameBox(
                         contentAlignment = Alignment.Center,
                     ) {
                         case.bandText?.let {
+                            // Tamaño que cabe siempre a lo ancho («PlayStation 2» en una caja estrecha): si no cabía,
+                            // el texto se salía y se veía descentrado.
+                            val size = minOf(height * 0.05f, frontW * 0.88f / (it.length * 0.62f).coerceAtLeast(1f))
                             Text(
                                 it, color = Color(case.bandTextColor), fontWeight = FontWeight.Bold,
-                                fontSize = with(density) { (height * 0.05f).toSp() }, maxLines = 1, softWrap = false,
-                                lineHeight = with(density) { (height * 0.05f).toSp() },
-                                modifier = Modifier.wrapContentHeight(unbounded = true),
+                                fontSize = with(density) { size.toSp() }, maxLines = 1, softWrap = false,
+                                lineHeight = with(density) { size.toSp() }, textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().wrapContentHeight(unbounded = true),
                             )
                         }
                     }

@@ -276,6 +276,8 @@
     <string name="ach_hidden">Obiettivo nascosto</string>
     <string name="ach_manual">segnato da te</string>
     <string name="ach_loading">Cerco gli obiettivi…</string>
+    <string name="ach_retry">Ricarica</string>
+    <string name="ach_error">Impossibile leggere gli obiettivi (servizio forse sovraccarico). Tocca «Ricarica» tra poco.</string>
     <string name="ach_none">Nessun obiettivo trovato per questo gioco.</string>
     <string name="ach_no_ra_system">%1$s non ha obiettivi su RetroAchievements. Qui sotto hai gli obiettivi di Repisa.</string>
     <string name="ach_link_ra">Collega RetroAchievements nelle Impostazioni per vedere gli obiettivi.</string>
@@ -342,7 +344,7 @@
     <string name="collection_default">La mia collezione</string>
     <string name="collection">Collezione</string>
     <string name="collections">Collezioni</string>
-    <string name="collection_new">Nuova collezione…</string>
+    <string name="collection_new">Nuova collezione</string>
     <string name="collection_rename">Rinomina</string>
     <string name="collection_hint">es. Da provare, Priorità, Con amici…</string>
     <string name="collections_empty">Nessuna collezione. Creane una: appare come uno scaffale in alto.</string>
@@ -351,6 +353,18 @@
     <string name="select_many">Seleziona</string>
     <string name="select_all">Seleziona tutto</string>
     <string name="selected_count">%1$d selezionati · tocca le copertine</string>
+    <string name="menu_collections">Collezioni</string>
+    <string name="menu_collections_sub">I tuoi scaffali: vedi, aggiungi, togli, elimina</string>
+    <string name="collection_add_games">Aggiungi giochi</string>
+    <string name="collection_remove_from">Togli dalla collezione</string>
+    <string name="collection_delete_confirm">Eliminare «%1$s»? I giochi restano nella tua libreria.</string>
+    <string name="collection_no_games">Ancora nessun gioco: usa «Aggiungi giochi».</string>
+    <string name="collection_pick_title">Giochi in «%1$s»</string>
+    <string name="msg_removed_collection">%1$d gioco/i tolti da «%2$s»</string>
+    <string name="status_order">Ordine degli scaffali per stato</string>
+    <string name="status_order_hint">Usato quando raggruppi per stato. Sposta con ▲ ▼.</string>
+    <string name="status_order_reset">Ripristina ordine</string>
+    <string name="shelf_fold_hint">Suggerimento: tocca la targhetta dorata di uno scaffale per chiuderlo o aprirlo.</string>
     <string name="status_clear">Togli stato (automatico)</string>
     <string name="random_platform">Piattaforma</string>
     <string name="random_any_platform">Qualsiasi piattaforma</string>

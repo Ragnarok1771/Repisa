@@ -1,5 +1,6 @@
 package com.repisa.app.sources
 
+import kotlinx.coroutines.sync.withLock
 import android.util.Base64
 import com.repisa.app.data.Http
 import com.repisa.app.data.Settings
@@ -139,6 +140,8 @@ class EpicSource(private val settings: Settings) {
         saveSession(Http.getJson(req), client)
     }
 
+    private val refreshLock = kotlinx.coroutines.sync.Mutex()
+
     private fun saveSession(r: JsonElement, client: String) {
         settings.epicClient = client
         settings.epicAccessToken = r["access_token"].str ?: error("Epic no devolvió token")
@@ -149,7 +152,13 @@ class EpicSource(private val settings: Settings) {
             ?: (System.currentTimeMillis() + 3600_000)
     }
 
-    private suspend fun ensureToken(): String {
+    /**
+     * Epic cambia el pase de renovación cada vez que se usa: si dos tareas lo renovasen a la vez (sincronizar y
+     * logros), la segunda gastaría uno ya usado. Por eso se renueva de una en una.
+     */
+    private suspend fun ensureToken(): String = refreshLock.withLock { ensureTokenLocked() }
+
+    private suspend fun ensureTokenLocked(): String {
         val token = settings.epicAccessToken
         if (token != null && System.currentTimeMillis() < settings.epicExpiresAt - 60_000) return token
         val refresh = settings.epicRefreshToken ?: error("No has iniciado sesión en Epic Games")
