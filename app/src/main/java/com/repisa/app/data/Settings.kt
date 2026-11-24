@@ -35,7 +35,7 @@ class Settings(context: Context) {
         val SECRET_KEYS = setOf("steam_key", "epic_access", "epic_refresh", "sgdb_key", "ra_api_key")
         /** Carpetas: los permisos de Android no sobreviven a reinstalar, así que no se exportan. */
         val DEVICE_KEYS = setOf("rom_folders", "esde_folder", "ra_folder", "cocoon_folder", "session_game", "session_pkg",
-            "session_start", "last_auto_sync", "frontend_report", "cover_pass", "facts_pass", "last_update_check", "onboarding_step")
+            "session_start", "last_auto_sync", "frontend_report", "cover_pass", "facts_pass", "ach_pass", "last_update_check", "onboarding_step")
     }
 
     val prefsForBackup: android.content.SharedPreferences get() = prefs
@@ -94,6 +94,14 @@ class Settings(context: Context) {
         get() = prefs.getInt("onboarding_step", 0)
         set(v) = prefs.edit { putInt("onboarding_step", v) }
 
+    /** Estado automático: sin tiempo = Pendiente, con tiempo = Jugando (si no se puso a mano). */
+    var autoStatus: Boolean
+        get() = prefs.getBoolean("auto_status", true)
+        set(v) = prefs.edit { putBoolean("auto_status", v) }
+
+    /** Colecciones propias, en JSON: [{"id":"c1","name":"Probar"}, ...] (en orden). */
+    var collectionsJson: String? get() = str("collections"); set(v) = put("collections", v)
+
     /** Repisa «Seguir jugando» arriba del todo. */
     var continueShelf: Boolean
         get() = prefs.getBoolean("continue_shelf", true)
@@ -132,6 +140,9 @@ class Settings(context: Context) {
     /** Clave gratuita de https://www.steamgriddb.com/profile/preferences/api (buscador de carátulas). */
     var steamGridDbKey: String? get() = secret("sgdb_key"); set(v) = putSecret("sgdb_key", v?.trim())
     /** Última "pasada" automática de búsqueda de carátulas que faltan (ver LibraryViewModel.COVER_PASS). */
+    var achPass: Int
+        get() = prefs.getInt("ach_pass", 0)
+        set(v) = prefs.edit { putInt("ach_pass", v) }
     var factsPass: Int
         get() = prefs.getInt("facts_pass", 0)
         set(v) = prefs.edit { putInt("facts_pass", v) }

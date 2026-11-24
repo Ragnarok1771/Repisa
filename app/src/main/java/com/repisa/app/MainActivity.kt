@@ -114,6 +114,7 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
     var inRated by rememberSaveable { mutableStateOf(false) }
     var inRandom by rememberSaveable { mutableStateOf(false) }
     var inStats by rememberSaveable { mutableStateOf(false) }
+    var inAch by rememberSaveable { mutableStateOf(false) }
     val selectedId by vm.selectedId.collectAsState()
     val games by vm.displayGames.collectAsState()
     val selected = games.firstOrNull { it.id == selectedId }
@@ -136,8 +137,10 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
     BackHandler(enabled = true) {
         when {
             selected != null -> vm.selectedId.value = null
+            vm.selecting.value -> vm.endSelection()
             inRandom -> inRandom = false
             inStats -> inStats = false
+            inAch -> inAch = false
             inRated -> inRated = false
             inSettings -> closeSettings()
             else -> Unit
@@ -150,8 +153,10 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
             when (e.key.nativeKeyCode) {
                 KeyEvent.KEYCODE_BUTTON_B -> when {
                     selected != null -> { vm.selectedId.value = null; true }
+                    vm.selecting.value -> { vm.endSelection(); true }
                     inRandom -> { inRandom = false; true }
                     inStats -> { inStats = false; true }
+                    inAch -> { inAch = false; true }
                     inRated -> { inRated = false; true }
                     inSettings -> { closeSettings(); true }
                     else -> false
@@ -167,9 +172,11 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
         ) {
             when {
                 inStats -> com.repisa.app.ui.StatsScreen(vm, onBack = { inStats = false })
+                inAch -> com.repisa.app.ui.AchievementsOverview(vm, onBack = { inAch = false }, onOpen = { vm.selectedId.value = it.id })
                 inRated -> RatedScreen(vm, onBack = { inRated = false }, onOpen = { vm.selectedId.value = it.id })
                 else -> ShelfScreen(vm, onOpenSettings = { vm.inSettings.value = true }, onOpenGame = { vm.selectedId.value = it.id },
-                    onOpenRated = { inRated = true }, onOpenRandom = { inRandom = true }, onOpenStats = { inStats = true })
+                    onOpenRated = { inRated = true }, onOpenRandom = { inRandom = true }, onOpenStats = { inStats = true },
+                    onOpenAchievements = { inAch = true })
             }
             if (inRandom) com.repisa.app.ui.RandomPicker(vm, onClose = { inRandom = false }, onOpen = { vm.selectedId.value = it.id })
             selected?.let { DetailScreen(it, vm, onClose = { vm.selectedId.value = null }) }

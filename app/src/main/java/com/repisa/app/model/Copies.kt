@@ -51,6 +51,7 @@ object Copies {
             val name = if (main.userEdited) main.title else group.minBy { it.title.length }.title
             out += main.copy(
                 status = main.status ?: group.firstNotNullOfOrNull { it.status },
+                collections = group.flatMap { it.collections }.distinct(),
                 notes = main.notes ?: group.firstNotNullOfOrNull { it.notes },
                 title = name,
                 originalTitle = main.title,

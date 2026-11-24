@@ -44,6 +44,7 @@ fun mergeGame(old: Game?, new: Game): Game {
         manualMinutes = old.manualMinutes,
         notes = old.notes,
         status = old.status,
+        collections = old.collections,
         achUnlocked = old.achUnlocked, achTotal = old.achTotal,
         lastPlayed = listOfNotNull(old.lastPlayed, new.lastPlayed).maxOrNull(),
         coverUrl = if ((old.userEdited || old.customCover) && old.coverUrl != null) old.coverUrl else new.coverUrl ?: old.coverUrl,

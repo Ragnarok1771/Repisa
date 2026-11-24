@@ -434,6 +434,14 @@ private fun DisplayPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
             Switch(checked = c, onCheckedChange = { c = it; vm.setContinueShelf(it) })
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.setting_auto_status), color = Color.White)
+                Hint(stringResource(R.string.setting_auto_status_hint))
+            }
+            var c by remember { mutableStateOf(s.autoStatus) }
+            Switch(checked = c, onCheckedChange = { c = it; vm.setAutoStatus(it) })
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.setting_status_boxes), color = Color.White, modifier = Modifier.weight(1f))
             var c by remember { mutableStateOf(s.showStatusOnBoxes) }
             Switch(checked = c, onCheckedChange = { c = it; s.showStatusOnBoxes = it })
@@ -445,6 +453,20 @@ private fun DisplayPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
         Hint(stringResource(R.string.box_size_hint))
         Slider(value = h, onValueChange = { h = it }, onValueChangeFinished = { s.shelfHeightDp = h.toInt() },
             valueRange = 90f..240f, modifier = Modifier.widthIn(max = 560.dp))
+        // Colecciones propias: renombrar o borrar (los juegos no se borran, solo salen de la colección).
+        val collections by vm.collections.collectAsState()
+        var renaming by remember { mutableStateOf<GameCollection?>(null) }
+        HorizontalDivider(color = Color(0x33FFFFFF))
+        Text(stringResource(R.string.collections), color = Color.White)
+        Hint(stringResource(R.string.collections_hint))
+        collections.forEach { c ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("📂 " + c.name, color = Color(0xFFE8D9C0), modifier = Modifier.weight(1f))
+                TextButton(onClick = { renaming = c }) { Text(stringResource(R.string.collection_rename)) }
+                TextButton(onClick = { vm.deleteCollection(c.id) }) { Text(stringResource(R.string.delete)) }
+            }
+        }
+        renaming?.let { c -> CollectionNameDialog(c.name, onDismiss = { renaming = null }) { vm.renameCollection(c.id, it); renaming = null } }
         val hidden by vm.hidden.collectAsState()
         if (hidden.isNotEmpty()) {
             HorizontalDivider(color = Color(0x33FFFFFF))

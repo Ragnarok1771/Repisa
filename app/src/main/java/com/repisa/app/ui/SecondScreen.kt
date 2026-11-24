@@ -40,6 +40,7 @@ import com.repisa.app.R
 import com.repisa.app.i18n.L10n
 import com.repisa.app.model.formatPlaytime
 import com.repisa.app.model.label
+import com.repisa.app.model.playStatus
 import java.text.DateFormat
 import java.util.Date
 
@@ -109,7 +110,7 @@ private fun FocusPanel(vm: LibraryViewModel) {
                 Text(L10n.games(all.size) + " · " + stringResource(R.string.hours_played, all.sumOf { it.totalMinutes } / 60),
                     color = Color(0xFFBFA98A))
                 // Resumen por estado: ⏳ 12 · ▶ 3 · ✓ 40 ...
-                val byStatus = androidx.compose.runtime.remember(all) { all.mapNotNull { com.repisa.app.model.PlayStatus.of(it.status) }.groupingBy { it }.eachCount() }
+                val byStatus = androidx.compose.runtime.remember(all) { all.mapNotNull { it.playStatus }.groupingBy { it }.eachCount() }
                 if (byStatus.isNotEmpty()) Text(
                     com.repisa.app.model.PlayStatus.entries.filter { it in byStatus }.joinToString("  ·  ") { "${it.icon} ${it.label} ${byStatus[it]}" },
                     color = Color(0xFFE8D9C0), fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp),

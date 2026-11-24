@@ -2,6 +2,40 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.14.0]
+
+**Estados**
+- Nuevo estado **∅ No aplica** (gris) para juegos sin final (Fortnite, Counter-Strike, Deadlock…): no cuentan como
+  pendientes, no salen en el dado y no entran en «Los más jugados».
+- **Estado automático** (Ajustes → Pantalla, activado): los juegos que no hayas marcado son *Pendiente* si no tienen
+  tiempo jugado y *Jugando* si lo tienen. Un *Pendiente* con horas nuevas (jugado aquí, en el PC, en Steam o en Epic)
+  pasa solo a *Jugando*.
+- **Selección múltiple**: mantén pulsada una carátula (o toca el chip «☑ Seleccionar»), toca las demás y usa
+  *Estado ▾*, *Colección ▾* o *Seleccionar todo*. Con mando: A o Y marcan; B sale.
+
+**Colecciones propias** (como las de Steam: «Probar», «Prioridad»…) — se crean desde la selección o desde la ficha
+(📂 Colecciones) y aparecen como repisas arriba del todo, tras «Seguir jugando». Se renombran o borran en
+Ajustes → Pantalla.
+
+**Logros**
+- **Steam**: Repisa usa ahora el mismo servicio que la web de Steam, con tu sesión: ves tus logros con su fecha aunque
+  el perfil sea privado y sin clave de API. La lista viene de la API pública de Steam (en tu idioma).
+- **Epic**: mejor búsqueda de su juego en Steam (sin «Game of the Year», «Definitive Edition», DLC…).
+- **🏆 Pantalla de logros** a la izquierda de los totales de arriba: logros conseguidos, juegos con logros, juegos
+  completados, logros de Repisa, **últimos logros con su fecha** y el progreso de cada juego.
+- Al actualizar se vuelven a pedir una vez los logros de Steam.
+
+**¿A qué juego? 🎲** — filtros en este orden: *Todo* · *Según mis gustos* · *Solo pendientes* · **Plataforma ▾** ·
+**Duración ▾** (≤ 5, 10, 15, 20, 30, 40 o 60 h). La ruleta da **2 a 4 vueltas** antes de frenar.
+
+**Ficha** — **▶ Jugar** grande y arriba, bajo el título.
+
+**Panel de la pantalla de abajo** — en pantallas casi cuadradas (la de abajo de la AYN Thor) todo va en columna:
+Mi nota/Metacritic/HowLongToBeat a tamaño normal (ya se lee «Historia»), botones que pasan de línea y notas a lo ancho
+con letra más grande (tocarlas las edita).
+
+**Estadísticas** — «No aplica» en *Por estado*; «Los más jugados» sin los juegos marcados *No aplica*.
+
 ## [0.13.0]
 
 > ⚠ **Cambio de firma (solo esta vez).** Desde esta versión Repisa se firma con una clave privada. No se instala

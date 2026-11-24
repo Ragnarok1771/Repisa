@@ -69,6 +69,10 @@
   },
   {
     "version": "0.13.0",
+    "commit": "60d2554e42e38937001a65569b3f262ec143d4a0"
+  },
+  {
+    "version": "0.14.0",
     "commit": "HEAD"
   }
 ]

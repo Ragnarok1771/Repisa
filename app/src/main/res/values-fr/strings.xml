@@ -326,6 +326,36 @@
     <string name="onb_finish">À vous de jouer !</string>
     <string name="onb_skip_all">Passer le guide</string>
     <string name="onb_again">Revoir le guide de démarrage</string>
+    <string name="achov_unlocked">succès débloqués</string>
+    <string name="achov_games">jeux avec succès</string>
+    <string name="achov_perfect" formatted="false">jeux à 100 % des succès</string>
+    <string name="achov_repisa">succès Repisa</string>
+    <string name="achov_recent">Derniers succès</string>
+    <string name="achov_by_game">Progression par jeu</string>
+    <string name="achov_none">Aucun succès chargé pour l’instant. Ils apparaissent quand Repisa vérifie vos jeux Steam et RetroAchievements, ou en ouvrant les succès d’un jeu.</string>
+    <string name="status_na">Sans objet</string>
+    <string name="setting_auto_status">Statut automatique</string>
+    <string name="setting_auto_status_hint" formatted="false">Jeux non marqués : sans temps de jeu = À faire, avec = En cours. Un jeu À faire que vous lancez (ici, sur PC, Steam ou Epic) passe En cours. Terminé, 100 %, Abandonné et Sans objet se marquent à la main.</string>
+    <string name="stats_most_played_hint">Sans les jeux marqués « Sans objet » (Counter-Strike, Fortnite…).</string>
+    <string name="msg_status_set">%1$d jeu(x) → %2$s</string>
+    <string name="msg_added_collection">%1$d jeu(x) ajouté(s) à « %2$s »</string>
+    <string name="collection_default">Ma collection</string>
+    <string name="collection">Collection</string>
+    <string name="collections">Collections</string>
+    <string name="collection_new">Nouvelle collection…</string>
+    <string name="collection_rename">Renommer</string>
+    <string name="collection_hint">ex. À essayer, Priorité, Entre amis…</string>
+    <string name="collections_empty">Pas encore de collection. Créez-en une : elle apparaît comme une étagère en haut.</string>
+    <string name="collections_hint">Vos propres étagères (comme les collections Steam). Ajoutez des jeux depuis la fiche (📂) ou en en sélectionnant plusieurs. Supprimer une collection ne supprime pas ses jeux.</string>
+    <string name="delete">Supprimer</string>
+    <string name="select_many">Sélectionner</string>
+    <string name="select_all">Tout sélectionner</string>
+    <string name="selected_count">%1$d sélectionnés · touchez les jaquettes</string>
+    <string name="status_clear">Retirer le statut (automatique)</string>
+    <string name="random_platform">Plateforme</string>
+    <string name="random_any_platform">Toutes les plateformes</string>
+    <string name="random_duration">Durée</string>
+    <string name="random_any_duration">Toute durée</string>
     <string name="diag_copy">Copier le diagnostic</string>
     <string name="diag_copied">Copié ✓</string>
     <string name="diag_share">Partager le diagnostic</string>

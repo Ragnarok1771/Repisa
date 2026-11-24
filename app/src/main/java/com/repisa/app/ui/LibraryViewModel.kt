@@ -61,7 +61,14 @@ data class ViewOptions(
     val source: Source? = null,
     val query: String = "",
     val continueShelf: Boolean = true,
+    /** Se incrementa para forzar a reconstruir las repisas. */
+    val rev: Int = 0,
+    val collections: List<GameCollection> = emptyList(),
 )
+
+/** Colección propia del usuario (repisa con nombre). */
+@kotlinx.serialization.Serializable
+data class GameCollection(val id: String, val name: String)
 
 class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     val settings = Settings(app)
@@ -80,6 +87,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             sort = runCatching { SortMode.valueOf(settings.sortMode) }.getOrDefault(SortMode.ALPHA),
             group = runCatching { GroupMode.valueOf(settings.groupMode) }.getOrDefault(GroupMode.NONE),
             continueShelf = settings.continueShelf,
+            collections = runCatching {
+                kotlinx.serialization.json.Json.decodeFromString(kotlinx.serialization.builtins.ListSerializer(GameCollection.serializer()),
+                    settings.collectionsJson ?: "[]")
+            }.getOrDefault(emptyList()),
         )
     )
 
@@ -101,6 +112,70 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     fun finishOnboarding() { settings.onboardingDone = true; onboarding.value = false }
 
     fun restartOnboarding() { settings.onboardingDone = false; settings.onboardingStep = 0; onboarding.value = true; inSettings.value = false }
+
+    // ------------------------------------------------------------------ Selección múltiple y colecciones
+
+    /** Selección de varias carátulas (para poner estado o añadir a una colección de golpe). */
+    val selecting = MutableStateFlow(false)
+    val selection = MutableStateFlow<Set<String>>(emptySet())
+
+    fun startSelection(game: Game? = null) { selecting.value = true; selection.value = setOfNotNull(game?.id) }
+    fun toggleSelected(game: Game) = selection.update { if (game.id in it) it - game.id else it + game.id }
+    fun selectAll(games: List<Game>) = selection.update { it + games.map { g -> g.id } }
+    fun endSelection() { selecting.value = false; selection.value = emptySet() }
+
+    /** Aplica un cambio a varios juegos (y a sus copias unidas) y guarda una sola vez. */
+    private fun updateMany(ids: Set<String>, change: (Game) -> Game) = viewModelScope.launch {
+        val all = ids + displayGames.value.filter { it.id in ids }.flatMap { it.copyIds }
+        mutex.withLock {
+            _games.update { list -> list.map { if (it.id in all) change(it) else it } }
+            store.save(_games.value)
+        }
+    }
+
+    fun setStatusFor(ids: Set<String>, status: com.repisa.app.model.PlayStatus?) {
+        // El estado va en la copia principal (la que se ve); a las demás copias se les quita para no contradecirla.
+        val mains = displayGames.value.filter { it.id in ids }.map { it.id }.toSet()
+        updateMany(ids) { g -> g.copy(status = if (g.id in mains) status?.name else null) }
+        message.value = L10n.s(R.string.msg_status_set, ids.size, status?.label ?: L10n.s(R.string.shelf_no_status))
+    }
+
+    val collections = MutableStateFlow(loadCollections())
+
+    private fun loadCollections(): List<GameCollection> = runCatching {
+        kotlinx.serialization.json.Json.decodeFromString(kotlinx.serialization.builtins.ListSerializer(GameCollection.serializer()),
+            settings.collectionsJson ?: "[]")
+    }.getOrDefault(emptyList())
+
+    private fun saveCollections(list: List<GameCollection>) {
+        settings.collectionsJson = kotlinx.serialization.json.Json.encodeToString(
+            kotlinx.serialization.builtins.ListSerializer(GameCollection.serializer()), list)
+        collections.value = list
+        _options.update { it.copy(rev = it.rev + 1, collections = list) }
+    }
+
+    fun createCollection(name: String): GameCollection {
+        val c = GameCollection("c${System.currentTimeMillis()}", name.trim().ifBlank { L10n.s(R.string.collection_default) })
+        saveCollections(collections.value + c)
+        return c
+    }
+
+    fun renameCollection(id: String, name: String) =
+        saveCollections(collections.value.map { if (it.id == id) it.copy(name = name.trim().ifBlank { it.name }) else it })
+
+    fun deleteCollection(id: String) {
+        saveCollections(collections.value.filter { it.id != id })
+        updateMany(_games.value.filter { id in it.collections }.map { it.id }.toSet()) { it.copy(collections = it.collections - id) }
+    }
+
+    fun addToCollection(ids: Set<String>, collectionId: String) {
+        val mains = displayGames.value.filter { it.id in ids }.map { it.id }.toSet()
+        updateMany(mains.ifEmpty { ids }.let { m -> m }) { g -> if (collectionId in g.collections) g else g.copy(collections = g.collections + collectionId) }
+        message.value = L10n.s(R.string.msg_added_collection, ids.size, collections.value.firstOrNull { it.id == collectionId }?.name ?: "")
+    }
+
+    fun removeFromCollection(ids: Set<String>, collectionId: String) =
+        updateMany(ids) { g -> g.copy(collections = g.collections - collectionId) }
 
     // ------------------------------------------------------------------ Logros
 
@@ -166,6 +241,13 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     fun achievementsPass() {
         if (achievementsJob?.isActive == true) return
         achievementsJob = viewModelScope.launch {
+            // Tras cambiar cómo se leen los logros de Steam, volver a pedirlos una vez.
+            if (settings.achPass < ACH_PASS) {
+                achievementStore.clearAll()
+                achievements.value = emptyMap()
+                mutex.withLock { _games.update { list -> list.map { if (it.achTotal != null) it.copy(achTotal = null, achUnlocked = null) else it } } }
+                settings.achPass = ACH_PASS
+            }
             val ra = settings.raUser != null && settings.raApiKey != null
             val pending = displayGames.value.filter { g ->
                 g.achTotal == null && when (g.source) {
@@ -267,6 +349,15 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             .onFailure { message.value = L10n.s(R.string.backup_failed, it.message ?: "") }
     }
 
+    init { com.repisa.app.model.StatusRules.auto = settings.autoStatus }
+
+    /** Activa o desactiva el estado automático y vuelve a dibujar las repisas. */
+    fun setAutoStatus(on: Boolean) {
+        settings.autoStatus = on
+        com.repisa.app.model.StatusRules.auto = on
+        _options.update { it.copy(rev = it.rev + 1) } // reconstruir «Repisas por estado»
+    }
+
     /** Juegos quitados de la repisa por el usuario. */
     val hidden = MutableStateFlow(settings.hiddenGames)
 
@@ -350,7 +441,12 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         } else emptyList()
         val head = if (cont.isEmpty()) emptyList() else listOf(ShelfGroup(L10n.s(R.string.shelf_continue), L10n.s(R.string.shelf_continue_sub), cont))
 
-        return head + when (o.group) {
+        // Colecciones propias («Probar», «Prioridad»...), como en la biblioteca de Steam: arriba, tras «Seguir jugando».
+        val own = if (q.isEmpty()) o.collections.mapNotNull { c ->
+            sorted.filter { c.id in it.collections }.takeIf { it.isNotEmpty() }?.let { group("📂 " + c.name, it) }
+        } else emptyList()
+
+        return head + own + when (o.group) {
             GroupMode.NONE -> if (sorted.isEmpty()) emptyList() else listOf(group(MY_COLLECTION, sorted))
             GroupMode.GENRE -> {
                 val map = linkedMapOf<String, MutableList<Game>>()
@@ -387,7 +483,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             GroupMode.DECADE -> sorted.groupBy { it.releaseYear?.let { y -> y / 10 * 10 } ?: 9999 }.entries
                 .sortedBy { it.key }
                 .map { group(if (it.key == 9999) L10n.s(R.string.shelf_unknown_year) else L10n.s(R.string.shelf_decade, it.key), it.value) }
-            GroupMode.STATUS -> sorted.groupBy { com.repisa.app.model.PlayStatus.of(it.status) }.entries
+            GroupMode.STATUS -> sorted.groupBy { it.playStatus }.entries
                 .sortedBy { it.key?.ordinal ?: 99 }
                 .map { group(it.key?.let { st -> "${st.icon} ${st.label}" } ?: L10n.s(R.string.shelf_no_status), it.value) }
             GroupMode.FAVORITES -> sorted.partition { it.favorite }.let { (fav, rest) ->
@@ -479,7 +575,12 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             }
             mutex.withLock {
                 val current = _games.value.associateBy { it.id }
-                val merged = fresh.map { mergeGame(current[it.id], it) }
+                val merged = fresh.map { mergeGame(current[it.id], it) }.map { g ->
+                    // Pendiente y con horas nuevas (jugado en el PC, en Steam o en Epic): pasa a «Jugando».
+                    val before = current[g.id]?.totalMinutes
+                    if (g.status == com.repisa.app.model.PlayStatus.BACKLOG.name && before != null && g.totalMinutes > before)
+                        g.copy(status = com.repisa.app.model.PlayStatus.PLAYING.name) else g
+                }
                 val freshIds = merged.map { it.id }.toSet()
                 // Lo que la fuente ya no devuelve se elimina (juego desinstalado, ROM borrada...).
                 _games.value = _games.value.filter { it.source != source && it.id !in freshIds } + merged
@@ -569,6 +670,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         const val COVER_PASS = 2
         /** Súbelo cuando mejore la búsqueda de género/estudio/año para que se repasen los juegos sin esos datos. */
         const val FACTS_PASS = 2
+        /** Súbelo cuando cambie cómo se leen los logros, para volver a pedirlos. */
+        const val ACH_PASS = 2
     }
 
     private suspend fun replace(game: Game, save: Boolean = true) = mutex.withLock {
@@ -586,6 +689,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             manualMinutes = current.manualMinutes,
             notes = current.notes,
             status = current.status,
+            collections = current.collections,
             achUnlocked = current.achUnlocked, achTotal = current.achTotal,
             coverUrl = if (current.customCover) current.coverUrl else enriched.coverUrl,
             customCover = current.customCover,

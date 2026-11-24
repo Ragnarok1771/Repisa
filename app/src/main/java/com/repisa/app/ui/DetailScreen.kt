@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -77,6 +79,7 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     var hiding by remember { mutableStateOf(false) }
     var editingNotes by remember { mutableStateOf(false) }
     var showAchievements by remember { mutableStateOf(false) }
+    var showCollections by remember { mutableStateOf(false) }
     var resetting by remember { mutableStateOf(false) }
     var searchingCover by remember { mutableStateOf(false) }
     var rating by remember { mutableStateOf(false) }
@@ -131,6 +134,15 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         if (game.familyShared) Tag(stringResource(R.string.tag_family), Color(0xFF2B5A7A))
                         game.genres.forEach { Tag(L10n.genre(it), Color(0xFF2F4A3A)) }
                     }
+                    // Jugar, bien visible arriba (es lo primero que se busca en una biblioteca).
+                    if (canPlay) {
+                        Spacer(Modifier.height(12.dp))
+                        Button(onClick = { vm.play(game) }, modifier = Modifier.focusRequester(firstButton).height(56.dp).widthIn(min = 220.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D), contentColor = Color.Black)) {
+                            Icon(Icons.Default.PlayArrow, null, Modifier.size(28.dp))
+                            Text(" " + stringResource(R.string.play), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                     Spacer(Modifier.height(14.dp))
                     ScoresRow(game, scale, onRate = { rating = true }, onOpen = { vm.launcher.openUrl(it) })
                     Spacer(Modifier.height(10.dp))
@@ -158,12 +170,6 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                     }
                     Spacer(Modifier.height(16.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (canPlay) {
-                            Button(onClick = { vm.play(game) }, modifier = Modifier.focusRequester(firstButton),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D), contentColor = Color.Black)) {
-                                Icon(Icons.Default.PlayArrow, null); Text(stringResource(R.string.play))
-                            }
-                        }
                         game.storeUrl?.let { url ->
                             OutlinedButton(onClick = { vm.launcher.openUrl(url) },
                                 modifier = if (canPlay) Modifier else Modifier.focusRequester(firstButton)) {
@@ -184,6 +190,9 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         OutlinedButton(onClick = { showAchievements = true }) {
                             Text("🏆 " + stringResource(R.string.achievements) +
                                 (game.achTotal?.takeIf { it > 0 }?.let { " ${game.achUnlocked ?: 0}/$it" } ?: ""), color = Color.White)
+                        }
+                        OutlinedButton(onClick = { showCollections = true }) {
+                            Text("📂 " + stringResource(R.string.collections), color = Color.White)
                         }
                         OutlinedButton(onClick = { editingNotes = true }) {
                             Text("✎ " + stringResource(R.string.notes), color = Color.White)
@@ -207,6 +216,7 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
     if (searchingCover) CoverSearchDialog(game, vm, onDismiss = { searchingCover = false })
     if (editing) EditDialog(game, vm.settings.manualTimeIsTotal, onDismiss = { editing = false }) { vm.updateGame(it); editing = false }
     if (showAchievements) AchievementsDialog(game, vm, onDismiss = { showAchievements = false })
+    if (showCollections) CollectionsDialog(game, vm, onDismiss = { showCollections = false })
     if (editingNotes) com.repisa.app.NotesDialog(game.notes.orEmpty(), onDismiss = { editingNotes = false }) {
         vm.updateGame(game.copy(notes = it.ifBlank { null })); editingNotes = false
     }
@@ -439,4 +449,35 @@ private fun CopiesDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
     )
+}
+
+/** Colecciones del juego: marcar/desmarcar y crear una nueva. */
+@Composable
+private fun CollectionsDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) {
+    val collections by vm.collections.collectAsState()
+    val current = vm.displayGames.collectAsState().value.firstOrNull { it.id == game.id } ?: game
+    var newColl by remember { mutableStateOf(false) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("📂 " + stringResource(R.string.collections)) },
+        text = {
+            Column {
+                if (collections.isEmpty()) Text(stringResource(R.string.collections_empty), fontSize = 14.sp)
+                collections.forEach { c ->
+                    val inIt = c.id in current.collections
+                    Row(Modifier.fillMaxWidth().clickable {
+                        if (inIt) vm.removeFromCollection(setOf(game.id) + game.copyIds, c.id) else vm.addToCollection(setOf(game.id), c.id)
+                    }, verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.Checkbox(checked = inIt, onCheckedChange = null)
+                        Text(c.name)
+                    }
+                }
+                TextButton(onClick = { newColl = true }) { Text("＋ " + stringResource(R.string.collection_new)) }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
+    )
+    if (newColl) CollectionNameDialog(onDismiss = { newColl = false }) { name ->
+        val c = vm.createCollection(name); vm.addToCollection(setOf(game.id), c.id); newColl = false
+    }
 }

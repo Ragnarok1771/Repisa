@@ -1,6 +1,5 @@
 package com.repisa.app.sources
 
-import android.webkit.CookieManager
 import com.repisa.app.data.Http
 import com.repisa.app.data.Settings
 import com.repisa.app.data.arr
@@ -73,6 +72,9 @@ object Achievements {
 
     // ------------------------------------------------------------------ Steam
 
+    private val edition = setOf("goty", "game", "of", "the", "year", "edition", "definitive", "complete", "deluxe", "ultimate",
+        "remastered", "standard", "enhanced", "directors", "cut", "collection", "anniversary", "gold", "premium", "special")
+
     /** appid de Steam de un juego: el suyo si es de Steam; si es de Epic, el del mismo juego en la tienda de Steam. */
     suspend fun steamAppId(game: Game): Int? {
         if (game.source == Source.STEAM) return game.id.removePrefix("steam:").toIntOrNull()
@@ -81,81 +83,95 @@ object Achievements {
             .addQueryParameter("term", title).addQueryParameter("l", "english").addQueryParameter("cc", "US").build()
         val (code, body) = get(url.toString())
         if (code != 200) return null
-        val wanted = CoverSearch.tokens(title)
+        // Sin palabras de edición («Game of the Year», «Definitive Edition»...) ni DLC del mismo juego.
+        fun core(t: String) = CoverSearch.tokens(t) - edition
+        val wanted = core(title)
+        if (wanted.isEmpty()) return null
         return Http.json.parseToJsonElement(body)["items"].arr
-            .map { it to CoverSearch.similarity(wanted, CoverSearch.tokens(it["name"].str.orEmpty())) }
+            .filter { !Regex("(?i)\\b(soundtrack|dlc|season pass|pack|bundle)\\b").containsMatchIn(it["name"].str.orEmpty()) }
+            .map { it to CoverSearch.similarity(wanted, core(it["name"].str.orEmpty())) }
             .filter { it.second >= 0.85 }.maxByOrNull { it.second }?.first?.get("id")?.long?.toInt()
     }
 
-    /** Lista completa de logros de un juego de Steam (nombre, descripción, icono) desde su página pública. */
-    private suspend fun steamSchema(appId: Int): List<Achievement> {
-        val (code, html) = get("https://steamcommunity.com/achievements/$appId?l=${steamLang()}")
-        if (code != 200) return emptyList()
-        val row = Regex("""\\"api_name\\":\\"(.*?)\\",\\"name\\":\\"(.*?)\\",\\"description\\":\\"(.*?)\\",\\"hidden\\":(true|false).*?\\"icon_achieved\\":\\"([^"\\]+)\\"""")
-        return row.findAll(html).map { m ->
-            val (api, name, desc, hidden, icon) = m.destructured
-            Achievement(api, unescape(name), unescape(desc),
-                "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/apps/$appId/$icon", hidden = hidden == "true")
-        }.distinctBy { it.id }.toList()
-    }
+    /** Lista de logros de un juego de Steam (API pública): nombre y descripción traducidos, icono y % de jugadores. */
+    private class SteamSchema(val items: List<Achievement>, val byKey: Map<Long, String>)
 
-    private fun unescape(s: String) = s.replace(Regex("""\\\\u([0-9a-fA-F]{4})""")) { it.groupValues[1].toInt(16).toChar().toString() }
-        .replace("\\\\\\\"", "\"").replace("\\\\n", " ").replace("\\\\/", "/").replace("\\\\'", "'")
-
-    /** % de jugadores que tiene cada logro (API pública de Steam, sin clave). */
-    private suspend fun steamPercents(appId: Int): Map<String, Float> {
-        val (code, body) = get("https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid=$appId")
-        if (code != 200) return emptyMap()
-        return Http.json.parseToJsonElement(body)["achievementpercentages"]["achievements"].arr
-            .mapNotNull { a -> a["name"].str?.let { n -> a["percent"].str?.toFloatOrNull()?.let { n to it } } }.toMap()
+    private suspend fun steamSchema(appId: Int): SteamSchema {
+        val (code, body) = get("https://api.steampowered.com/IPlayerService/GetGameAchievements/v1/?appid=$appId&language=${steamLang()}")
+        if (code == 429 || code >= 500) error("Steam $code") // límite de peticiones: reintentar más tarde
+        if (code != 200) return SteamSchema(emptyList(), emptyMap())
+        val list = Http.json.parseToJsonElement(body)["response"]["achievements"].arr
+        val byKey = HashMap<Long, String>()
+        val items = list.mapNotNull { a ->
+            val id = a["internal_name"].str ?: return@mapNotNull null
+            a["internal_key"].long?.let { byKey[it] = id }
+            if (a["archived"]?.toString() == "true") return@mapNotNull null
+            Achievement(
+                id = id,
+                name = a["localized_name"].str.orEmpty(),
+                description = a["localized_desc"].str.orEmpty(),
+                icon = a["icon"].str?.let { "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/apps/$appId/$it" },
+                percent = a["player_percent_unlocked"].str?.toFloatOrNull(),
+                hidden = a["hidden"]?.toString() == "true",
+            )
+        }
+        return SteamSchema(items, byKey)
     }
 
     /**
-     * Tus desbloqueos en Steam (apiName → fecha). Prueba, en orden: clave de API, la sesión de Steam de Repisa y
-     * el perfil público (XML de la comunidad). Devuelve null si Steam no deja verlos (perfil privado).
+     * Tus desbloqueos en Steam (id del logro → fecha), con el mismo servicio que usa la web de Steam
+     * (IPlayerService/GetUserAchievements): con la sesión de Steam de Repisa funciona aunque tu perfil sea privado;
+     * sin ella, si los detalles de juego son públicos. Con clave de API se usa también GetPlayerAchievements.
+     * Devuelve null si Steam no deja verlos.
      */
-    private suspend fun steamUnlocks(settings: Settings, appId: Int): Map<String, Long?>? {
+    private suspend fun steamUnlocks(settings: Settings, appId: Int, schema: SteamSchema): Map<String, Long?>? {
         val steamId = settings.steamLinkedId ?: settings.steamUser ?: return null
-        fun parseApi(body: String): Map<String, Long?>? = runCatching {
-            val stats = Http.json.parseToJsonElement(body)["playerstats"]
-            if (stats["success"]?.toString() == "false") return null
-            stats["achievements"].arr.associate { a ->
-                a["apiname"].str!! to (if (a["achieved"].long == 1L) (a["unlocktime"].long ?: 0L) * 1000 else null)
-            }
-        }.getOrNull()?.takeIf { it.isNotEmpty() }
-
-        val base = "https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?appid=$appId&steamid=$steamId"
-        settings.steamApiKey?.let { key -> get("$base&key=$key").takeIf { it.first == 200 }?.let { parseApi(it.second) }?.let { return it } }
-        runCatching { SteamLogin.fetchWebToken() }.getOrNull()?.let { token ->
-            get("$base&access_token=$token").takeIf { it.first == 200 }?.let { parseApi(it.second) }?.let { return it }
+        val token = runCatching { SteamLogin.fetchWebToken() }.getOrNull()
+        val auth = buildString {
+            token?.let { append("&access_token=").append(it) }
+            if (token == null) settings.steamApiKey?.let { append("&key=").append(it) }
         }
-        // Perfil de la comunidad en XML (funciona si los detalles de juego son públicos, o con la sesión iniciada).
-        val cookies = runCatching { withContext(Dispatchers.Main) { CookieManager.getInstance().getCookie("https://steamcommunity.com") } }.getOrNull()
-        val (code, xml) = get("https://steamcommunity.com/profiles/$steamId/stats/$appId/achievements/?xml=1", cookies)
-        if (code != 200 || !xml.contains("<achievements>")) return null
-        return Regex("""<achievement closed="(\d)">(.*?)</achievement>""", RegexOption.DOT_MATCHES_ALL).findAll(xml).mapNotNull { m ->
-            val api = Regex("""<apiname>(?:<!\[CDATA\[)?(.*?)(?:]]>)?</apiname>""").find(m.groupValues[2])?.groupValues?.get(1) ?: return@mapNotNull null
-            val time = Regex("""<unlockTimestamp>(\d+)</unlockTimestamp>""").find(m.groupValues[2])?.groupValues?.get(1)?.toLongOrNull()
-            api to (if (m.groupValues[1] == "1") (time ?: 0L) * 1000 else null)
-        }.toMap().takeIf { it.isNotEmpty() }
+        val (code, body) = get("https://api.steampowered.com/IPlayerService/GetUserAchievements/v1/?appid=$appId&steamid=$steamId$auth")
+        if (code == 429 || code >= 500) error("Steam $code")
+        if (code == 200) {
+            val r = Http.json.parseToJsonElement(body)["response"]
+            // Con acceso, la respuesta trae siempre schema_version (aunque no tengas ningún logro); si es privado, viene vacía.
+            if (r["schema_version"] != null) {
+                val out = HashMap<String, Long?>()
+                r["achievements"].arr.forEach { a ->
+                    val id = a["internal_key"].long?.let { schema.byKey[it] } ?: a["internal_name"].str ?: return@forEach
+                    val unlocked = a["unlocked"]?.toString().let { it == "true" || it == "1" }
+                    val time = (a["unlock_time"].long ?: a["rtime_unlocked"].long ?: 0L) * 1000
+                    out[id] = if (unlocked) time.takeIf { it > 0 } ?: 1L else null
+                }
+                return out
+            }
+        }
+        // Clave de API (opcional): el método clásico.
+        settings.steamApiKey?.let { key ->
+            val (c2, b2) = get("https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?appid=$appId&steamid=$steamId&key=$key")
+            if (c2 == 200) runCatching {
+                val stats = Http.json.parseToJsonElement(b2)["playerstats"]
+                if (stats["success"]?.toString() != "false") return stats["achievements"].arr.associate { a ->
+                    a["apiname"].str!! to (if (a["achieved"].long == 1L) ((a["unlocktime"].long ?: 0L) * 1000).takeIf { it > 0 } ?: 1L else null)
+                }
+            }
+        }
+        return null
     }
 
     /** Logros de Steam para un juego de Steam o de Epic. [manual]: marcas a mano (id → fecha) para juegos de Epic. */
     suspend fun steam(game: Game, settings: Settings, manual: Map<String, Long>): AchievementSet? {
         val appId = steamAppId(game) ?: return null
         val schema = steamSchema(appId)
-        if (schema.isEmpty()) return null
-        val percents = runCatching { steamPercents(appId) }.getOrDefault(emptyMap())
-        val unlocks = if (game.source == Source.STEAM) runCatching { steamUnlocks(settings, appId) }.getOrNull() else null
+        if (schema.items.isEmpty()) return null
+        val unlocks = if (game.source == Source.STEAM) steamUnlocks(settings, appId, schema) else null
         val url = "https://steamcommunity.com/stats/$appId/achievements"
         return if (unlocks != null) {
-            AchievementSet(STEAM, schema.map { a ->
-                a.copy(percent = percents[a.id], unlockedAt = unlocks[a.id]?.takeIf { it > 0 } ?: unlocks[a.id]?.let { 1L })
-            }, url)
+            AchievementSet(STEAM, schema.items.map { a -> a.copy(unlockedAt = unlocks[a.id]) }, url)
         } else {
-            AchievementSet(STEAM_LIST, schema.map { a ->
-                a.copy(percent = percents[a.id], unlockedAt = manual[a.id], manual = a.id in manual)
-            }, url, note = if (game.source == Source.STEAM) "private" else "epic")
+            AchievementSet(STEAM_LIST, schema.items.map { a -> a.copy(unlockedAt = manual[a.id], manual = a.id in manual) },
+                url, note = if (game.source == Source.STEAM) "private" else "epic")
         }
     }
 

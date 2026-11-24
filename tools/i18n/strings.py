@@ -846,6 +846,72 @@ s("onb_skip_all", "Skip the guide", "Saltar la guía", "Passer le guide", "Anlei
   ptPT="Saltar o guia")
 s("onb_again", "Show the start guide again", "Ver la guía de inicio otra vez", "Revoir le guide de démarrage", "Startanleitung erneut zeigen",
   "Rivedi la guida iniziale", "Ver o guia inicial de novo")
+s("achov_unlocked", "achievements unlocked", "logros conseguidos", "succès débloqués", "Erfolge freigeschaltet", "obiettivi sbloccati",
+  "conquistas desbloqueadas")
+s("achov_games", "games with achievements", "juegos con logros", "jeux avec succès", "Spiele mit Erfolgen", "giochi con obiettivi",
+  "jogos com conquistas")
+s("achov_perfect", "games with every achievement", "juegos con todos los logros", "jeux à 100 % des succès", "Spiele mit allen Erfolgen",
+  "giochi con tutti gli obiettivi", "jogos com todas as conquistas")
+s("achov_repisa", "Repisa achievements", "logros de Repisa", "succès Repisa", "Repisa-Erfolge", "obiettivi Repisa", "conquistas do Repisa")
+s("achov_recent", "Latest achievements", "Últimos logros", "Derniers succès", "Neueste Erfolge", "Ultimi obiettivi", "Últimas conquistas")
+s("achov_by_game", "Progress by game", "Progreso por juego", "Progression par jeu", "Fortschritt pro Spiel", "Progressi per gioco",
+  "Progresso por jogo")
+s("achov_none", "No achievements loaded yet. They appear as Repisa checks your Steam games and RetroAchievements, or when you open a game's achievements.",
+  "Aún no hay logros cargados. Aparecen a medida que Repisa revisa tus juegos de Steam y RetroAchievements, o al abrir los logros de un juego.",
+  "Aucun succès chargé pour l’instant. Ils apparaissent quand Repisa vérifie vos jeux Steam et RetroAchievements, ou en ouvrant les succès d’un jeu.",
+  "Noch keine Erfolge geladen. Sie erscheinen, während Repisa deine Steam- und RetroAchievements-Spiele prüft oder wenn du die Erfolge eines Spiels öffnest.",
+  "Ancora nessun obiettivo. Compaiono mentre Repisa controlla i giochi Steam e RetroAchievements, o quando apri gli obiettivi di un gioco.",
+  "Ainda não há conquistas carregadas. Elas aparecem conforme o Repisa verifica seus jogos do Steam e RetroAchievements, ou ao abrir as conquistas de um jogo.")
+s("status_na", "Doesn't apply", "No aplica", "Sans objet", "Nicht zutreffend", "Non applicabile", "Não se aplica")
+s("setting_auto_status", "Automatic status", "Estado automático", "Statut automatique", "Automatischer Status", "Stato automatico",
+  "Status automático", ptPT="Estado automático")
+s("setting_auto_status_hint", "Games you haven't marked: no playtime = Backlog, with playtime = Playing. A Backlog game you play (here, on PC, Steam or Epic) becomes Playing. Finished, 100%, Dropped and Doesn't apply are set by you.",
+  "Juegos que no hayas marcado: sin tiempo jugado = Pendiente, con tiempo = Jugando. Un Pendiente que juegues (aquí, en el PC, Steam o Epic) pasa a Jugando. Terminado, 100 %, Abandonado y No aplica los pones tú.",
+  "Jeux non marqués : sans temps de jeu = À faire, avec = En cours. Un jeu À faire que vous lancez (ici, sur PC, Steam ou Epic) passe En cours. Terminé, 100 %, Abandonné et Sans objet se marquent à la main.",
+  "Nicht markierte Spiele: ohne Spielzeit = Ausstehend, mit Spielzeit = Spiele gerade. Ein ausstehendes Spiel, das du spielst (hier, am PC, Steam oder Epic), wechselt zu Spiele gerade. Beendet, 100 %, Abgebrochen und Nicht zutreffend setzt du selbst.",
+  "Giochi non segnati: senza tempo = Da giocare, con tempo = In corso. Un gioco Da giocare che giochi (qui, su PC, Steam o Epic) passa a In corso. Finito, 100%, Abbandonato e Non applicabile li metti tu.",
+  "Jogos que você não marcou: sem tempo jogado = Pendente, com tempo = Jogando. Um Pendente que você jogar (aqui, no PC, Steam ou Epic) passa a Jogando. Zerado, 100%, Abandonado e Não se aplica você marca.")
+s("stats_most_played_hint", "Without the games marked “Doesn't apply” (Counter-Strike, Fortnite…).",
+  "Sin los juegos marcados como «No aplica» (Counter-Strike, Fortnite…).",
+  "Sans les jeux marqués « Sans objet » (Counter-Strike, Fortnite…).", "Ohne Spiele mit „Nicht zutreffend“ (Counter-Strike, Fortnite…).",
+  "Senza i giochi segnati «Non applicabile» (Counter-Strike, Fortnite…).", "Sem os jogos marcados como \"Não se aplica\" (Counter-Strike, Fortnite…).")
+s("msg_status_set", "%1$d game(s) → %2$s", "%1$d juego(s) → %2$s", "%1$d jeu(x) → %2$s", "%1$d Spiel(e) → %2$s", "%1$d gioco/i → %2$s",
+  "%1$d jogo(s) → %2$s")
+s("msg_added_collection", "%1$d game(s) added to “%2$s”", "%1$d juego(s) añadidos a «%2$s»", "%1$d jeu(x) ajouté(s) à « %2$s »",
+  "%1$d Spiel(e) zu „%2$s“ hinzugefügt", "%1$d gioco/i aggiunti a «%2$s»", "%1$d jogo(s) adicionados a \"%2$s\"")
+s("collection_default", "My collection", "Mi colección", "Ma collection", "Meine Sammlung", "La mia collezione", "Minha coleção",
+  ptPT="A minha coleção")
+s("collection", "Collection", "Colección", "Collection", "Sammlung", "Collezione", "Coleção")
+s("collections", "Collections", "Colecciones", "Collections", "Sammlungen", "Collezioni", "Coleções")
+s("collection_new", "New collection…", "Nueva colección…", "Nouvelle collection…", "Neue Sammlung…", "Nuova collezione…", "Nova coleção…")
+s("collection_rename", "Rename", "Renombrar", "Renommer", "Umbenennen", "Rinomina", "Renomear", ptPT="Mudar o nome")
+s("collection_hint", "e.g. Try out, Priority, With friends…", "p. ej. Probar, Prioridad, Con amigos…", "ex. À essayer, Priorité, Entre amis…",
+  "z. B. Ausprobieren, Priorität, Mit Freunden…", "es. Da provare, Priorità, Con amici…", "ex. Experimentar, Prioridade, Com amigos…")
+s("collections_empty", "You don't have collections yet. Create one: it appears as its own shelf at the top.",
+  "Aún no tienes colecciones. Crea una: aparece como una repisa propia arriba del todo.",
+  "Pas encore de collection. Créez-en une : elle apparaît comme une étagère en haut.",
+  "Noch keine Sammlungen. Erstelle eine: Sie erscheint als eigenes Regal oben.",
+  "Nessuna collezione. Creane una: appare come uno scaffale in alto.",
+  "Você ainda não tem coleções. Crie uma: ela aparece como uma estante própria no topo.")
+s("collections_hint", "Your own shelves (like Steam collections). Add games from a game's details (📂) or by selecting several. Deleting a collection doesn't delete its games.",
+  "Tus propias repisas (como las colecciones de Steam). Añade juegos desde la ficha (📂) o seleccionando varios. Borrar una colección no borra sus juegos.",
+  "Vos propres étagères (comme les collections Steam). Ajoutez des jeux depuis la fiche (📂) ou en en sélectionnant plusieurs. Supprimer une collection ne supprime pas ses jeux.",
+  "Deine eigenen Regale (wie Steam-Sammlungen). Spiele über die Details (📂) oder per Mehrfachauswahl hinzufügen. Eine Sammlung löschen entfernt keine Spiele.",
+  "I tuoi scaffali (come le collezioni di Steam). Aggiungi giochi dalla scheda (📂) o selezionandone diversi. Eliminare una collezione non elimina i giochi.",
+  "Suas próprias estantes (como as coleções do Steam). Adicione jogos pela ficha (📂) ou selecionando vários. Apagar uma coleção não apaga os jogos.")
+s("delete", "Delete", "Borrar", "Supprimer", "Löschen", "Elimina", "Apagar")
+s("select_many", "Select", "Seleccionar", "Sélectionner", "Auswählen", "Seleziona", "Selecionar")
+s("select_all", "Select all", "Seleccionar todo", "Tout sélectionner", "Alle auswählen", "Seleziona tutto", "Selecionar tudo")
+s("selected_count", "%1$d selected · tap covers to add or remove", "%1$d seleccionados · toca carátulas para añadir o quitar",
+  "%1$d sélectionnés · touchez les jaquettes", "%1$d ausgewählt · Cover antippen zum Hinzufügen/Entfernen",
+  "%1$d selezionati · tocca le copertine", "%1$d selecionados · toque nas capas para adicionar ou tirar")
+s("status_clear", "Remove status (automatic)", "Quitar estado (automático)", "Retirer le statut (automatique)", "Status entfernen (automatisch)",
+  "Togli stato (automatico)", "Tirar status (automático)", ptPT="Retirar estado (automático)")
+s("random_platform", "Platform", "Plataforma", "Plateforme", "Plattform", "Piattaforma", "Plataforma")
+s("random_any_platform", "Any platform", "Cualquier plataforma", "Toutes les plateformes", "Alle Plattformen", "Qualsiasi piattaforma",
+  "Qualquer plataforma")
+s("random_duration", "Length", "Duración", "Durée", "Dauer", "Durata", "Duração")
+s("random_any_duration", "Any length", "Cualquier duración", "Toute durée", "Beliebige Dauer", "Qualsiasi durata", "Qualquer duração")
 s("diag_copy", "Copy diagnostics", "Copiar diagnóstico", "Copier le diagnostic", "Diagnose kopieren", "Copia diagnostica", "Copiar diagnóstico")
 s("diag_copied", "Copied ✓", "Copiado ✓", "Copié ✓", "Kopiert ✓", "Copiato ✓", "Copiado ✓")
 s("diag_share", "Share diagnostics", "Compartir diagnóstico", "Partager le diagnostic", "Diagnose teilen", "Condividi diagnostica", "Compartilhar diagnóstico",

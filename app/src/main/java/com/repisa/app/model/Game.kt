@@ -37,6 +37,8 @@ data class Game(
     /** Estado del juego ([PlayStatus]): pendiente, jugando, terminado, 100 % o abandonado. */
     val status: String? = null,
     /** Logros: conseguidos / total (Steam, RetroAchievements o marcados a mano), si se conocen. */
+    /** Colecciones propias a las que pertenece (ids de [com.repisa.app.ui.GameCollection]). */
+    val collections: List<String> = emptyList(),
     val achUnlocked: Int? = null,
     val achTotal: Int? = null,
     /** Fecha (epoch ms) de la última partida. */

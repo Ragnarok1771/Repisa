@@ -4,7 +4,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -14,16 +13,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -55,15 +54,13 @@ import com.repisa.app.model.formatPlaytime
 import com.repisa.app.model.label
 import com.repisa.app.model.playStatus
 import kotlinx.coroutines.launch
+import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
-private const val STRIP = 44      // carátulas en la tira
-private const val WINNER_AT = 38  // posición del juego elegido
-
 /**
- * «¿A qué juego?»: elige un juego al azar con una tira de carátulas que gira y se frena (como abrir una caja),
- * con filtros opcionales: solo pendientes, duración máxima (HowLongToBeat), sistema y «según mis gustos».
+ * «¿A qué juego?»: una tira de carátulas que da entre 2 y 4 vueltas y se frena hasta parar en un juego (como abrir una
+ * caja). Filtros: Todo · Según mis gustos · Solo pendientes · Plataforma ▾ · Duración ▾.
  */
 @Composable
 fun RandomPicker(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (Game) -> Unit) {
@@ -73,14 +70,18 @@ fun RandomPicker(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (Game) -> Un
     var maxHours by remember { mutableStateOf<Int?>(null) }
     var console by remember { mutableStateOf<String?>(null) }
     var byTaste by remember { mutableStateOf(false) }
+    var platformMenu by remember { mutableStateOf(false) }
+    var durationMenu by remember { mutableStateOf(false) }
+    val noFilters = !onlyBacklog && maxHours == null && console == null && !byTaste
 
     val consoles = remember(all) { all.groupBy { it.consoleId }.entries.sortedByDescending { it.value.size }.map { it.key } }
     val candidates = remember(all, onlyBacklog, maxHours, console) {
         all.filter { g ->
-            (!onlyBacklog || g.playStatus == PlayStatus.BACKLOG) &&
+            val st = g.playStatus
+            (!onlyBacklog || st == PlayStatus.BACKLOG) &&
                 (console == null || g.consoleId == console) &&
                 (maxHours == null || (g.hltbMain ?: Float.MAX_VALUE) <= maxHours!!) &&
-                g.playStatus != PlayStatus.FINISHED && g.playStatus != PlayStatus.COMPLETED && g.playStatus != PlayStatus.ABANDONED
+                st != PlayStatus.FINISHED && st != PlayStatus.COMPLETED && st != PlayStatus.ABANDONED && st != PlayStatus.NOT_APPLICABLE
         }
     }
     // «Según mis gustos»: más probabilidad para los géneros a los que más horas dedicas.
@@ -99,6 +100,7 @@ fun RandomPicker(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (Game) -> Un
     }
 
     var strip by remember { mutableStateOf<List<Game>>(emptyList()) }
+    var winnerAt by remember { mutableStateOf(0) }
     var winner by remember { mutableStateOf<Game?>(null) }
     var rolling by remember { mutableStateOf(false) }
     val offset = remember { Animatable(0f) }
@@ -111,13 +113,18 @@ fun RandomPicker(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (Game) -> Un
         val w = pick() ?: return
         winner = null
         rolling = true
-        strip = List(STRIP) { i -> if (i == WINNER_AT) w else candidates.random() }
+        // 2-4 vueltas: cada vuelta recorre la lista (barajada; si es enorme, una muestra de 36).
+        val laps = Random.nextInt(2, 5)
+        val lap = candidates.shuffled().take(36).let { l -> if (l.size < 8) List(8) { l[it % l.size] } else l }
+        val body = List(laps) { lap.shuffled() }.flatten()
+        winnerAt = body.size
+        strip = body + w + List(6) { candidates.random() }
         scope.launch {
             offset.snapTo(0f)
-            // Se para cerca del centro de la carátula, no siempre exacto, para que tenga emoción.
-            val target = WINNER_AT * slotPx + slotPx * (0.2f + Random.nextFloat() * 0.6f) - slotPx / 2
-            offset.animateTo(target, tween(4600, easing = CubicBezierEasing(0.08f, 0.75f, 0.12f, 1f)))
-            offset.animateTo(WINNER_AT * slotPx, tween(350))
+            // Arranca rápido y se frena poco a poco; se para cerca del centro de la carátula, no siempre exacto.
+            val target = winnerAt * slotPx + slotPx * (0.2f + Random.nextFloat() * 0.6f) - slotPx / 2
+            offset.animateTo(target, tween(6200 + laps * 600, easing = CubicBezierEasing(0.05f, 0.85f, 0.15f, 1f)))
+            offset.animateTo(winnerAt * slotPx, tween(350))
             winner = w
             rolling = false
             vm.focused.value = w // la pantalla de abajo muestra el juego elegido
@@ -133,36 +140,58 @@ fun RandomPicker(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (Game) -> Un
                 Spacer(Modifier.weight(1f))
                 Text(stringResource(R.string.random_count, candidates.size), color = Color(0xFFBFA98A), fontSize = 13.sp)
             }
-            // Filtros
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                item { FilterChip(onlyBacklog, { onlyBacklog = !onlyBacklog }, { Text("⏳ " + stringResource(R.string.random_only_backlog)) }) }
-                items(listOf(10, 20, 40)) { h ->
-                    FilterChip(maxHours == h, { maxHours = if (maxHours == h) null else h }, { Text(stringResource(R.string.random_max_hours, h)) })
+            // Filtros: Todo · Según mis gustos · Solo pendientes · Plataforma ▾ · Duración ▾
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                item {
+                    FilterChip(noFilters, { onlyBacklog = false; maxHours = null; console = null; byTaste = false },
+                        { Text(stringResource(R.string.filter_all)) })
                 }
                 item { FilterChip(byTaste, { byTaste = !byTaste }, { Text("♥ " + stringResource(R.string.random_by_taste)) }) }
-                item { FilterChip(console == null, { console = null }, { Text(stringResource(R.string.filter_all)) }) }
-                items(consoles) { c ->
-                    FilterChip(console == c, { console = if (console == c) null else c }, { Text(Consoles.byId(c).label) })
+                item { FilterChip(onlyBacklog, { onlyBacklog = !onlyBacklog }, { Text("⏳ " + stringResource(R.string.random_only_backlog)) }) }
+                item {
+                    Box {
+                        FilterChip(console != null, { platformMenu = true }, {
+                            Text((console?.let { Consoles.byId(it).label } ?: stringResource(R.string.random_platform)) + " ▾")
+                        })
+                        DropdownMenu(platformMenu, { platformMenu = false }) {
+                            DropdownMenuItem({ Text(stringResource(R.string.random_any_platform)) }, { console = null; platformMenu = false })
+                            consoles.forEach { c ->
+                                DropdownMenuItem({ Text(Consoles.byId(c).label) }, { console = c; platformMenu = false })
+                            }
+                        }
+                    }
+                }
+                item {
+                    Box {
+                        FilterChip(maxHours != null, { durationMenu = true }, {
+                            Text((maxHours?.let { stringResource(R.string.random_max_hours, it) } ?: stringResource(R.string.random_duration)) + " ▾")
+                        })
+                        DropdownMenu(durationMenu, { durationMenu = false }) {
+                            DropdownMenuItem({ Text(stringResource(R.string.random_any_duration)) }, { maxHours = null; durationMenu = false })
+                            listOf(5, 10, 15, 20, 30, 40, 60).forEach { h ->
+                                DropdownMenuItem({ Text(stringResource(R.string.random_max_hours, h)) }, { maxHours = h; durationMenu = false })
+                            }
+                        }
+                    }
                 }
             }
-            // La tira de carátulas con la marca dorada en el centro
+            // La tira de carátulas con la marca dorada en el centro (solo se dibujan las visibles).
             BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
-                val centerPx = with(density) { maxWidth.toPx() } / 2
+                val widthPx = with(density) { maxWidth.toPx() }
+                val centerPx = widthPx / 2
                 val boxH = minOf(maxHeight * 0.82f, 190.dp)
                 if (strip.isEmpty()) {
                     Text(stringResource(if (candidates.isEmpty()) R.string.random_none else R.string.random_hint),
                         color = Color(0xFFBFA98A), fontSize = 16.sp, modifier = Modifier.align(Alignment.Center))
                 } else {
-                    Row(
-                        Modifier.fillMaxHeight().wrapContentWidth(align = Alignment.Start, unbounded = true)
-                            .offset { IntOffset((centerPx - slotPx / 2 - offset.value).roundToInt(), 0) },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        strip.forEachIndexed { i, g ->
-                            Box(Modifier.width(slot).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                                val h = minOf(boxH, slot * 0.9f / frontAspect(g))
-                                GameBox(g, h, lifted = !rolling && i == WINNER_AT && winner != null, showStatus = false)
-                            }
+                    val first = floor((offset.value - centerPx) / slotPx).toInt().coerceAtLeast(0)
+                    val last = (first + (widthPx / slotPx).toInt() + 3).coerceAtMost(strip.lastIndex)
+                    for (i in first..last) {
+                        val g = strip[i]
+                        val x = centerPx - slotPx / 2 + i * slotPx - offset.value
+                        Box(Modifier.offset { IntOffset(x.roundToInt(), 0) }.width(slot).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                            val h = minOf(boxH, slot * 0.9f / frontAspect(g))
+                            GameBox(g, h, lifted = !rolling && i == winnerAt && winner != null, showStatus = false)
                         }
                     }
                 }

@@ -16,11 +16,20 @@ class AchievementStore(context: Context, private val settings: Settings) {
     private val dir = File(context.cacheDir, "achievements").apply { mkdirs() }
     private val mapSer = MapSerializer(String.serializer(), MapSerializer(String.serializer(), Long.serializer()))
 
-    private fun file(gameId: String) = File(dir, gameId.replace(Regex("[^A-Za-z0-9_-]"), "_") + ".json")
+    private fun file(gameId: String) = File(dir, fileKey(gameId) + ".json")
 
     fun cached(gameId: String): AchievementSet? = runCatching {
         Http.json.decodeFromString(AchievementSet.serializer(), file(gameId).readText())
     }.getOrNull()
+
+    /** Todos los logros guardados (para la pantalla general): id del juego → logros. */
+    fun all(): Map<String, AchievementSet> = dir.listFiles().orEmpty().mapNotNull { f ->
+        runCatching { f.nameWithoutExtension to Http.json.decodeFromString(AchievementSet.serializer(), f.readText()) }.getOrNull()
+    }.toMap()
+
+    fun fileKey(gameId: String) = gameId.replace(Regex("[^A-Za-z0-9_-]"), "_")
+
+    fun clearAll() { dir.listFiles()?.forEach { it.delete() } }
 
     fun save(gameId: String, set: AchievementSet) {
         runCatching { file(gameId).writeText(Http.json.encodeToString(AchievementSet.serializer(), set)) }

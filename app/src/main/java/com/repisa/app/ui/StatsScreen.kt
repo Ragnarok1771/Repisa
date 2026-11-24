@@ -85,6 +85,7 @@ fun StatsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
             Card(stringResource(R.string.stats_hours_genre)) { Bars(s.hoursByGenre) { formatPlaytime(it) } }
             Card(stringResource(R.string.stats_by_decade)) { Bars(s.gamesByDecade) { L10n.games(it) } }
             Card(stringResource(R.string.stats_most_played)) {
+                Text(stringResource(R.string.stats_most_played_hint), color = Muted, fontSize = 12.sp, modifier = Modifier.padding(bottom = 4.dp))
                 s.top.forEachIndexed { i, g ->
                     Row(Modifier.padding(vertical = 2.dp)) {
                         Text("${i + 1}. ${g.title}", color = Ink, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -167,7 +168,8 @@ data class Stats(
                     .groupBy({ it.first }, { it.second }).mapValues { it.value.sum() }, other),
                 gamesByDecade = all.mapNotNull { it.releaseYear }.groupingBy { it / 10 * 10 }.eachCount().entries
                     .sortedBy { it.key }.map { L10n.s(R.string.shelf_decade, it.key) to it.value },
-                top = all.filter { it.totalMinutes > 0 }.sortedByDescending { it.totalMinutes }.take(10),
+                // Sin los de «No aplica» (Counter-Strike, Fortnite...): no se juegan para terminarlos.
+                top = all.filter { it.totalMinutes > 0 && it.playStatus != PlayStatus.NOT_APPLICABLE }.sortedByDescending { it.totalMinutes }.take(10),
             )
         }
     }

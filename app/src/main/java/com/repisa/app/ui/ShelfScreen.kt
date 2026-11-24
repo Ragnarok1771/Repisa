@@ -1,5 +1,6 @@
 package com.repisa.app.ui
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -85,7 +86,7 @@ private sealed interface ShelfItem {
 
 @Composable
 fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (Game) -> Unit, onOpenRated: () -> Unit = {},
-                onOpenRandom: () -> Unit = {}, onOpenStats: () -> Unit = {}) {
+                onOpenRandom: () -> Unit = {}, onOpenStats: () -> Unit = {}, onOpenAchievements: () -> Unit = {}) {
     val shelves by vm.shelves.collectAsState()
     val options by vm.options.collectAsState()
     val status by vm.status.collectAsState()
@@ -94,7 +95,10 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
     val boxHeight = vm.settings.shelfHeightDp.dp
 
     Column(Modifier.fillMaxSize().roomBackground()) {
-        TopBar(vm, options, all, onOpenSettings, onOpenRated, onOpenRandom, onOpenStats)
+        TopBar(vm, options, all, onOpenSettings, onOpenRated, onOpenRandom, onOpenStats, onOpenAchievements)
+        val selecting by vm.selecting.collectAsState()
+        val selection by vm.selection.collectAsState()
+        if (selecting) SelectionBar(vm, selection, shelves.flatMap { it.games }.distinctBy { it.id })
         status?.let {
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Text(it, color = Color(0xFFE8D5B5), fontSize = 12.sp)
@@ -105,9 +109,12 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
             if (shelves.isEmpty()) {
                 EmptyRoom(hasGames = all.isNotEmpty(), onOpenSettings = onOpenSettings)
             } else {
+                val selState = SelectionState(selecting, selection, toggle = { vm.toggleSelected(it) }, start = { vm.startSelection(it) })
+                androidx.compose.runtime.CompositionLocalProvider(LocalSelection provides selState) {
                 Shelves(shelves, boxHeight, focused?.id, onFocus = { vm.focused.value = it }, onOpen = onOpenGame,
                     onPlay = { vm.play(it) }, onFavorite = { vm.toggleFavorite(it) },
                     onAspect = { g, a -> vm.setCoverAspect(g.id, a) })
+                }
             }
         }
         FocusBar(focused)
@@ -116,7 +123,7 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
 
 @Composable
 private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, onOpenSettings: () -> Unit, onOpenRated: () -> Unit,
-                   onOpenRandom: () -> Unit, onOpenStats: () -> Unit) {
+                   onOpenRandom: () -> Unit, onOpenStats: () -> Unit, onOpenAchievements: () -> Unit) {
     var searching by remember { mutableStateOf(options.query.isNotEmpty()) }
     Column(Modifier.fillMaxWidth().background(Color(0xCC120C09)).padding(horizontal = 12.dp, vertical = 6.dp)) {
         // Fila 1: nombre y versión a la izquierda, juegos y horas en el centro, botones a la derecha.
@@ -127,13 +134,16 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
                 Text(" v${com.repisa.app.BuildConfig.VERSION_NAME}", color = Color(0xFF9C8A70), fontSize = 10.sp,
                     modifier = Modifier.padding(top = 8.dp))
             }
-            // Tocar los totales abre las estadísticas.
-            if (!searching) Text(
-                L10n.games(all.size) + " · " + stringResource(R.string.hours_played, all.sumOf { it.totalMinutes } / 60) + "  📊",
-                color = Color(0xFFBFA98A), fontSize = 13.sp,
-                modifier = Modifier.align(Alignment.Center).clip(RoundedCornerShape(8.dp)).clickable(onClick = onOpenStats)
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-            )
+            // 🏆 abre los logros; tocar los totales abre las estadísticas.
+            if (!searching) Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
+                Text("🏆", fontSize = 16.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onOpenAchievements)
+                    .padding(horizontal = 10.dp, vertical = 6.dp))
+                Text(
+                    L10n.games(all.size) + " · " + stringResource(R.string.hours_played, all.sumOf { it.totalMinutes } / 60) + "  📊",
+                    color = Color(0xFFBFA98A), fontSize = 13.sp,
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onOpenStats).padding(horizontal = 10.dp, vertical = 6.dp),
+                )
+            }
             Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
                 if (searching) {
                     BasicTextField(
@@ -165,6 +175,7 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
                     val count = all.count { it.source == s || s in it.groupSources }
                     if (count > 0) SourceChip("${s.label} ($count)", options.source == s) { vm.setSource(s) }
                 }
+                item { SourceChip("☑ " + stringResource(R.string.select_many), false) { vm.startSelection() } }
             }
             Picker(stringResource(R.string.sort_label), options.sort.label, SortMode.entries.map { it.label }) { vm.setSort(SortMode.entries[it]) }
             Picker(stringResource(R.string.group_label), options.group.label, GroupMode.entries.map { it.label }) { vm.setGroup(GroupMode.entries[it]) }
@@ -208,6 +219,11 @@ private fun TopTextIcon(text: String, label: String, onClick: () -> Unit) {
                 .border(2.dp, Color.White, androidx.compose.foundation.shape.CircleShape) else Modifier),
     ) { Text(text, fontSize = 20.sp) }
 }
+
+/** Selección de varias carátulas, compartida con las cajas de las repisas. */
+class SelectionState(val active: Boolean, val ids: Set<String>, val toggle: (Game) -> Unit, val start: (Game) -> Unit)
+
+val LocalSelection = androidx.compose.runtime.staticCompositionLocalOf { SelectionState(false, emptySet(), {}, {}) }
 
 @Composable
 private fun SourceChip(label: String, selected: Boolean, onClick: () -> Unit) {
@@ -328,28 +344,39 @@ private fun ShelfRow(
             horizontalArrangement = Arrangement.spacedBy(gap),
             verticalAlignment = Alignment.Bottom,
         ) {
+            val sel = LocalSelection.current
             games.forEach { g ->
                 var isFocused by remember { mutableStateOf(false) }
+                val selected = sel.active && g.id in sel.ids
                 // Cada caja con su altura real: Switch más baja que PS2, 3DS más pequeña, Neo Geo enorme...
-                GameBox(
-                    g, boxHeight * g.console.case.heightScale,
-                    lifted = isFocused,
-                    onCoverAspect = { onAspect(g, it) },
-                    modifier = Modifier
-                        .onFocusChanged { isFocused = it.isFocused; if (it.isFocused) onFocus(g) }
-                        .onKeyEvent { e ->
-                            if (e.type != KeyEventType.KeyUp) return@onKeyEvent false
-                            when (e.key.nativeKeyCode) {
-                                KeyEvent.KEYCODE_BUTTON_A -> { onOpen(g); true }
-                                KeyEvent.KEYCODE_BUTTON_X -> { onPlay(g); true }
-                                KeyEvent.KEYCODE_BUTTON_Y -> { onFavorite(g); true }
-                                else -> false
+                Box {
+                    GameBox(
+                        g, boxHeight * g.console.case.heightScale,
+                        lifted = isFocused || selected,
+                        onCoverAspect = { onAspect(g, it) },
+                        modifier = Modifier
+                            .onFocusChanged { isFocused = it.isFocused; if (it.isFocused) onFocus(g) }
+                            .onKeyEvent { e ->
+                                if (e.type != KeyEventType.KeyUp) return@onKeyEvent false
+                                when (e.key.nativeKeyCode) {
+                                    KeyEvent.KEYCODE_BUTTON_A -> { if (sel.active) sel.toggle(g) else onOpen(g); true }
+                                    KeyEvent.KEYCODE_BUTTON_X -> { if (!sel.active) onPlay(g); true }
+                                    KeyEvent.KEYCODE_BUTTON_Y -> { if (sel.active) sel.toggle(g) else onFavorite(g); true }
+                                    else -> false
+                                }
                             }
-                        }
-                        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                            onFocus(g); onOpen(g)
-                        },
-                )
+                            .combinedClickable(
+                                interactionSource = remember { MutableInteractionSource() }, indication = null,
+                                // Mantener pulsada una caja empieza la selección de varias.
+                                onLongClick = { if (!sel.active) sel.start(g) else sel.toggle(g) },
+                            ) { onFocus(g); if (sel.active) sel.toggle(g) else onOpen(g) },
+                    )
+                    if (selected) Text(
+                        "✓", color = Color(0xFF2A1C14), fontSize = 16.sp, fontWeight = FontWeight.Black,
+                        modifier = Modifier.align(Alignment.TopEnd).padding(top = 10.dp, end = 4.dp)
+                            .background(Color(0xFFFFD27A), androidx.compose.foundation.shape.CircleShape).padding(horizontal = 7.dp, vertical = 1.dp),
+                    )
+                }
             }
         }
         WoodPlank()
@@ -484,4 +511,67 @@ fun CabinetSides(modifier: Modifier = Modifier) {
         drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color(0x66000000)), startX = rx - 10.dp.toPx(), endX = rx),
             topLeft = Offset(rx - 10.dp.toPx(), 0f), size = Size(10.dp.toPx(), size.height))
     }
+}
+
+/** Barra de selección: cuántos hay, poner estado, añadir a colección, seleccionar todo y cancelar. */
+@Composable
+private fun SelectionBar(vm: LibraryViewModel, selection: Set<String>, visible: List<Game>) {
+    val collections by vm.collections.collectAsState()
+    var statusMenu by remember { mutableStateOf(false) }
+    var collMenu by remember { mutableStateOf(false) }
+    var newColl by remember { mutableStateOf(false) }
+    Row(
+        Modifier.fillMaxWidth().background(Color(0xF02A1C14)).padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(stringResource(R.string.selected_count, selection.size), color = Color(0xFFFFD27A), fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f))
+        Box {
+            androidx.compose.material3.OutlinedButton(onClick = { statusMenu = true }, enabled = selection.isNotEmpty()) {
+                Text(stringResource(R.string.group_status) + " ▾", color = Color.White)
+            }
+            androidx.compose.material3.DropdownMenu(statusMenu, { statusMenu = false }) {
+                com.repisa.app.model.PlayStatus.entries.forEach { st ->
+                    androidx.compose.material3.DropdownMenuItem(text = { Text("${st.icon} ${st.label}") },
+                        onClick = { statusMenu = false; vm.setStatusFor(selection, st); vm.endSelection() })
+                }
+                androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.status_clear)) },
+                    onClick = { statusMenu = false; vm.setStatusFor(selection, null); vm.endSelection() })
+            }
+        }
+        Box {
+            androidx.compose.material3.OutlinedButton(onClick = { collMenu = true }, enabled = selection.isNotEmpty()) {
+                Text("📂 " + stringResource(R.string.collection) + " ▾", color = Color.White)
+            }
+            androidx.compose.material3.DropdownMenu(collMenu, { collMenu = false }) {
+                collections.forEach { c ->
+                    androidx.compose.material3.DropdownMenuItem(text = { Text(c.name) },
+                        onClick = { collMenu = false; vm.addToCollection(selection, c.id); vm.endSelection() })
+                }
+                androidx.compose.material3.DropdownMenuItem(text = { Text("＋ " + stringResource(R.string.collection_new)) },
+                    onClick = { collMenu = false; newColl = true })
+            }
+        }
+        androidx.compose.material3.TextButton(onClick = { vm.selectAll(visible) }) { Text(stringResource(R.string.select_all)) }
+        androidx.compose.material3.TextButton(onClick = { vm.endSelection() }) { Text(stringResource(R.string.cancel)) }
+    }
+    if (newColl) CollectionNameDialog(onDismiss = { newColl = false }) { name ->
+        val c = vm.createCollection(name); vm.addToCollection(selection, c.id); vm.endSelection(); newColl = false
+    }
+}
+
+/** Pide el nombre de una colección nueva (o el nuevo nombre de una existente). */
+@Composable
+fun CollectionNameDialog(initial: String = "", onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var name by remember { mutableStateOf(initial) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(if (initial.isEmpty()) R.string.collection_new else R.string.collection_rename)) },
+        text = {
+            androidx.compose.material3.OutlinedTextField(name, { name = it }, singleLine = true,
+                placeholder = { Text(stringResource(R.string.collection_hint)) })
+        },
+        confirmButton = { androidx.compose.material3.TextButton(onClick = { onSave(name) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.save)) } },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
 }
