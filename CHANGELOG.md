@@ -7,7 +7,7 @@ Cada versión se publica en la pestaña **Releases** con su APK listo para insta
 **Actualizaciones: por qué no salía el aviso**
 - El proyecto en GitHub pasó a llamarse **Repisa** y es **privado**: GitHub no deja ver las versiones de un proyecto
   privado a quien no ha iniciado sesión, y Repisa pregunta sin cuenta. Por eso el aviso nunca salía.
-- Repisa ya busca en el nombre nuevo (`Ragnarok1771/Repisa`).
+- Repisa ya busca las versiones en el proyecto con su nombre nuevo.
 - Si el proyecto sigue privado, «Buscar ahora» lo dice claramente en vez de un error genérico.
 - **Botón nuevo abajo del todo en Ajustes**: «⬆ Versión · Buscar ahora». Busca la versión nueva
   y, si la hay, abre el mismo aviso para actualizar.

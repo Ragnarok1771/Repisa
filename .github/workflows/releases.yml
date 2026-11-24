@@ -36,6 +36,17 @@ jobs:
             [ "$c" = "HEAD" ] && c="$GITHUB_SHA"
             if gh release view "v$v" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
               echo "v$v ya publicada"
+              # Si sus notas cambiaron en CHANGELOG.md, se actualizan también en la release ya publicada.
+              awk -v v="$v" '
+                $0 ~ "^## \\[" v "\\]" {on=1; next}
+                on && /^## \[/ {exit}
+                on {print}
+              ' CHANGELOG.md > notas.md
+              printf '\n---\nInstala `Repisa-%s.apk` en tu consola o móvil Android.\n' "$v" >> notas.md
+              actual=$(gh release view "v$v" --repo "$GITHUB_REPOSITORY" --json body -q .body)
+              if [ -s notas.md ] && [ "$actual" != "$(cat notas.md)" ]; then
+                gh release edit "v$v" --repo "$GITHUB_REPOSITORY" --notes-file notas.md && echo "v$v: notas actualizadas"
+              fi
             else
               pending=$(echo "$pending" | jq -c --arg v "$v" --arg c "$c" '. + [{version: $v, commit: $c}]')
             fi
