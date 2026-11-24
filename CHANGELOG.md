@@ -4,6 +4,10 @@ Cada versión se publica en la pestaña **Releases** con su APK listo para insta
 
 ## [0.14.3]
 
+> Incluye todo lo de las versiones 0.14.0 a 0.14.3.
+
+### 0.14.3
+
 **Actualizaciones: por qué no salía el aviso**
 - El proyecto en GitHub pasó a llamarse **Repisa** y es **privado**: GitHub no deja ver las versiones de un proyecto
   privado a quien no ha iniciado sesión, y Repisa pregunta sin cuenta. Por eso el aviso nunca salía.
@@ -12,7 +16,7 @@ Cada versión se publica en la pestaña **Releases** con su APK listo para insta
 - **Botón nuevo abajo del todo en Ajustes**: «⬆ Versión · Buscar ahora». Busca la versión nueva
   y, si la hay, abre el mismo aviso para actualizar.
 
-## [0.14.2]
+### 0.14.2
 
 **Actualizaciones obligatorias, como en GameNative**
 - Repisa busca versión nueva **cada vez que la abres o vuelves a ella** (antes solo una vez cada 6 horas, por eso no
@@ -31,7 +35,7 @@ Cada versión se publica en la pestaña **Releases** con su APK listo para insta
 
 **GitHub** — la página principal del proyecto muestra todas las funciones actuales (estados, colecciones, ruleta…).
 
-## [0.14.1]
+### 0.14.1
 
 **Steam: la sesión ya no caduca** ⚠️
 - El pase de sesión que da Steam dura solo unas horas. Antes, al caducar salía «La sesión de Steam venció» y había que
@@ -72,7 +76,7 @@ Cada versión se publica en la pestaña **Releases** con su APK listo para insta
 - Arreglado el fallo de las portadas generadas: el texto de la franja de la consola («SWITCH», «PlayStation 2»…)
   ya no se mueve de lado a lado mientras gira, y siempre cabe centrado en la franja.
 
-## [0.14.0]
+### 0.14.0
 
 **Estados**
 - Nuevo estado **∅ No aplica** (gris) para juegos sin final (Fortnite, Counter-Strike, Deadlock…): no cuentan como
@@ -107,6 +111,10 @@ con letra más grande (tocarlas las edita).
 **Estadísticas** — «No aplica» en *Por estado*; «Los más jugados» sin los juegos marcados *No aplica*.
 
 ## [0.13.0]
+
+> Incluye todo lo de las versiones 0.12.0 a 0.13.0.
+
+### 0.13.0
 
 > ⚠ **Cambio de firma (solo esta vez).** Desde esta versión Repisa se firma con una clave privada. No se instala
 > encima de la 0.12.0: antes de nada, en la 0.12.0 haz **Ajustes → Copia de seguridad y versión → Exportar mis
@@ -156,7 +164,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 
 **Seguridad** — clave de firma privada (fuera del repositorio); la de prueba se ha quitado.
 
-## [0.12.0]
+### 0.12.0
 
 - **Copia de seguridad**: Ajustes → Copia de seguridad y versión → *Exportar mis datos* / *Importar una copia*.
   Guarda calificaciones, tiempo a mano, favoritos, juegos quitados, copias preferentes, carátulas elegidas, datos
@@ -177,6 +185,10 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 
 ## [0.11.4]
 
+> Incluye todo lo de las versiones 0.10.0 a 0.11.4.
+
+### 0.11.4
+
 - **Corregir el tiempo jugado**: Ajustes → Tiempo de juego → «Al escribir el tiempo de un juego a mano»:
   *Sumarlo al tiempo registrado* (como hasta ahora) o *Usarlo como tiempo total del juego* (escribes 17 h 52 min y
   el juego queda con 17 h 52 min, sea más o menos de lo que tenía).
@@ -184,7 +196,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 - Botón **⟲ Reiniciar tiempo** en la ficha (con confirmación): deja el juego en 0; lo que juegues después se vuelve a
   sumar.
 
-## [0.11.3]
+### 0.11.3
 
 - **Tiempo a mano en horas y minutos**: Editar datos → «Tiempo jugado fuera de Repisa» con dos casillas (17 h 52 min),
   en lugar de horas con decimales. Se guarda aparte de lo que mide Repisa y se suma al resto.
@@ -195,7 +207,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 - La ficha de los juegos de emulador dice su **origen**: tu carpeta de ROMs, una playlist de RetroArch o
   ES-DE/Cocoon.
 
-## [0.11.2]
+### 0.11.2
 
 - **Fuera los juegos de Steam/PC que salían como emulados** (Bravely Default Flying Fairy, Persona 5 Royal,
   Xenonia…): Cocoon exporta también tus juegos de PC, y Repisa los añadía como juegos de emulador. Ahora, si tienes
@@ -204,7 +216,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 - Con eso desaparece también el Pokémon Esmeralda repetido (el que venía solo de Cocoon); el de tu carpeta se
   queda y busca su género, estudio y año en Wikidata.
 
-## [0.11.1]
+### 0.11.1
 
 - **Fuera los juegos fantasma de Cocoon**: lo que Cocoon conoce pero no está en tus carpetas (DLC, packs, entradas
   viejas, colecciones) ya no se añade como juego si tienes la carpeta de ese sistema. Solo se añaden juegos de
@@ -213,7 +225,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
   Awakens Set» de Cocoon da sus datos a tu archivo «Dragon Ball Z Kakarot».
 - El diagnóstico lista lo que el frontend tiene pero no se añadió.
 
-## [0.11.0]
+### 0.11.0
 
 - **Género, estudio y año en los juegos de emulador**: se buscan solos en segundo plano en **GameTDB** (Switch, 3DS,
   DS, Wii, GameCube y Wii U, con sinopsis) y en **Wikidata** (cualquier consola, también juegos que no están en
@@ -224,7 +236,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 - **Mando**: el icono seleccionado de la barra superior (buscar, calificaciones, sincronizar, ajustes) se ve con un
   círculo dorado; **B en la repisa principal ya no cierra la app**.
 
-## [0.10.0]
+### 0.10.0
 
 - **Jugar directo, sin preguntar**: Repisa detecta los emuladores instalados y abre cada juego con el adecuado
   (Eden, Citron o Sudachi para Switch; Azahar, Lime3DS o Citra para 3DS; melonDS o DraStic para DS; Dolphin,
@@ -234,6 +246,10 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 - Al pulsar «Escanear emuladores» se indica con qué emulador se abrirá cada sistema.
 
 ## [0.9.1]
+
+> Incluye todo lo de las versiones 0.6.0 a 0.9.1.
+
+### 0.9.1
 
 - **Cocoon funciona con cualquier exportación**: Repisa busca los `gamelist.xml` en todas las subcarpetas y reconoce el
   sistema por la carpeta, el nombre del archivo, la etiqueta `<system>` o las extensiones de los juegos.
@@ -248,7 +264,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 - Ajustes → Emuladores muestra **qué encontró** (listas, juegos, con género, con tiempo, emparejados) y explica
   paso a paso cómo exportar desde Cocoon.
 
-## [0.9.0]
+### 0.9.0
 
 - **Ficha del juego adaptable a todas las carátulas.** Mi nota, Metacritic y HowLongToBeat tienen altura fija y texto
   en una línea; si no caben en una fila (carátulas anchas de DS, 3DS, Nintendo 64 o Game Boy Advance),
@@ -259,7 +275,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
   el nombre principal y el nombre sin la saga delante («Shin Megami Tensei: Persona 2…» → «Persona 2…»).
 - Si faltaban datos, se vuelven a buscar a los 2 días (antes, a las 2 semanas).
 
-## [0.8.0]
+### 0.8.0
 
 - **Mucho más fluida**: las proporciones de las carátulas se aplican por lotes (antes cada carátula reconstruía toda
   la biblioteca y daba tirones); unir copias y construir repisas se hace en segundo plano.
@@ -268,7 +284,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 - **Steam es la copia preferente por defecto**; si no hay copia de Steam, la más jugada.
 - Fuera paquetes de contenido que no son juegos («Death Stranding Content»).
 
-## [0.7.0]
+### 0.7.0
 
 - **Copias del mismo juego unidas en una caja** (ediciones Legacy/Enhanced, el mismo juego en Steam y Epic), con el
   tiempo sumado y el nombre común. Botón **Copias** para elegir la copia preferente o separar una.
@@ -278,7 +294,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 - El idioma se cambia **sin parpadeos** en la pantalla de abajo.
 - Mis calificaciones: **ordenar de mayor a menor o al revés y filtrar por estrellas**.
 
-## [0.6.0]
+### 0.6.0
 
 - **Epic Games funciona**: corregida la clave del lanzador.
 - Ajustes en **submenús** (Emuladores, Carátulas y datos, Tiempo de juego, Pantalla, Idioma).
@@ -291,6 +307,10 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 
 ## [0.5.0]
 
+> Incluye todo lo de las versiones 0.1.0 a 0.5.0.
+
+### 0.5.0
+
 - **Calificaciones propias**: aspectos libres con peso en % y nota, escala 0-5 / 0-10 / 0-100, estrellas que se
   llenan en proporción y pantalla Mis calificaciones.
 - **Metacritic** (prensa y usuarios) y **HowLongToBeat** (historia, extras y completista) en la ficha.
@@ -298,7 +318,7 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 - Búsqueda de carátulas sin acentos y por palabras clave.
 - Tipografías Fredoka y Nunito; versión junto al nombre.
 
-## [0.4.0]
+### 0.4.0
 
 - **Grupo familiar de Steam**: juegos compartidos y sus horas.
 - **Buscador de carátulas** en la ficha (libretro, SteamGridDB, tienda de Steam) y «Buscar carátulas que faltan».
@@ -307,19 +327,19 @@ cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y
 - **Cajas a escala real**: Switch más baja que PS2, DS/3DS pequeñas, N64/SNES apaisadas.
 - Icono nuevo y fondo de vitrina de nogal con luz bajo las baldas.
 
-## [0.3.0]
+### 0.3.0
 
 - **Tiempo de juego siempre al día**: Steam, Epic y emuladores se sincronizan solos al abrir la app.
 - Medición precisa con el permiso **Acceso a datos de uso** (solo el tiempo con el emulador en pantalla).
 - Lectura de `gamelist.xml` de ES-DE, Cocoon y Batocera, con tiempo de juego.
 - Las partidas no se pierden si Android cierra Repisa mientras juegas.
 
-## [0.2.0]
+### 0.2.0
 
 - **Vincular Steam iniciando sesión** en la web oficial (sin clave de API).
 - La **carátula real** ocupa todo el frontal de la caja y la caja toma su forma exacta.
 
-## [0.1.0]
+### 0.1.0
 
 - Primera versión: repisas de madera con cajas de juegos de Steam, Epic Games y emuladores (carpetas de ROMs, ES-DE,
   RetroArch), ordenar y agrupar, ficha del juego, segunda pantalla de la AYN Thor y control con mando.

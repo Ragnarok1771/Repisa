@@ -29,6 +29,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Releases que ya no están en releases/versions.json (versiones juntadas en otra): se borran con su etiqueta.
+          keep=$(jq -r '.[].version' releases/versions.json | sed 's/^/v/')
+          for tag in $(gh release list --repo "$GITHUB_REPOSITORY" --limit 200 --json tagName -q '.[].tagName'); do
+            if ! echo "$keep" | grep -qx "$tag"; then
+              gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes && echo "$tag borrada (está incluida en otra)"
+            fi
+          done
           pending="[]"
           for row in $(jq -c '.[]' releases/versions.json); do
             v=$(echo "$row" | jq -r .version)
