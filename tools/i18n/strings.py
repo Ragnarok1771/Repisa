@@ -575,6 +575,12 @@ s("updates_check_now", "Check now", "Buscar ahora", "Vérifier maintenant", "Jet
 s("update_none", "You have the latest version (%1$s).", "Tienes la última versión (%1$s).", "Vous avez la dernière version (%1$s).",
   "Du hast die neueste Version (%1$s).", "Hai l’ultima versione (%1$s).", "Você tem a versão mais recente (%1$s).",
   ptPT="Tem a versão mais recente (%1$s).")
+s("update_private", "GitHub doesn't show the new versions: the Repisa project is private. Make it public (GitHub → Settings → Change visibility) so the app can update itself.",
+  "GitHub no deja ver las versiones nuevas: el proyecto Repisa es privado. Hazlo público (GitHub → Settings → Change visibility) para que la app se actualice sola.",
+  "GitHub ne montre pas les nouvelles versions : le projet Repisa est privé. Rendez-le public pour que l'app se mette à jour.",
+  "GitHub zeigt die neuen Versionen nicht: das Projekt Repisa ist privat. Mach es öffentlich, damit sich die App aktualisiert.",
+  "GitHub non mostra le nuove versioni: il progetto Repisa è privato. Rendilo pubblico perché l'app si aggiorni.",
+  "O GitHub não mostra as versões novas: o projeto Repisa é privado. Torne-o público para o app se atualizar.")
 s("update_check_failed", "Couldn't check for new versions (no connection, or the project isn't public).",
   "No se pudo buscar versiones nuevas (sin conexión o el proyecto no es público).",
   "Impossible de vérifier (pas de connexion, ou le projet n’est pas public).",

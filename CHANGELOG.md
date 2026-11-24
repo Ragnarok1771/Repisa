@@ -2,6 +2,16 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.14.3]
+
+**Actualizaciones: por qué no salía el aviso**
+- El proyecto en GitHub pasó a llamarse **Repisa** y es **privado**: GitHub no deja ver las versiones de un proyecto
+  privado a quien no ha iniciado sesión, y Repisa pregunta sin cuenta. Por eso el aviso nunca salía.
+- Repisa ya busca en el nombre nuevo (`Ragnarok1771/Repisa`).
+- Si el proyecto sigue privado, «Buscar ahora» lo dice claramente en vez de un error genérico.
+- **Botón nuevo abajo del todo en Ajustes**: «⬆ Versión · Buscar ahora». Busca la versión nueva
+  y, si la hay, abre el mismo aviso para actualizar.
+
 ## [0.14.2]
 
 **Actualizaciones obligatorias, como en GameNative**

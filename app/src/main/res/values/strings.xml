@@ -207,6 +207,7 @@
     <string name="updates_hint">Repisa looks at the project\'s releases on GitHub and, if there is a newer one, shows its patch notes and installs it over this one.</string>
     <string name="updates_check_now">Check now</string>
     <string name="update_none">You have the latest version (%1$s).</string>
+    <string name="update_private">GitHub doesn\'t show the new versions: the Repisa project is private. Make it public (GitHub → Settings → Change visibility) so the app can update itself.</string>
     <string name="update_check_failed">Couldn\'t check for new versions (no connection, or the project isn\'t public).</string>
     <string name="update_title">Repisa %1$s is available</string>
     <string name="update_required">Install it to keep using Repisa (your library and settings stay as they are).</string>

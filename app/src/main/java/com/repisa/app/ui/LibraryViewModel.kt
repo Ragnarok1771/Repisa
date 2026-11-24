@@ -286,8 +286,12 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         if (update.value != null) return@launch
         if (quiet && System.currentTimeMillis() - lastUpdateCheck < 10 * 60_000L) return@launch
         lastUpdateCheck = System.currentTimeMillis()
-        val r = runCatching { com.repisa.app.data.Updater.latest() }.getOrNull()
+        val result = runCatching { com.repisa.app.data.Updater.latest() }
+        val r = result.getOrNull()
         when {
+            result.exceptionOrNull() is com.repisa.app.data.Updater.NotVisible -> {
+                lastUpdateCheck = 0; if (!quiet) message.value = L10n.s(R.string.update_private)
+            }
             r == null -> { lastUpdateCheck = 0; if (!quiet) message.value = L10n.s(R.string.update_check_failed) }
             !com.repisa.app.data.Updater.isNewer(r.version, com.repisa.app.BuildConfig.VERSION_NAME) ->
                 if (!quiet) message.value = L10n.s(R.string.update_none, com.repisa.app.BuildConfig.VERSION_NAME)

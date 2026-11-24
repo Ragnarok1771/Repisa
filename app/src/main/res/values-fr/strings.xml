@@ -206,6 +206,7 @@
     <string name="updates_hint">Repisa consulte les versions du projet sur GitHub et, s’il y en a une plus récente, affiche ses notes et l’installe par-dessus.</string>
     <string name="updates_check_now">Vérifier maintenant</string>
     <string name="update_none">Vous avez la dernière version (%1$s).</string>
+    <string name="update_private">GitHub ne montre pas les nouvelles versions : le projet Repisa est privé. Rendez-le public pour que l\'app se mette à jour.</string>
     <string name="update_check_failed">Impossible de vérifier (pas de connexion, ou le projet n’est pas public).</string>
     <string name="update_title">Repisa %1$s est disponible</string>
     <string name="update_required">Installez-la pour continuer à utiliser Repisa (bibliothèque et réglages conservés).</string>

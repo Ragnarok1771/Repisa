@@ -254,6 +254,16 @@ private fun MainPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit, open:
         }
     }
 
+    // Abajo del todo: buscar actualización a mano (por si el aviso no salió solo).
+    Row(Modifier.fillMaxWidth().background(Color(0xB3120C09), RoundedCornerShape(12.dp)).padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("⬆ " + stringResource(R.string.updates_title), color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            Text("Repisa v${com.repisa.app.BuildConfig.VERSION_NAME}", color = Color(0xFFBFA98A), fontSize = 12.sp)
+        }
+        Button(onClick = { vm.checkForUpdate(quiet = false) }) { Text(stringResource(R.string.updates_check_now)) }
+    }
+
     if (epicWeb) {
         LoginWebDialog(stringResource(R.string.epic_link), EpicSource.LOGIN_URL, onDismiss = { epicWeb = false }) { view, url, done ->
             // Al terminar, Epic muestra un JSON con "authorizationCode".

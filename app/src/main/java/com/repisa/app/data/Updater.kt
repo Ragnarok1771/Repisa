@@ -18,7 +18,10 @@ import java.io.File
  */
 object Updater {
     /** Repositorio con las releases (si se renombra, GitHub redirige el nombre antiguo). */
-    const val REPO = "Ragnarok1771/Pruebas"
+    const val REPO = "Ragnarok1771/Repisa"
+
+    /** GitHub respondió 404: el repositorio es privado (sin cuenta no se ven sus versiones) o no existe. */
+    class NotVisible : Exception("404")
 
     data class Release(val version: String, val notes: String, val apkUrl: String, val apkName: String)
 
@@ -27,6 +30,7 @@ object Updater {
         val req = Request.Builder().url("https://api.github.com/repos/$REPO/releases/latest")
             .header("Accept", "application/vnd.github+json").build()
         Http.client.newCall(req).execute().use { r ->
+            if (r.code == 404) throw NotVisible()
             if (!r.isSuccessful) return@withContext null
             val json = Http.json.parseToJsonElement(r.body?.string().orEmpty())
             val tag = json["tag_name"].str ?: return@withContext null

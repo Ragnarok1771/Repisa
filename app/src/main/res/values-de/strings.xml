@@ -206,6 +206,7 @@
     <string name="updates_hint">Repisa prüft die Releases des Projekts auf GitHub und zeigt bei einer neueren die Patchnotes und installiert sie darüber.</string>
     <string name="updates_check_now">Jetzt prüfen</string>
     <string name="update_none">Du hast die neueste Version (%1$s).</string>
+    <string name="update_private">GitHub zeigt die neuen Versionen nicht: das Projekt Repisa ist privat. Mach es öffentlich, damit sich die App aktualisiert.</string>
     <string name="update_check_failed">Prüfung nicht möglich (keine Verbindung oder das Projekt ist nicht öffentlich).</string>
     <string name="update_title">Repisa %1$s ist verfügbar</string>
     <string name="update_required">Installiere sie, um Repisa weiter zu nutzen (Bibliothek und Einstellungen bleiben erhalten).</string>
