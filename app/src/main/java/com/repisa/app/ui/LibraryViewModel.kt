@@ -13,6 +13,7 @@ import com.repisa.app.model.Consoles
 import com.repisa.app.model.Copies
 import com.repisa.app.model.label
 import com.repisa.app.model.Game
+import com.repisa.app.model.playStatus
 import com.repisa.app.model.Source
 import com.repisa.app.model.formatPlaytime
 import com.repisa.app.sources.EmulatorSource
@@ -46,7 +47,7 @@ enum class SortMode(private val labelRes: Int) {
 enum class GroupMode(private val labelRes: Int) {
     NONE(R.string.group_none), GENRE(R.string.group_genre), CONSOLE(R.string.group_console),
     DEVELOPER(R.string.group_developer), SOURCE(R.string.group_source), DECADE(R.string.group_decade),
-    FAVORITES(R.string.group_favorites);
+    FAVORITES(R.string.group_favorites), STATUS(R.string.group_status);
 
     val label: String get() = L10n.s(labelRes)
 }
@@ -58,6 +59,7 @@ data class ViewOptions(
     val group: GroupMode = GroupMode.NONE,
     val source: Source? = null,
     val query: String = "",
+    val continueShelf: Boolean = true,
 )
 
 class LibraryViewModel(app: Application) : AndroidViewModel(app) {
@@ -76,8 +78,11 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         ViewOptions(
             sort = runCatching { SortMode.valueOf(settings.sortMode) }.getOrDefault(SortMode.ALPHA),
             group = runCatching { GroupMode.valueOf(settings.groupMode) }.getOrDefault(GroupMode.NONE),
+            continueShelf = settings.continueShelf,
         )
     )
+
+    fun setContinueShelf(on: Boolean) { settings.continueShelf = on; _options.update { it.copy(continueShelf = on) } }
     val options: StateFlow<ViewOptions> = _options.asStateFlow()
 
     /** Texto de progreso de la sincronización (null = sin tareas). */
@@ -243,7 +248,14 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         fun group(title: String, games: List<Game>) =
             ShelfGroup(title, "${L10n.games(games.size)} · ${hours(games)}", games)
 
-        return when (o.group) {
+        // «Seguir jugando»: los últimos jugados (90 días), arriba del todo, sin buscar.
+        val cont = if (o.continueShelf && q.isEmpty()) {
+            val since = System.currentTimeMillis() - 90L * 86_400_000
+            sorted.filter { (it.lastPlayedAny ?: 0) > since }.sortedByDescending { it.lastPlayedAny }.take(8)
+        } else emptyList()
+        val head = if (cont.isEmpty()) emptyList() else listOf(ShelfGroup(L10n.s(R.string.shelf_continue), L10n.s(R.string.shelf_continue_sub), cont))
+
+        return head + when (o.group) {
             GroupMode.NONE -> if (sorted.isEmpty()) emptyList() else listOf(group(MY_COLLECTION, sorted))
             GroupMode.GENRE -> {
                 val map = linkedMapOf<String, MutableList<Game>>()
@@ -266,6 +278,9 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             GroupMode.DECADE -> sorted.groupBy { it.releaseYear?.let { y -> y / 10 * 10 } ?: 9999 }.entries
                 .sortedBy { it.key }
                 .map { group(if (it.key == 9999) L10n.s(R.string.shelf_unknown_year) else L10n.s(R.string.shelf_decade, it.key), it.value) }
+            GroupMode.STATUS -> sorted.groupBy { com.repisa.app.model.PlayStatus.of(it.status) }.entries
+                .sortedBy { it.key?.ordinal ?: 99 }
+                .map { group(it.key?.let { st -> "${st.icon} ${st.label}" } ?: L10n.s(R.string.shelf_no_status), it.value) }
             GroupMode.FAVORITES -> sorted.partition { it.favorite }.let { (fav, rest) ->
                 listOfNotNull(fav.takeIf { it.isNotEmpty() }?.let { group(L10n.s(R.string.shelf_favorites), it) },
                     rest.takeIf { it.isNotEmpty() }?.let { group(L10n.s(R.string.shelf_rest), it) })
@@ -449,6 +464,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             trackedMinutes = current.trackedMinutes,
             manualMinutes = current.manualMinutes,
             notes = current.notes,
+            status = current.status,
             coverUrl = if (current.customCover) current.coverUrl else enriched.coverUrl,
             customCover = current.customCover,
             rating = current.rating,
@@ -498,6 +514,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun toggleFavorite(game: Game) = updateGame(game.copy(favorite = !game.favorite))
 
+    fun setStatus(game: Game, status: com.repisa.app.model.PlayStatus?) = updateGame(game.copy(status = status?.name))
+
     // ------------------------------------------------------------------ Copias del mismo juego
 
     /** Todas las copias de la caja [game] (ella primero). */
@@ -538,6 +556,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun play(game: Game) {
         val app = getApplication<android.app.Application>()
+        // Si estaba pendiente, al jugarlo pasa a «Jugando».
+        if (game.playStatus == com.repisa.app.model.PlayStatus.BACKLOG) setStatus(game, com.repisa.app.model.PlayStatus.PLAYING)
         // DS y 3DS usan las dos pantallas: para ellos no hay panel.
         val companion = settings.companionPanel && game.consoleId !in setOf("nds", "3ds")
         val bottom = if (companion) secondDisplayId(app) else null

@@ -409,6 +409,16 @@ private fun DisplayPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
             var comp by remember { mutableStateOf(s.companionPanel) }
             Switch(checked = comp, onCheckedChange = { comp = it; s.companionPanel = it })
         }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.setting_continue_shelf), color = Color.White, modifier = Modifier.weight(1f))
+            var c by remember { mutableStateOf(s.continueShelf) }
+            Switch(checked = c, onCheckedChange = { c = it; vm.setContinueShelf(it) })
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.setting_status_boxes), color = Color.White, modifier = Modifier.weight(1f))
+            var c by remember { mutableStateOf(s.showStatusOnBoxes) }
+            Switch(checked = c, onCheckedChange = { c = it; s.showStatusOnBoxes = it })
+        }
         HorizontalDivider(color = Color(0x33FFFFFF))
         // El valor se ve mientras se arrastra; se guarda al soltar.
         var h by remember { mutableFloatStateOf(s.shelfHeightDp.toFloat()) }

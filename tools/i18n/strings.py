@@ -627,6 +627,66 @@ s("companion_setting_hint",
   "Con Gioca il gioco si apre sopra e sotto resta Repisa con cronometro, ora, valutazione, preferito e note. Non per DS e 3DS (usano entrambi gli schermi).",
   "Ao tocar em Jogar, o jogo abre em cima e embaixo fica o Repisa com o tempo da sessão, a hora, avaliar, favorito e notas. Não no DS nem no 3DS (usam as duas telas).",
   ptPT="Ao tocar em Jogar, o jogo abre em cima e em baixo fica o Repisa com o tempo da sessão, a hora, avaliar, favorito e notas. Não no DS nem no 3DS (usam os dois ecrãs).")
+s("status_backlog", "Backlog", "Pendiente", "À faire", "Ausstehend", "Da giocare", "Pendente")
+s("status_playing", "Playing", "Jugando", "En cours", "Spiele gerade", "In corso", "Jogando", ptPT="A jogar")
+s("status_finished", "Finished", "Terminado", "Terminé", "Beendet", "Finito", "Zerado", ptPT="Terminado")
+s("status_completed", "100%", "100 %", "100 %", "100 %", "100%", "100%")
+s("status_abandoned", "Dropped", "Abandonado", "Abandonné", "Abgebrochen", "Abbandonato", "Abandonado")
+s("group_status", "Status", "Estado", "Statut", "Status", "Stato", "Status", ptPT="Estado")
+s("shelf_no_status", "No status", "Sin estado", "Sans statut", "Ohne Status", "Senza stato", "Sem status", ptPT="Sem estado")
+s("shelf_continue", "Continue playing", "Seguir jugando", "Continuer", "Weiterspielen", "Continua a giocare", "Continuar jogando",
+  ptPT="Continuar a jogar")
+s("shelf_continue_sub", "Played recently", "Jugados hace poco", "Joués récemment", "Kürzlich gespielt", "Giocati di recente",
+  "Jogados recentemente")
+s("remaining_main", "About %1$s h left to finish it (HowLongToBeat, story)", "Te faltan unas %1$s h para terminarlo (HowLongToBeat, historia)",
+  "Il reste environ %1$s h pour le finir (HowLongToBeat, histoire)", "Noch etwa %1$s Std. bis zum Ende (HowLongToBeat, Story)",
+  "Mancano circa %1$s h per finirlo (HowLongToBeat, storia)", "Faltam cerca de %1$s h para terminar (HowLongToBeat, história)")
+s("remaining_complete", "About %1$s h left for 100%% (HowLongToBeat)", "Te faltan unas %1$s h para el 100 %% (HowLongToBeat)",
+  "Il reste environ %1$s h pour le 100 %% (HowLongToBeat)", "Noch etwa %1$s Std. bis 100 %% (HowLongToBeat)",
+  "Mancano circa %1$s h per il 100%% (HowLongToBeat)", "Faltam cerca de %1$s h para os 100%% (HowLongToBeat)")
+s("setting_continue_shelf", "“Continue playing” shelf at the top", "Repisa «Seguir jugando» arriba", "Étagère « Continuer » en haut",
+  "Regal „Weiterspielen“ oben", "Scaffale «Continua a giocare» in alto", "Estante \"Continuar jogando\" no topo",
+  ptPT="Estante \"Continuar a jogar\" no topo")
+s("setting_status_boxes", "Status ribbon on the boxes", "Cinta de estado en las cajas", "Ruban de statut sur les boîtes",
+  "Statusband auf den Hüllen", "Nastro di stato sulle scatole", "Fita de status nas caixas", ptPT="Fita de estado nas caixas")
+s("random_title", "What should I play?", "¿A qué juego?", "À quoi je joue ?", "Was soll ich spielen?", "A cosa gioco?", "O que eu jogo?",
+  ptPT="O que vou jogar?")
+s("random_count", "%1$d possible games", "%1$d juegos posibles", "%1$d jeux possibles", "%1$d mögliche Spiele", "%1$d giochi possibili",
+  "%1$d jogos possíveis")
+s("random_only_backlog", "Only backlog", "Solo pendientes", "Seulement à faire", "Nur ausstehende", "Solo da giocare", "Só pendentes")
+s("random_max_hours", "≤ %1$d h", "≤ %1$d h", "≤ %1$d h", "≤ %1$d Std.", "≤ %1$d h", "≤ %1$d h")
+s("random_by_taste", "My taste", "Según mis gustos", "Selon mes goûts", "Nach meinem Geschmack", "Secondo i miei gusti", "Pelo meu gosto",
+  ptPT="Segundo os meus gostos")
+s("random_none", "No game matches these filters.", "Ningún juego cumple estos filtros.", "Aucun jeu ne correspond.",
+  "Kein Spiel passt zu diesen Filtern.", "Nessun gioco corrisponde ai filtri.", "Nenhum jogo corresponde aos filtros.")
+s("random_hint", "Press the dice and let fate decide.", "Pulsa el dado y que decida la suerte.", "Lancez le dé et laissez faire le hasard.",
+  "Würfle und lass das Glück entscheiden.", "Tira il dado e lascia decidere la sorte.", "Toque no dado e deixe a sorte decidir.",
+  ptPT="Toque no dado e deixe a sorte decidir.")
+s("random_roll", "Roll", "Tirar", "Lancer", "Würfeln", "Tira", "Rolar", ptPT="Lançar")
+s("random_again", "Again", "Otra vez", "Encore", "Nochmal", "Ancora", "De novo")
+s("random_open", "See details", "Ver ficha", "Voir la fiche", "Details", "Scheda", "Ver ficha")
+s("random_hltb", "~%1$s h to finish", "~%1$s h para terminarlo", "~%1$s h pour le finir", "~%1$s Std. bis zum Ende", "~%1$s h per finirlo",
+  "~%1$s h para terminar")
+s("stats_title", "Statistics", "Estadísticas", "Statistiques", "Statistiken", "Statistiche", "Estatísticas")
+s("stats_in_library", "in your library", "en tu biblioteca", "dans votre bibliothèque", "in deiner Bibliothek", "nella tua libreria",
+  "na sua biblioteca")
+s("stats_played", "played in total", "jugadas en total", "jouées au total", "insgesamt gespielt", "giocate in totale", "jogadas no total")
+s("stats_done", "finished or 100%", "terminados o al 100 %", "terminés ou à 100 %", "beendet oder 100 %", "finiti o al 100%",
+  "zerados ou 100%", ptPT="terminados ou a 100%")
+s("stats_backlog_left", "in backlog (~%1$s h)", "pendientes (~%1$s h)", "à faire (~%1$s h)", "ausstehend (~%1$s Std.)", "da giocare (~%1$s h)",
+  "pendentes (~%1$s h)")
+s("stats_avg_rating", "average of %1$d rated", "nota media de %1$d calificados", "note moyenne de %1$d jeux", "Schnitt aus %1$d bewerteten",
+  "media di %1$d valutati", "média de %1$d avaliados")
+s("stats_by_status", "By status", "Por estado", "Par statut", "Nach Status", "Per stato", "Por status", ptPT="Por estado")
+s("stats_no_status", "%1$d without status", "%1$d sin estado", "%1$d sans statut", "%1$d ohne Status", "%1$d senza stato",
+  "%1$d sem status", ptPT="%1$d sem estado")
+s("stats_hours_system", "Hours by system", "Horas por sistema", "Heures par système", "Stunden pro System", "Ore per sistema", "Horas por sistema")
+s("stats_hours_genre", "Hours by genre", "Horas por género", "Heures par genre", "Stunden pro Genre", "Ore per genere", "Horas por gênero",
+  ptPT="Horas por género")
+s("stats_by_decade", "Games by release decade", "Juegos por década de salida", "Jeux par décennie", "Spiele nach Jahrzehnt",
+  "Giochi per decennio", "Jogos por década de lançamento")
+s("stats_most_played", "Most played", "Los más jugados", "Les plus joués", "Am meisten gespielt", "I più giocati", "Os mais jogados")
+s("stats_other", "Others", "Otros", "Autres", "Andere", "Altri", "Outros")
 s("diag_copy", "Copy diagnostics", "Copiar diagnóstico", "Copier le diagnostic", "Diagnose kopieren", "Copia diagnostica", "Copiar diagnóstico")
 s("diag_copied", "Copied ✓", "Copiado ✓", "Copié ✓", "Kopiert ✓", "Copiato ✓", "Copiado ✓")
 s("diag_share", "Share diagnostics", "Compartir diagnóstico", "Partager le diagnostic", "Diagnose teilen", "Condividi diagnostica", "Compartilhar diagnóstico",

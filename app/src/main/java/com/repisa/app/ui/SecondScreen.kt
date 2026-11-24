@@ -108,6 +108,12 @@ private fun FocusPanel(vm: LibraryViewModel) {
                 Text("Repisa", color = Color(0xFFFFD27A), fontSize = 40.sp, fontWeight = FontWeight.Black, fontFamily = DisplayFont)
                 Text(L10n.games(all.size) + " · " + stringResource(R.string.hours_played, all.sumOf { it.totalMinutes } / 60),
                     color = Color(0xFFBFA98A))
+                // Resumen por estado: ⏳ 12 · ▶ 3 · ✓ 40 ...
+                val byStatus = androidx.compose.runtime.remember(all) { all.mapNotNull { com.repisa.app.model.PlayStatus.of(it.status) }.groupingBy { it }.eachCount() }
+                if (byStatus.isNotEmpty()) Text(
+                    com.repisa.app.model.PlayStatus.entries.filter { it in byStatus }.joinToString("  ·  ") { "${it.icon} ${it.label} ${byStatus[it]}" },
+                    color = Color(0xFFE8D9C0), fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp),
+                )
                 Spacer(Modifier.height(12.dp))
                 val top = androidx.compose.runtime.remember(all) { all.sortedByDescending { it.totalMinutes }.take(3) }
                 if (top.isNotEmpty()) {

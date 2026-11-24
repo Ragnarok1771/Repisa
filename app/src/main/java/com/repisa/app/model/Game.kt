@@ -34,6 +34,8 @@ data class Game(
     val manualMinutes: Int = 0,
     /** Notas personales del juego (dónde lo dejaste, trucos, lo que quieras). */
     val notes: String? = null,
+    /** Estado del juego ([PlayStatus]): pendiente, jugando, terminado, 100 % o abandonado. */
+    val status: String? = null,
     /** Fecha (epoch ms) de la última partida. */
     val lastPlayed: Long? = null,
     val coverUrl: String? = null,

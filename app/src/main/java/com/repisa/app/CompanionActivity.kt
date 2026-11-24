@@ -115,6 +115,8 @@ private fun CompanionPanel(game: Game, vm: LibraryViewModel, onClose: () -> Unit
                 Text("${game.console.label} · " + stringResource(R.string.stat_playtime) + ": " + formatPlaytime(game.totalMinutes),
                     color = Color(0xFFFFD27A), fontSize = 13.sp)
                 ScoresRow(game, scale, small = true, onRate = { rating = true })
+                com.repisa.app.ui.StatusPicker(game, small = true) { vm.setStatus(game, it) }
+                com.repisa.app.ui.remainingText(game)?.let { Text(it, color = Color(0xFFBFA98A), fontSize = 12.sp) }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { rating = true }) { Text("★ " + stringResource(R.string.rate), color = Color.White) }
                     OutlinedButton(onClick = { vm.toggleFavorite(game) }) {

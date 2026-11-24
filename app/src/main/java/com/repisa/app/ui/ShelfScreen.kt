@@ -1,5 +1,8 @@
 package com.repisa.app.ui
 
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import android.view.KeyEvent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -81,7 +84,8 @@ private sealed interface ShelfItem {
 }
 
 @Composable
-fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (Game) -> Unit, onOpenRated: () -> Unit = {}) {
+fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (Game) -> Unit, onOpenRated: () -> Unit = {},
+                onOpenRandom: () -> Unit = {}, onOpenStats: () -> Unit = {}) {
     val shelves by vm.shelves.collectAsState()
     val options by vm.options.collectAsState()
     val status by vm.status.collectAsState()
@@ -90,7 +94,7 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
     val boxHeight = vm.settings.shelfHeightDp.dp
 
     Column(Modifier.fillMaxSize().roomBackground()) {
-        TopBar(vm, options, all, onOpenSettings, onOpenRated)
+        TopBar(vm, options, all, onOpenSettings, onOpenRated, onOpenRandom, onOpenStats)
         status?.let {
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Text(it, color = Color(0xFFE8D5B5), fontSize = 12.sp)
@@ -111,7 +115,8 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
 }
 
 @Composable
-private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, onOpenSettings: () -> Unit, onOpenRated: () -> Unit) {
+private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, onOpenSettings: () -> Unit, onOpenRated: () -> Unit,
+                   onOpenRandom: () -> Unit, onOpenStats: () -> Unit) {
     var searching by remember { mutableStateOf(options.query.isNotEmpty()) }
     Column(Modifier.fillMaxWidth().background(Color(0xCC120C09)).padding(horizontal = 12.dp, vertical = 6.dp)) {
         // Fila 1: nombre y versión a la izquierda, juegos y horas en el centro, botones a la derecha.
@@ -122,9 +127,12 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
                 Text(" v${com.repisa.app.BuildConfig.VERSION_NAME}", color = Color(0xFF9C8A70), fontSize = 10.sp,
                     modifier = Modifier.padding(top = 8.dp))
             }
+            // Tocar los totales abre las estadísticas.
             if (!searching) Text(
-                L10n.games(all.size) + " · " + stringResource(R.string.hours_played, all.sumOf { it.totalMinutes } / 60),
-                color = Color(0xFFBFA98A), fontSize = 13.sp, modifier = Modifier.align(Alignment.Center),
+                L10n.games(all.size) + " · " + stringResource(R.string.hours_played, all.sumOf { it.totalMinutes } / 60) + "  📊",
+                color = Color(0xFFBFA98A), fontSize = 13.sp,
+                modifier = Modifier.align(Alignment.Center).clip(RoundedCornerShape(8.dp)).clickable(onClick = onOpenStats)
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
             )
             Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
                 if (searching) {
@@ -142,6 +150,7 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
                     TopIcon(Icons.Default.Clear, stringResource(R.string.close_search)) { vm.setQuery(""); searching = false }
                 } else {
                     TopIcon(Icons.Default.Search, stringResource(R.string.search)) { searching = true }
+                    TopTextIcon("🎲", stringResource(R.string.random_title), onClick = onOpenRandom)
                 }
                 TopIcon(Icons.Default.Star, stringResource(R.string.my_ratings), Color(0xFFFFC94D), onClick = onOpenRated)
                 TopIcon(Icons.Default.Refresh, stringResource(R.string.sync)) { vm.syncAll() }
@@ -184,6 +193,20 @@ private fun TopIcon(
     ) {
         Icon(icon, label, tint = if (focused) Color(0xFF2A1C14) else tint)
     }
+}
+
+/** Como [TopIcon] pero con un emoji (el dado). */
+@Composable
+private fun TopTextIcon(text: String, label: String, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .onFocusChanged { focused = it.isFocused }
+            .semantics { contentDescription = label }
+            .then(if (focused) Modifier.background(Color(0xFFFFD27A), androidx.compose.foundation.shape.CircleShape)
+                .border(2.dp, Color.White, androidx.compose.foundation.shape.CircleShape) else Modifier),
+    ) { Text(text, fontSize = 20.sp) }
 }
 
 @Composable

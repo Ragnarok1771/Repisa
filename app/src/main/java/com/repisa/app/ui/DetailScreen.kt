@@ -132,6 +132,9 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                     }
                     Spacer(Modifier.height(14.dp))
                     ScoresRow(game, scale, onRate = { rating = true }, onOpen = { vm.launcher.openUrl(it) })
+                    Spacer(Modifier.height(10.dp))
+                    StatusPicker(game) { vm.setStatus(game, it) }
+                    remainingText(game)?.let { Text(it, color = Color(0xFFBFA98A), fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp)) }
                     Spacer(Modifier.height(8.dp))
                     Stat(stringResource(R.string.stat_playtime), formatPlaytime(game.totalMinutes) +
                         if (game.trackedMinutes > 0 && game.playtimeMinutes > 0)

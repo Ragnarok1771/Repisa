@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.repisa.app.model.Game
+import com.repisa.app.model.playStatus
 import kotlin.math.abs
 
 /** Proporción (ancho/alto) del frontal: la de la carátula real si ya se conoce, si no la típica del sistema. */
@@ -69,6 +70,7 @@ fun GameBox(
     modifier: Modifier = Modifier,
     lifted: Boolean = false,
     onCoverAspect: ((Float) -> Unit)? = null,
+    showStatus: Boolean = LocalShowStatus.current,
 ) {
     val case = game.console.case
     val caseColor = Color(case.caseColor)
@@ -160,7 +162,33 @@ fun GameBox(
                     )
                 )
             )
+            // Cinta de estado en la esquina (pendiente, jugando, terminado, 100 %, abandonado).
+            if (showStatus) game.playStatus?.let { StatusCorner(it, (frontW * 0.30f).coerceIn(14.dp, 44.dp)) }
         }
+    }
+}
+
+/** Mostrar la cinta de estado en las cajas (ajuste de Pantalla). */
+val LocalShowStatus = androidx.compose.runtime.staticCompositionLocalOf { true }
+
+/** Triángulo de color en la esquina superior izquierda de la carátula, con el icono del estado. */
+@Composable
+fun StatusCorner(status: com.repisa.app.model.PlayStatus, size: Dp) {
+    val color = Color(status.color)
+    Box(
+        Modifier.size(size).drawBehind {
+            val tri = Path().apply { moveTo(0f, 0f); lineTo(this@drawBehind.size.width, 0f); lineTo(0f, this@drawBehind.size.height); close() }
+            drawPath(tri, color)
+            // Filo oscuro para que se separe de cualquier carátula
+            drawLine(Color.Black.copy(alpha = 0.45f), Offset(this.size.width, 0f), Offset(0f, this.size.height), strokeWidth = 1.5f)
+        },
+    ) {
+        val density = LocalDensity.current
+        Text(
+            status.icon, color = if (status == com.repisa.app.model.PlayStatus.BACKLOG || status == com.repisa.app.model.PlayStatus.PLAYING) Color(0xFF1C130D) else Color.White,
+            fontWeight = FontWeight.Bold, fontSize = with(density) { (size * 0.34f).toSp() }, lineHeight = with(density) { (size * 0.34f).toSp() },
+            modifier = Modifier.padding(start = size * 0.09f, top = size * 0.04f),
+        )
     }
 }
 

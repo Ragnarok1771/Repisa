@@ -112,6 +112,8 @@ class MainActivity : ComponentActivity() {
 private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageChanged: () -> Unit) {
     val inSettings by vm.inSettings.collectAsState()
     var inRated by rememberSaveable { mutableStateOf(false) }
+    var inRandom by rememberSaveable { mutableStateOf(false) }
+    var inStats by rememberSaveable { mutableStateOf(false) }
     val selectedId by vm.selectedId.collectAsState()
     val games by vm.displayGames.collectAsState()
     val selected = games.firstOrNull { it.id == selectedId }
@@ -134,6 +136,8 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
     BackHandler(enabled = true) {
         when {
             selected != null -> vm.selectedId.value = null
+            inRandom -> inRandom = false
+            inStats -> inStats = false
             inRated -> inRated = false
             inSettings -> closeSettings()
             else -> Unit
@@ -146,6 +150,8 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
             when (e.key.nativeKeyCode) {
                 KeyEvent.KEYCODE_BUTTON_B -> when {
                     selected != null -> { vm.selectedId.value = null; true }
+                    inRandom -> { inRandom = false; true }
+                    inStats -> { inStats = false; true }
                     inRated -> { inRated = false; true }
                     inSettings -> { closeSettings(); true }
                     else -> false
@@ -156,10 +162,16 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
     ) {
         if (inSettings) {
             SettingsScreen(vm, onBack = { closeSettings() }, onLanguageChanged = onLanguageChanged)
-        } else {
-            if (inRated) RatedScreen(vm, onBack = { inRated = false }, onOpen = { vm.selectedId.value = it.id })
-            else ShelfScreen(vm, onOpenSettings = { vm.inSettings.value = true }, onOpenGame = { vm.selectedId.value = it.id },
-                onOpenRated = { inRated = true })
+        } else androidx.compose.runtime.CompositionLocalProvider(
+            com.repisa.app.ui.LocalShowStatus provides remember(inSettings) { vm.settings.showStatusOnBoxes },
+        ) {
+            when {
+                inStats -> com.repisa.app.ui.StatsScreen(vm, onBack = { inStats = false })
+                inRated -> RatedScreen(vm, onBack = { inRated = false }, onOpen = { vm.selectedId.value = it.id })
+                else -> ShelfScreen(vm, onOpenSettings = { vm.inSettings.value = true }, onOpenGame = { vm.selectedId.value = it.id },
+                    onOpenRated = { inRated = true }, onOpenRandom = { inRandom = true }, onOpenStats = { inStats = true })
+            }
+            if (inRandom) com.repisa.app.ui.RandomPicker(vm, onClose = { inRandom = false }, onOpen = { vm.selectedId.value = it.id })
             selected?.let { DetailScreen(it, vm, onClose = { vm.selectedId.value = null }) }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp))

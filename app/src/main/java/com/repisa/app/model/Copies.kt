@@ -50,6 +50,8 @@ object Copies {
             // salvo que el usuario haya puesto uno a mano.
             val name = if (main.userEdited) main.title else group.minBy { it.title.length }.title
             out += main.copy(
+                status = main.status ?: group.firstNotNullOfOrNull { it.status },
+                notes = main.notes ?: group.firstNotNullOfOrNull { it.notes },
                 title = name,
                 originalTitle = main.title,
                 copyIds = group.map { it.id }.filter { it != main.id },

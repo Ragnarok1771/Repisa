@@ -41,6 +41,7 @@ fun mergeGame(old: Game?, new: Game): Game {
         trackedMinutes = old.trackedMinutes,
         manualMinutes = old.manualMinutes,
         notes = old.notes,
+        status = old.status,
         lastPlayed = listOfNotNull(old.lastPlayed, new.lastPlayed).maxOrNull(),
         coverUrl = if ((old.userEdited || old.customCover) && old.coverUrl != null) old.coverUrl else new.coverUrl ?: old.coverUrl,
         customCover = old.customCover,
