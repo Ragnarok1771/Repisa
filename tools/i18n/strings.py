@@ -583,6 +583,12 @@ s("update_check_failed", "Couldn't check for new versions (no connection, or the
   "Não foi possível verificar (sem conexão ou o projeto não é público).")
 s("update_title", "Repisa %1$s is available", "Repisa %1$s está disponible", "Repisa %1$s est disponible", "Repisa %1$s ist verfügbar",
   "Repisa %1$s è disponibile", "Repisa %1$s está disponível")
+s("update_required", "Install it to keep using Repisa (your library and settings stay as they are).",
+  "Instálala para seguir usando Repisa (tu biblioteca y ajustes se quedan como están).",
+  "Installez-la pour continuer à utiliser Repisa (bibliothèque et réglages conservés).",
+  "Installiere sie, um Repisa weiter zu nutzen (Bibliothek und Einstellungen bleiben erhalten).",
+  "Installala per continuare a usare Repisa (libreria e impostazioni restano come sono).",
+  "Instale para continuar usando o Repisa (sua biblioteca e ajustes continuam iguais).")
 s("update_no_notes", "No patch notes.", "Sin notas del parche.", "Pas de notes.", "Keine Patchnotes.", "Nessuna nota.", "Sem notas.")
 s("update_now", "Update", "Actualizar", "Mettre à jour", "Aktualisieren", "Aggiorna", "Atualizar")
 s("update_later", "Later", "Más tarde", "Plus tard", "Später", "Più tardi", "Mais tarde")
@@ -590,12 +596,12 @@ s("update_skip", "Skip this version", "Omitir esta versión", "Ignorer cette ver
   "Pular esta versão", ptPT="Ignorar esta versão")
 s("update_downloading", "Downloading… %1$d%%", "Descargando… %1$d%%", "Téléchargement… %1$d%%", "Wird heruntergeladen… %1$d%%",
   "Download… %1$d%%", "Baixando… %1$d%%", ptPT="A transferir… %1$d%%")
-s("update_allow_install", "Allow Repisa to install apps (Android will open the setting), then tap Update again.",
-  "Permite que Repisa instale apps (Android abrirá el ajuste) y vuelve a pulsar Actualizar.",
-  "Autorisez Repisa à installer des apps (Android ouvre le réglage), puis touchez à nouveau Mettre à jour.",
-  "Erlaube Repisa, Apps zu installieren (Android öffnet die Einstellung), und tippe dann erneut auf Aktualisieren.",
-  "Consenti a Repisa di installare app (Android apre l’impostazione), poi tocca di nuovo Aggiorna.",
-  "Permita que o Repisa instale apps (o Android abre o ajuste) e toque em Atualizar de novo.")
+s("update_allow_install", "Allow Repisa to install apps (Android opens the setting) and come back: the update continues by itself.",
+  "Permite que Repisa instale apps (Android abre el ajuste) y vuelve: la actualización sigue sola.",
+  "Autorisez Repisa à installer des apps (Android ouvre le réglage) puis revenez : la mise à jour continue seule.",
+  "Erlaube Repisa, Apps zu installieren (Android öffnet die Einstellung), und kehre zurück: das Update läuft weiter.",
+  "Consenti a Repisa di installare app (Android apre l’impostazione) e torna: l’aggiornamento continua da solo.",
+  "Permita que o Repisa instale apps (o Android abre o ajuste) e volte: a atualização continua sozinha.")
 s("update_failed", "Couldn't download the update: %1$s", "No se pudo descargar la actualización: %1$s",
   "Échec du téléchargement : %1$s", "Download fehlgeschlagen: %1$s", "Download non riuscito: %1$s",
   "Não foi possível baixar a atualização: %1$s", ptPT="Não foi possível transferir a atualização: %1$s")

@@ -54,7 +54,8 @@ object Backup {
         }
     }
 
-    fun export(games: List<Game>, prefs: SharedPreferences, appVersion: String, coversDir: java.io.File? = null): String {
+    fun export(games: List<Game>, prefs: SharedPreferences, appVersion: String, coversDir: java.io.File? = null,
+               archive: List<Game> = emptyList()): String {
         val skip = Settings.SECRET_KEYS + Settings.DEVICE_KEYS
         val savedPrefs = prefs.all.filterKeys { it !in skip }.mapNotNull { (k, v) ->
             val typed: JsonObject = when (v) {
@@ -77,17 +78,20 @@ object Backup {
             "games" to Http.json.encodeToJsonElement(gamesSerializer, games.map { it.stored() }),
             "settings" to JsonObject(savedPrefs),
             "covers" to JsonObject(ownCovers(games, coversDir)),
+            // Lo tuyo de juegos que ahora no están (cuenta desvinculada...), para recuperarlo si vuelven.
+            "archive" to Http.json.encodeToJsonElement(gamesSerializer, archive.map { it.stored() }),
         ))
         return root.toString()
     }
 
-    class Parsed(val games: List<Game>, val settings: Map<String, JsonElement>, val version: String?)
+    class Parsed(val games: List<Game>, val settings: Map<String, JsonElement>, val version: String?, val archive: List<Game> = emptyList())
 
     fun parse(text: String): Parsed {
         val root = Http.json.parseToJsonElement(text).jsonObject
         require(root["app"]?.jsonPrimitive?.content == "Repisa") { "no es una copia de Repisa" }
         val games = Http.json.decodeFromJsonElement(gamesSerializer, root["games"] ?: JsonArray(emptyList()))
-        return Parsed(games, root["settings"]?.jsonObject ?: emptyMap(), root["version"]?.jsonPrimitive?.content)
+        val archive = runCatching { Http.json.decodeFromJsonElement(gamesSerializer, root["archive"] ?: JsonArray(emptyList())) }.getOrDefault(emptyList())
+        return Parsed(games, root["settings"]?.jsonObject ?: emptyMap(), root["version"]?.jsonPrimitive?.content, archive)
     }
 
     /** Escribe los ajustes de la copia (nunca claves ni carpetas, aunque vinieran en el archivo). */

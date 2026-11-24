@@ -10,7 +10,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -19,14 +18,20 @@ import androidx.compose.ui.unit.sp
 import com.repisa.app.R
 import com.repisa.app.data.Updater
 
-/** Aviso de versión nueva con sus notas del parche: actualizar ahora, más tarde u omitir esta versión. */
+/**
+ * Aviso de versión nueva con sus notas del parche. Es obligatorio (Repisa solo suma cosas nuevas): no se puede cerrar,
+ * solo actualizar. Descarga el APK con su progreso y abre el instalador de Android.
+ */
 @Composable
-fun UpdateDialog(release: Updater.Release, progress: Float?, onUpdate: () -> Unit, onLater: () -> Unit, onSkip: () -> Unit) {
+fun UpdateDialog(release: Updater.Release, progress: Float?, onUpdate: () -> Unit) {
     AlertDialog(
-        onDismissRequest = { if (progress == null) onLater() },
+        onDismissRequest = {},
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
         title = { Text(stringResource(R.string.update_title, release.version)) },
         text = {
             Column {
+                Text(stringResource(R.string.update_required), fontSize = 14.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    modifier = Modifier.padding(bottom = 8.dp))
                 Text(
                     // Notas tal cual vienen de GitHub, sin los símbolos de formato.
                     release.notes.replace(Regex("""\*\*|`|^#+\s*""", RegexOption.MULTILINE), "").trim()
@@ -41,11 +46,5 @@ fun UpdateDialog(release: Updater.Release, progress: Float?, onUpdate: () -> Uni
             }
         },
         confirmButton = { Button(onClick = onUpdate, enabled = progress == null) { Text(stringResource(R.string.update_now)) } },
-        dismissButton = {
-            Column {
-                TextButton(onClick = onLater, enabled = progress == null) { Text(stringResource(R.string.update_later)) }
-                TextButton(onClick = onSkip, enabled = progress == null) { Text(stringResource(R.string.update_skip)) }
-            }
-        },
     )
 }

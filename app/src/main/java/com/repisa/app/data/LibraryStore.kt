@@ -24,7 +24,31 @@ class LibraryStore(context: Context) {
         tmp.writeText(Http.json.encodeToString(serializer, games))
         tmp.renameTo(file)
     }
+
+    /**
+     * Juegos que salieron de la biblioteca (cuenta desvinculada, fuente quitada, juego que la tienda ya no devuelve)
+     * con todo lo tuyo: estado, nota, notas, colecciones, favorito, tiempo a mano, carátula propia...
+     * Si el juego vuelve (al vincular otra vez), se le devuelve todo.
+     */
+    private val archiveFile = File(context.filesDir, "archive.json")
+
+    suspend fun loadArchive(): Map<String, Game> = withContext(Dispatchers.IO) {
+        if (!archiveFile.exists()) return@withContext emptyMap()
+        runCatching { Http.json.decodeFromString(serializer, archiveFile.readText()) }.getOrDefault(emptyList()).associateBy { it.id }
+    }
+
+    suspend fun saveArchive(games: Map<String, Game>) = withContext(Dispatchers.IO) {
+        val tmp = File(archiveFile.parentFile, "archive.json.tmp")
+        tmp.writeText(Http.json.encodeToString(serializer, games.values.toList()))
+        tmp.renameTo(archiveFile)
+    }
 }
+
+/** ¿Tiene algo puesto por el usuario que valga la pena guardar si el juego sale de la biblioteca? */
+val Game.hasPersonalData: Boolean
+    get() = status != null || rating != null || !notes.isNullOrBlank() || collections.isNotEmpty() || favorite ||
+        manualMinutes != 0 || trackedMinutes > 0 || customCover || userEdited || preferredCopy || noMerge ||
+        achUnlocked != null
 
 /**
  * Combina lo que acaba de devolver una fuente con lo que ya teníamos guardado.

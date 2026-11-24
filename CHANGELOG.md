@@ -2,6 +2,25 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.14.2]
+
+**Actualizaciones obligatorias, como en GameNative**
+- Repisa busca versión nueva **cada vez que la abres o vuelves a ella** (antes solo una vez cada 6 horas, por eso no
+  salía el aviso).
+- Si la hay, sale el aviso con las notas del parche y **solo se puede actualizar** (ya no hay «Más tarde» ni
+  «Omitir»): descarga el APK con su progreso y abre el instalador de Android.
+- La primera vez Android pide permitir que Repisa instale apps: das el permiso, vuelves y **la actualización sigue
+  sola**. Si cancelas el instalador, «Actualizar» lo vuelve a abrir sin descargar otra vez.
+
+**Lo tuyo ya no se pierde al desvincular una cuenta** ⚠️
+- Antes, al desvincular Steam o Epic (o quitar una fuente), sus juegos se borraban con todo lo tuyo: estado, nota,
+  notas, colecciones, favorito, tiempo a mano, carátula propia…
+- Ahora Repisa lo guarda aparte y, cuando el juego vuelve (al vincular otra vez, o si reaparece en la tienda o la
+  carpeta de ROMs), **lo recupera todo solo**.
+- Ese archivo también va en la **copia de seguridad**.
+
+**GitHub** — la página principal del proyecto muestra todas las funciones actuales (estados, colecciones, ruleta…).
+
 ## [0.14.1]
 
 **Steam: la sesión ya no caduca** ⚠️

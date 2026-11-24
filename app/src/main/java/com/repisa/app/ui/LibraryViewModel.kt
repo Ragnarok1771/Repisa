@@ -7,6 +7,7 @@ import com.repisa.app.R
 import com.repisa.app.data.LibraryStore
 import com.repisa.app.i18n.L10n
 import com.repisa.app.data.Settings
+import com.repisa.app.data.hasPersonalData
 import com.repisa.app.data.mergeGame
 import com.repisa.app.launch.Launcher
 import com.repisa.app.model.Consoles
@@ -277,33 +278,46 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     /** Progreso de la descarga de la actualización (0..1), o null si no se está descargando. */
     val updateProgress = MutableStateFlow<Float?>(null)
 
-    /** [quiet]: al abrir la app, como mucho cada 6 h y sin mensajes si no hay nada nuevo. */
+    /**
+     * Busca versión nueva al abrir Repisa y cada vez que se vuelve a ella (como mucho una vez cada 10 min).
+     * Si la hay, el aviso es obligatorio: solo se puede actualizar. [quiet]: sin mensajes si no hay nada nuevo.
+     */
     fun checkForUpdate(quiet: Boolean) = viewModelScope.launch {
-        if (quiet && (!settings.checkUpdates || System.currentTimeMillis() - settings.lastUpdateCheck < 6 * 3_600_000L)) return@launch
-        settings.lastUpdateCheck = System.currentTimeMillis()
+        if (update.value != null) return@launch
+        if (quiet && System.currentTimeMillis() - lastUpdateCheck < 10 * 60_000L) return@launch
+        lastUpdateCheck = System.currentTimeMillis()
         val r = runCatching { com.repisa.app.data.Updater.latest() }.getOrNull()
         when {
-            r == null -> if (!quiet) message.value = L10n.s(R.string.update_check_failed)
+            r == null -> { lastUpdateCheck = 0; if (!quiet) message.value = L10n.s(R.string.update_check_failed) }
             !com.repisa.app.data.Updater.isNewer(r.version, com.repisa.app.BuildConfig.VERSION_NAME) ->
                 if (!quiet) message.value = L10n.s(R.string.update_none, com.repisa.app.BuildConfig.VERSION_NAME)
-            quiet && r.version == settings.skippedVersion -> Unit
             else -> update.value = r
         }
     }
 
-    fun skipUpdate() { settings.skippedVersion = update.value?.version; update.value = null }
+    private var lastUpdateCheck = 0L
+    /** Se pidió el permiso de instalar: al volver a Repisa con él concedido, la actualización sigue sola. */
+    private var installAfterPermission = false
+    /** APK ya descargado (si se cancela el instalador, «Actualizar» lo vuelve a abrir sin descargar otra vez). */
+    private var downloadedApk: Pair<String, java.io.File>? = null
 
     fun installUpdate() = viewModelScope.launch {
         val r = update.value ?: return@launch
+        if (updateProgress.value != null) return@launch
         val app = getApplication<android.app.Application>()
         if (!com.repisa.app.data.Updater.canInstall(app)) {
+            installAfterPermission = true
             message.value = L10n.s(R.string.update_allow_install)
             runCatching { app.startActivity(com.repisa.app.data.Updater.permissionIntent(app)) }
             return@launch
         }
+        installAfterPermission = false
+        downloadedApk?.takeIf { it.first == r.version && it.second.exists() }?.let {
+            runCatching { com.repisa.app.data.Updater.install(app, it.second) }; return@launch
+        }
         updateProgress.value = 0f
         runCatching { com.repisa.app.data.Updater.download(app, r) { updateProgress.value = it } }
-            .onSuccess { com.repisa.app.data.Updater.install(app, it); update.value = null }
+            .onSuccess { downloadedApk = r.version to it; runCatching { com.repisa.app.data.Updater.install(app, it) } }
             .onFailure { message.value = L10n.s(R.string.update_failed, it.message ?: "") }
         updateProgress.value = null
     }
@@ -315,7 +329,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         val app = getApplication<android.app.Application>()
         runCatching {
             val text = com.repisa.app.data.Backup.export(_games.value, settings.prefsForBackup, com.repisa.app.BuildConfig.VERSION_NAME,
-                java.io.File(app.filesDir, "covers"))
+                java.io.File(app.filesDir, "covers"), archive.values.toList())
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 app.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(text.toByteArray()) }
             }
@@ -332,12 +346,15 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             }
             val parsed = com.repisa.app.data.Backup.parse(text).let {
                 com.repisa.app.data.Backup.Parsed(
-                    com.repisa.app.data.Backup.restoreCovers(text, it.games, java.io.File(app.filesDir, "covers")), it.settings, it.version)
+                    com.repisa.app.data.Backup.restoreCovers(text, it.games, java.io.File(app.filesDir, "covers")), it.settings, it.version, it.archive)
             }
             com.repisa.app.data.Backup.restoreSettings(parsed.settings, settings.prefsForBackup)
             mutex.withLock {
                 _games.value = com.repisa.app.data.Backup.mergeLibrary(_games.value, parsed.games)
                 store.save(_games.value)
+                val inLibrary = _games.value.map { it.id }.toSet()
+                val extra = parsed.archive.filter { it.id !in inLibrary && it.id !in archive }
+                if (extra.isNotEmpty()) { archive = archive + extra.associateBy { it.id }; store.saveArchive(archive) }
             }
             // Refrescar lo que depende de los ajustes recién restaurados.
             hidden.value = settings.hiddenGames
@@ -418,9 +435,25 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     private val libraryLoaded = kotlinx.coroutines.CompletableDeferred<Unit>()
     private var syncJob: Job? = null
 
+    /** Juegos que salieron de la biblioteca, guardados con tus datos (ver [LibraryStore.loadArchive]). */
+    private var archive: Map<String, Game> = emptyMap()
+
+    /** Quita juegos de la biblioteca guardando antes lo tuyo de cada uno. Llamar con [mutex] tomado. */
+    private suspend fun removeGamesLocked(remove: (Game) -> Boolean) {
+        val (gone, kept) = _games.value.partition(remove)
+        val worth = gone.filter { it.hasPersonalData }
+        if (worth.isNotEmpty()) {
+            archive = archive + worth.associateBy { it.id }
+            store.saveArchive(archive)
+        }
+        _games.value = kept
+        store.save(kept)
+    }
+
     init {
         viewModelScope.launch {
             _games.value = store.load()
+            archive = store.loadArchive()
             loaded = true
             libraryLoaded.complete(Unit)
             if (!autoSync()) startEnrichment()
@@ -600,16 +633,24 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             }
             mutex.withLock {
                 val current = _games.value.associateBy { it.id }
-                val merged = fresh.map { mergeGame(current[it.id], it) }.map { g ->
+                // Un juego que vuelve (cuenta vinculada otra vez) recupera su estado, nota, notas, colecciones...
+                val restored = fresh.filter { current[it.id] == null && archive[it.id] != null }.map { it.id }.toSet()
+                val merged = fresh.map { mergeGame(current[it.id] ?: archive[it.id], it) }.map { g ->
                     // Pendiente y con horas nuevas (jugado en el PC, en Steam o en Epic): pasa a «Jugando».
                     val before = current[g.id]?.totalMinutes
                     if (g.status == com.repisa.app.model.PlayStatus.BACKLOG.name && before != null && g.totalMinutes > before)
                         g.copy(status = com.repisa.app.model.PlayStatus.PLAYING.name) else g
                 }
                 val freshIds = merged.map { it.id }.toSet()
-                // Lo que la fuente ya no devuelve se elimina (juego desinstalado, ROM borrada...).
-                _games.value = _games.value.filter { it.source != source && it.id !in freshIds } + merged
+                // Lo que la fuente ya no devuelve sale de la repisa (juego desinstalado, ROM borrada...), pero lo tuyo
+                // se guarda por si vuelve.
+                removeGamesLocked { it.source == source && it.id !in freshIds }
+                _games.value = _games.value.filter { it.id !in freshIds } + merged
                 store.save(_games.value)
+                if (restored.isNotEmpty()) {
+                    archive = archive - restored
+                    store.saveArchive(archive)
+                }
             }
             if (!quiet) message.value = L10n.s(R.string.msg_sync_count, source.label, fresh.size) +
                 if (source == Source.EMULATOR) detectedEmulators(fresh.map { it.consoleId }.toSet())?.let { "\n$it" }.orEmpty() else ""
@@ -654,10 +695,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         settings.steamApiKey = null
         settings.steamUser = null
         SteamLogin.clearSession(settings)
-        mutex.withLock {
-            _games.update { list -> list.filter { it.source != Source.STEAM } }
-            store.save(_games.value)
-        }
+        mutex.withLock { removeGamesLocked { it.source == Source.STEAM } }
     }
 
     /** Busca portadas y datos que faltan, de uno en uno y en segundo plano. */
@@ -839,6 +877,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun onResume() = viewModelScope.launch {
         playing.value = null // de vuelta en Repisa: se cierra el panel de la partida
+        // Versión nueva: se busca también al volver a Repisa; y si se acaba de dar el permiso de instalar, sigue sola.
+        if (installAfterPermission && update.value != null &&
+            com.repisa.app.data.Updater.canInstall(getApplication<android.app.Application>())) installUpdate()
+        else checkForUpdate(quiet = true)
         // Si Android cerró Repisa mientras jugabas, hay que esperar a cargar la biblioteca
         // antes de anotar la sesión; si no, se perdería.
         libraryLoaded.await()
@@ -1000,17 +1042,11 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun epicLogout() = viewModelScope.launch {
         settings.clearEpic()
-        mutex.withLock {
-            _games.update { list -> list.filter { it.source != Source.EPIC } }
-            store.save(_games.value)
-        }
+        mutex.withLock { removeGamesLocked { it.source == Source.EPIC } }
     }
 
     fun removeSource(source: Source) = viewModelScope.launch {
-        mutex.withLock {
-            _games.update { list -> list.filter { it.source != source } }
-            store.save(_games.value)
-        }
+        mutex.withLock { removeGamesLocked { it.source == source } }
     }
 
     fun consolesInLibrary(): List<String> = _games.value.filter { it.source == Source.EMULATOR }

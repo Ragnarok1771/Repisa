@@ -185,7 +185,6 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
         if (onboarding && !inSettings) com.repisa.app.ui.OnboardingScreen(vm, openSettings = { vm.inSettings.value = true },
             onDone = { vm.finishOnboarding() })
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp))
-        update?.let { r -> com.repisa.app.ui.UpdateDialog(r, updateProgress, onUpdate = { vm.installUpdate() },
-            onLater = { vm.update.value = null }, onSkip = { vm.skipUpdate() }) }
+        update?.let { r -> com.repisa.app.ui.UpdateDialog(r, updateProgress, onUpdate = { vm.installUpdate() }) }
     }
 }

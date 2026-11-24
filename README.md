@@ -35,11 +35,14 @@ para las consolas portátiles Android con doble pantalla.
 
 ### Tu biblioteca, junta
 - **Steam**: juegos propios **y del grupo familiar**, horas jugadas y última partida. Se vincula iniciando sesión en
-  la web oficial de Steam (también con el QR de la app de Steam).
+  la web oficial de Steam (también con el QR de la app de Steam) y **la sesión se renueva sola**: no hay que volver a
+  vincular.
 - **Epic Games**: juegos y horas jugadas, iniciando sesión en la web oficial de Epic.
 - **Emuladores**: carpetas de ROMs ordenadas por sistema, **ES-DE**, **RetroArch** (playlists y tiempo de juego) y
   **Cocoon** / Batocera (`gamelist.xml` exportados y copias de seguridad de Cocoon, con su tiempo de juego).
   Ajustes → Emuladores explica los pasos y muestra qué encontró Repisa.
+- **Lo tuyo no se pierde**: si desvinculas una cuenta o un juego desaparece de su tienda, su estado, tu nota, tus
+  notas, colecciones y favoritos quedan guardados y vuelven solos cuando el juego regresa.
 - **Copias unidas**: el mismo juego en varias ediciones o tiendas (GTA V normal, Enhanced y Legacy, en Steam y en
   Epic) aparece como **una sola caja** con el tiempo sumado. Tú eliges la copia preferente (por defecto, la de Steam).
 - **Sin herramientas**: editores, kits de mods, servidores dedicados o paquetes de contenido no aparecen.
@@ -70,11 +73,18 @@ para las consolas portátiles Android con doble pantalla.
 | ![Copias](docs/capturas/copias.png) | ![Pantalla inferior](docs/capturas/pantalla-inferior.png) |
 
 ### Tu colección, al día
-- **Estado de cada juego**: Pendiente, Jugando, Terminado, 100 % o Abandonado, con una cinta de color en la caja,
-  repisas por estado y «te faltan ~X h» según HowLongToBeat.
+- **Estado de cada juego**: ⏳ Pendiente, ▶ Jugando, ✓ Terminado, ★ 100 %, ✕ Abandonado y ∅ No aplica (para juegos
+  sin final como Counter-Strike o Fortnite), con una cinta de color en la caja y «te faltan ~X h» según HowLongToBeat.
+- **Estado automático**: sin horas = Pendiente, con horas = Jugando; un Pendiente que juegas pasa solo a Jugando.
+- **Repisas por estado** en el orden que tú elijas (por defecto Jugando, Pendiente, Terminado, 100 %, Abandonado,
+  No aplica).
+- **Selección múltiple**: mantén pulsada una carátula, toca las demás y cambia el estado o la colección de todas a la vez.
+- **Colecciones propias** (como las de Steam: «Probar», «Prioridad», «Con amigos»…): repisas tuyas arriba del todo,
+  y una página en Ajustes para ver sus juegos, añadir con casillas y buscador, quitar, renombrar y borrar.
+- **Repisas plegables**: toca la placa dorada de una repisa para plegarla o desplegarla; se recuerda.
 - **Seguir jugando**: los últimos que jugaste, arriba del todo.
-- **¿A qué juego? 🎲**: una ruleta de carátulas elige por ti entre tus pendientes (con filtros de duración, sistema
-  y gustos).
+- **¿A qué juego? 🎲**: una ruleta de carátulas da de 2 a 4 vueltas y elige por ti (filtros: según tus gustos,
+  solo pendientes, plataforma y duración), con botón para jugar directamente.
 - **Estadísticas 📊**: horas por sistema y género, juegos por década, terminados, pendientes y los más jugados.
 - **Logros 🏆**: los tuyos de Steam con su fecha, la lista de Steam para juegos de Epic (marcándolos a mano),
   RetroAchievements para juegos emulados y logros de Repisa para cualquier juego.
@@ -136,8 +146,9 @@ Las versiones nuevas se instalan encima de la anterior sin perder tu biblioteca 
   a mano, favoritos, juegos quitados, copias preferentes, carátulas elegidas y ajustes. **Importar una copia** lo
   recupera (por ejemplo, al cambiar de consola). Las sesiones de Steam/Epic, las claves y las carpetas no se
   guardan en la copia.
-- Al abrir, Repisa busca versiones nuevas en las releases de este repositorio y, si hay una, muestra sus notas del
-  parche y la instala encima (Android pide confirmación). Se puede desactivar en Ajustes.
+- Cada vez que abres Repisa (o vuelves a ella) busca versiones nuevas en las releases de este repositorio. Si hay
+  una, muestra sus notas del parche y **hay que actualizar**: la descarga con su progreso y abre el instalador de
+  Android, que la instala encima sin perder nada.
 
 ## Privacidad
 
@@ -200,7 +211,9 @@ marcas pertenecen a sus dueños.
 **Repisa** shows your video game collection as physical boxes on a wooden shelf. It brings together your **Steam**
 (including Family Sharing), **Epic Games** and **emulator** libraries (ROM folders, ES-DE, RetroArch, Cocoon) with real
 cover art, real box sizes per console, up-to-date playtime, Metacritic and HowLongToBeat data, and your own weighted
-ratings with stars. Built for Android handhelds such as the dual-screen **AYN Thor** (bottom screen shows the selected
+ratings with stars. Track each game's status (backlog, playing, finished, 100 %, abandoned, not applicable), make your
+own collections, let the 🎲 roulette pick your next game, see stats and achievements (Steam, RetroAchievements and
+Repisa's own). Built for Android handhelds such as the dual-screen **AYN Thor** (bottom screen shows the selected
 game) and fully playable with a controller. Available in 9 languages.
 
 [Download the latest APK](../../releases/latest) · [Changelog](CHANGELOG.md)

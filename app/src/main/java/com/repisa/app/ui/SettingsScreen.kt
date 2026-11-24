@@ -848,14 +848,7 @@ private fun DataPage(vm: LibraryViewModel) {
     }
     Section(stringResource(R.string.updates_title)) {
         Text("Repisa v${com.repisa.app.BuildConfig.VERSION_NAME}", color = Color.White)
-        var auto by remember { mutableStateOf(s.checkUpdates) }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.updates_auto), color = Color.White)
-                Hint(stringResource(R.string.updates_hint))
-            }
-            Switch(checked = auto, onCheckedChange = { auto = it; s.checkUpdates = it })
-        }
+        Hint(stringResource(R.string.updates_hint))
         OutlinedButton(onClick = { vm.checkForUpdate(quiet = false) }) { Text(stringResource(R.string.updates_check_now), color = Color.White) }
         HorizontalDivider(color = Color(0x33FFFFFF))
         OutlinedButton(onClick = { vm.restartOnboarding() }) { Text(stringResource(R.string.onb_again), color = Color.White) }

@@ -208,12 +208,13 @@
     <string name="update_none">Tem a versão mais recente (%1$s).</string>
     <string name="update_check_failed">Não foi possível verificar (sem conexão ou o projeto não é público).</string>
     <string name="update_title">Repisa %1$s está disponível</string>
+    <string name="update_required">Instale para continuar usando o Repisa (sua biblioteca e ajustes continuam iguais).</string>
     <string name="update_no_notes">Sem notas.</string>
     <string name="update_now">Atualizar</string>
     <string name="update_later">Mais tarde</string>
     <string name="update_skip">Ignorar esta versão</string>
     <string name="update_downloading">A transferir… %1$d%%</string>
-    <string name="update_allow_install">Permita que o Repisa instale apps (o Android abre o ajuste) e toque em Atualizar de novo.</string>
+    <string name="update_allow_install">Permita que o Repisa instale apps (o Android abre o ajuste) e volte: a atualização continua sozinha.</string>
     <string name="update_failed">Não foi possível transferir a atualização: %1$s</string>
     <string name="license_hint">O Repisa é software livre com a licença GNU GPL v3: pode usá-lo, estudá-lo, partilhá-lo e modificá-lo; as versões modificadas também têm de ser partilhadas com a mesma licença.</string>
     <string name="companion_session">esta sessão</string>
