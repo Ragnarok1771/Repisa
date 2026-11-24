@@ -277,6 +277,7 @@
     <string name="ach_manual">marcada por si</string>
     <string name="ach_loading">A procurar conquistas…</string>
     <string name="ach_none">Nenhuma conquista encontrada para este jogo.</string>
+    <string name="ach_no_ra_system">%1$s não tem conquistas no RetroAchievements. As conquistas do Repisa estão abaixo.</string>
     <string name="ach_link_ra">Ligue o RetroAchievements nas Definições para ver as conquistas.</string>
     <string name="ach_note_epic">São as conquistas da versão Steam. A Epic não deixa o Repisa ver as suas: marque as que conseguir (data e hora ficam salvas).</string>
     <string name="ach_note_private">O Steam não mostra suas conquistas (detalhes de jogo privados). No Steam: Perfil → Editar perfil → Privacidade → Detalhes de jogo: Público. Ou coloque sua chave de API do Steam. Enquanto isso, marque-as você.</string>

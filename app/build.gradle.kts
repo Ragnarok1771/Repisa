@@ -13,8 +13,21 @@ android {
         applicationId = "com.repisa.app"
         minSdk = 30
         targetSdk = 35
-        versionCode = 17
-        versionName = "0.12.0"
+        versionCode = 18
+        versionName = "0.13.0"
+    }
+
+    // Clave de firma privada de Repisa (desde la 0.13.0). No está en el repositorio: se pasa con variables de
+    // entorno (en GitHub, desde los secretos REPISA_KEYSTORE_BASE64 y REPISA_KEYSTORE_PASSWORD).
+    // Sin ellas, la versión release se firma con la clave debug de quien compila (solo para pruebas).
+    val releaseKeystore = System.getenv("REPISA_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
+    signingConfigs {
+        if (releaseKeystore != null) create("repisa") {
+            storeFile = releaseKeystore
+            storePassword = System.getenv("REPISA_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("REPISA_KEY_ALIAS") ?: "repisa"
+            keyPassword = System.getenv("REPISA_KEYSTORE_PASSWORD")
+        }
     }
 
     buildTypes {
@@ -22,8 +35,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Firmado con la clave debug para poder instalarlo directamente en la consola.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (releaseKeystore != null) signingConfigs.getByName("repisa") else signingConfigs.getByName("debug")
         }
     }
     compileOptions {

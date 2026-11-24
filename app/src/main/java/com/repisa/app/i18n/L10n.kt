@@ -83,7 +83,8 @@ object L10n {
         version.value++
     }
 
-    fun s(@StringRes id: Int, vararg args: Any): String = ctx.getString(id, *args)
+    /** Sin datos que insertar no se formatea: así un «%» suelto en el texto («% de logros») no rompe nada. */
+    fun s(@StringRes id: Int, vararg args: Any): String = if (args.isEmpty()) ctx.getString(id) else ctx.getString(id, *args)
     fun plural(@PluralsRes id: Int, n: Int, vararg args: Any): String = ctx.resources.getQuantityString(id, n, *args)
 
     fun games(n: Int) = plural(R.plurals.games_count, n, n)

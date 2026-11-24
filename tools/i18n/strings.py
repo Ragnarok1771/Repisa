@@ -720,6 +720,12 @@ s("ach_loading", "Looking for achievements…", "Buscando logros…", "Recherche
   "Procurando conquistas…", ptPT="A procurar conquistas…")
 s("ach_none", "No achievements found for this game.", "No se encontraron logros para este juego.", "Aucun succès trouvé pour ce jeu.",
   "Keine Erfolge für dieses Spiel gefunden.", "Nessun obiettivo trovato per questo gioco.", "Nenhuma conquista encontrada para este jogo.")
+s("ach_no_ra_system", "%1$s has no achievements on RetroAchievements. You have the Repisa achievements below.",
+  "%1$s no tiene logros en RetroAchievements. Tienes los logros de Repisa aquí abajo.",
+  "%1$s n’a pas de succès sur RetroAchievements. Vous avez les succès Repisa ci-dessous.",
+  "%1$s hat keine Erfolge bei RetroAchievements. Unten findest du die Repisa-Erfolge.",
+  "%1$s non ha obiettivi su RetroAchievements. Qui sotto hai gli obiettivi di Repisa.",
+  "%1$s não tem conquistas no RetroAchievements. As conquistas do Repisa estão abaixo.")
 s("ach_link_ra", "Link RetroAchievements in Settings to see this game's achievements.",
   "Vincula RetroAchievements en Ajustes para ver los logros de este juego.",
   "Reliez RetroAchievements dans Paramètres pour voir les succès de ce jeu.",

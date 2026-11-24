@@ -53,7 +53,7 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.plan.outputs.matrix) }}
     steps:
-      - name: Repositorio actual (notas y clave de firma)
+      - name: Repositorio actual (notas de la versión)
         uses: actions/checkout@v4
         with:
           path: actual
@@ -68,13 +68,26 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
-      - name: Misma firma que las versiones anteriores
+      - name: Clave de firma privada (secretos del repositorio)
+        env:
+          KEYSTORE_B64: ${{ secrets.REPISA_KEYSTORE_BASE64 }}
         run: |
-          mkdir -p ~/.android
-          cp actual/signing/repisa-debug.keystore ~/.android/debug.keystore
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Falta el secreto REPISA_KEYSTORE_BASE64 (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/repisa-release.jks"
+          echo "REPISA_KEYSTORE=$RUNNER_TEMP/repisa-release.jks" >> "$GITHUB_ENV"
       - name: Compilar
         working-directory: version
+        env:
+          REPISA_KEYSTORE_PASSWORD: ${{ secrets.REPISA_KEYSTORE_PASSWORD }}
         run: ./gradlew --no-daemon assembleRelease
+      - name: Comprobar la firma
+        run: |
+          apk=version/app/build/outputs/apk/release/app-release.apk
+          "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"/apksigner verify --print-certs "$apk" | grep -i "CN=Repisa" \
+            || { echo "::error::El APK no está firmado con la clave de Repisa."; exit 1; }
       - name: Notas de la versión
         run: |
           awk -v v="${{ matrix.version }}" '
@@ -82,7 +95,7 @@ jobs:
             on && /^## \[/ {exit}
             on {print}
           ' actual/CHANGELOG.md > notas.md
-          printf '\n---\nInstala `Repisa-%s.apk` en tu consola o móvil Android (se actualiza encima de la anterior sin perder datos).\n' "${{ matrix.version }}" >> notas.md
+          printf '\n---\nInstala `Repisa-%s.apk` en tu consola o móvil Android.\n' "${{ matrix.version }}" >> notas.md
           cat notas.md
       - name: Publicar
         env:

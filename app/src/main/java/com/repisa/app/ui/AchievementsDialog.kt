@@ -97,6 +97,8 @@ fun AchievementsDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) 
                     Text(
                         when {
                             !known || game.id in loading -> stringResource(R.string.ach_loading)
+                            game.source == Source.EMULATOR && game.consoleId !in Achievements.raConsoles ->
+                                stringResource(R.string.ach_no_ra_system, game.console.name)
                             game.source == Source.EMULATOR && vm.settings.raUser == null -> stringResource(R.string.ach_link_ra)
                             else -> stringResource(R.string.ach_none)
                         },

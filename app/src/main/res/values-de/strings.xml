@@ -277,6 +277,7 @@
     <string name="ach_manual">selbst abgehakt</string>
     <string name="ach_loading">Suche Erfolge…</string>
     <string name="ach_none">Keine Erfolge für dieses Spiel gefunden.</string>
+    <string name="ach_no_ra_system">%1$s hat keine Erfolge bei RetroAchievements. Unten findest du die Repisa-Erfolge.</string>
     <string name="ach_link_ra">Verknüpfe RetroAchievements in den Einstellungen, um die Erfolge zu sehen.</string>
     <string name="ach_note_epic">Das sind die Erfolge der Steam-Version. Epic zeigt Repisa deine nicht, also hake die erreichten ab: Datum und Uhrzeit werden gespeichert.</string>
     <string name="ach_note_private">Steam zeigt deine Erfolge nicht (Spieldetails privat). In Steam: Profil → Profil bearbeiten → Privatsphäre → Spieldetails: Öffentlich. Oder Steam-API-Schlüssel eintragen. Bis dahin selbst abhaken.</string>

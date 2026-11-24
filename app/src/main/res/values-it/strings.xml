@@ -277,6 +277,7 @@
     <string name="ach_manual">segnato da te</string>
     <string name="ach_loading">Cerco gli obiettivi…</string>
     <string name="ach_none">Nessun obiettivo trovato per questo gioco.</string>
+    <string name="ach_no_ra_system">%1$s non ha obiettivi su RetroAchievements. Qui sotto hai gli obiettivi di Repisa.</string>
     <string name="ach_link_ra">Collega RetroAchievements nelle Impostazioni per vedere gli obiettivi.</string>
     <string name="ach_note_epic">Sono gli obiettivi della versione Steam. Epic non permette a Repisa di vedere i tuoi: segna quelli che ottieni (data e ora salvate).</string>
     <string name="ach_note_private">Steam non mostra i tuoi obiettivi (dettagli di gioco privati). In Steam: Profilo → Modifica → Privacy → Dettagli di gioco: Pubblico. Oppure aggiungi la chiave API di Steam. Intanto puoi segnarli tu.</string>

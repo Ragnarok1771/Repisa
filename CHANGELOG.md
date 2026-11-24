@@ -2,6 +2,45 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.13.0]
+
+> ⚠ **Cambio de firma (solo esta vez).** Desde esta versión Repisa se firma con una clave privada. No se instala
+> encima de la 0.12.0: antes de nada, en la 0.12.0 haz **Ajustes → Copia de seguridad y versión → Exportar mis
+> datos**; luego desinstala Repisa, instala la 0.13.0 y en la guía de inicio pulsa **«Tengo una copia: importarla»**.
+> Después vuelve a vincular Steam/Epic y a elegir tus carpetas. Las siguientes versiones se instalarán encima.
+
+**Estado de cada juego**
+- **Pendiente** (amarillo), **Jugando** (verde claro), **Terminado** (verde oscuro), **100 %** (morado) y
+  **Abandonado** (rojo), con su icono (⏳ ▶ ✓ ★ ✕): cinta de color en la esquina de la caja, selector en la ficha y
+  en el panel de abajo, **Repisas por → Estado**, y «te faltan ~X h» según HowLongToBeat.
+- Si un juego está *Pendiente* y lo juegas desde Repisa, pasa solo a *Jugando*.
+
+**Seguir jugando** — repisa arriba del todo con los últimos jugados (90 días). Se puede quitar en Ajustes → Pantalla.
+
+**¿A qué juego? 🎲** — junto a la lupa: una tira de carátulas gira y se frena en un juego. Filtros: solo pendientes,
+≤ 10/20/40 h (HowLongToBeat), sistema y «según mis gustos» (más probabilidad para tus géneros más jugados).
+*Jugar*, *Ver ficha* u *Otra vez*; la pantalla de abajo muestra el juego elegido.
+
+**Estadísticas 📊** — tocando los totales de la barra de arriba: horas totales, terminados, pendientes (con las horas
+que suman en HowLongToBeat), nota media, juegos por estado, horas por sistema y por género, juegos por década y los
+más jugados. La pantalla de abajo muestra un resumen por estado.
+
+**Logros 🏆** (botón en la ficha y en el panel de abajo; nuevo orden «% de logros»)
+- **Steam**: tus logros con la **fecha y hora** de cada desbloqueo y el % de jugadores que lo tienen.
+- **Juegos de Epic**: la lista de logros de la versión de Steam, para **marcarlos a mano** (se guarda cuándo).
+- **RetroAchievements**: vincula tu cuenta (usuario y *Web API Key*) en Ajustes; logros con fecha para GB, GBA, DS,
+  N64, SNES, PS1, PS2, PSP, GameCube y más.
+- **Logros de Repisa** para cualquier juego (también Switch o 3DS): primera partida, 10/50/100 h, más que
+  HowLongToBeat, terminado, 100 %, calificado, con notas, favorito.
+
+**Carátula desde la galería** — en *Buscar carátula*: eliges una foto y la encuadras (mover y ampliar) en un marco
+con la proporción real de la caja de ese sistema. Va dentro de la copia de seguridad.
+
+**Guía de primera vez** — importar una copia, vincular Steam/Epic, carpeta de ROMs, permiso de tiempo de juego y
+cómo se usa el mando. Se puede volver a ver en Ajustes → Copia de seguridad y versión.
+
+**Seguridad** — clave de firma privada (fuera del repositorio); la de prueba se ha quitado.
+
 ## [0.12.0]
 
 - **Copia de seguridad**: Ajustes → Copia de seguridad y versión → *Exportar mis datos* / *Importar una copia*.

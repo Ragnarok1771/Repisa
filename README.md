@@ -69,6 +69,19 @@ para las consolas portátiles Android con doble pantalla.
 |---|---|
 | ![Copias](docs/capturas/copias.png) | ![Pantalla inferior](docs/capturas/pantalla-inferior.png) |
 
+### Tu colección, al día
+- **Estado de cada juego**: Pendiente, Jugando, Terminado, 100 % o Abandonado, con una cinta de color en la caja,
+  repisas por estado y «te faltan ~X h» según HowLongToBeat.
+- **Seguir jugando**: los últimos que jugaste, arriba del todo.
+- **¿A qué juego? 🎲**: una ruleta de carátulas elige por ti entre tus pendientes (con filtros de duración, sistema
+  y gustos).
+- **Estadísticas 📊**: horas por sistema y género, juegos por década, terminados, pendientes y los más jugados.
+- **Logros 🏆**: los tuyos de Steam con su fecha, la lista de Steam para juegos de Epic (marcándolos a mano),
+  RetroAchievements para juegos emulados y logros de Repisa para cualquier juego.
+- **Panel en la pantalla de abajo mientras juegas** (AYN Thor y similares): tiempo de la sesión, hora, nota, estado,
+  logros y notas.
+- **Carátula desde la galería**, encuadrada a la forma de la caja de cada sistema.
+
 ### Tus calificaciones
 
 ![Mis calificaciones](docs/capturas/calificaciones.png)

@@ -277,6 +277,7 @@
     <string name="ach_manual">marked by you</string>
     <string name="ach_loading">Looking for achievements…</string>
     <string name="ach_none">No achievements found for this game.</string>
+    <string name="ach_no_ra_system">%1$s has no achievements on RetroAchievements. You have the Repisa achievements below.</string>
     <string name="ach_link_ra">Link RetroAchievements in Settings to see this game\'s achievements.</string>
     <string name="ach_note_epic">These are the achievements of the Steam version. Epic doesn\'t let Repisa see yours, so tick the ones you get: the date and time are saved.</string>
     <string name="ach_note_private">Steam isn\'t showing your achievements (your game details are private). In Steam: Profile → Edit profile → Privacy settings → Game details: Public. Or add your Steam API key in Settings → Steam → Advanced. Meanwhile you can tick them yourself.</string>

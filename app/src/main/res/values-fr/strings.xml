@@ -277,6 +277,7 @@
     <string name="ach_manual">coché par vous</string>
     <string name="ach_loading">Recherche des succès…</string>
     <string name="ach_none">Aucun succès trouvé pour ce jeu.</string>
+    <string name="ach_no_ra_system">%1$s n’a pas de succès sur RetroAchievements. Vous avez les succès Repisa ci-dessous.</string>
     <string name="ach_link_ra">Reliez RetroAchievements dans Paramètres pour voir les succès de ce jeu.</string>
     <string name="ach_note_epic">Ce sont les succès de la version Steam. Epic ne laisse pas Repisa voir les vôtres : cochez ceux que vous obtenez (date et heure enregistrées).</string>
     <string name="ach_note_private">Steam ne montre pas vos succès (détails de jeu privés). Dans Steam : Profil → Modifier → Confidentialité → Détails des jeux : Public. Ou ajoutez votre clé API Steam. En attendant, cochez-les vous-même.</string>
