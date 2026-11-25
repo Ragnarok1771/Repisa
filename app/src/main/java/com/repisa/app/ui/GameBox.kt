@@ -81,6 +81,8 @@ fun GameBox(
     lifted: Boolean = false,
     onCoverAspect: ((Float) -> Unit)? = null,
     showStatus: Boolean = LocalShowStatus.current,
+    /** Algo dibujado encima de la carátula (el precio en la lista de deseos). */
+    overlay: (@Composable androidx.compose.foundation.layout.BoxScope.() -> Unit)? = null,
 ) {
     val case = game.console.case
     val caseColor = Color(case.caseColor)
@@ -177,6 +179,7 @@ fun GameBox(
             )
             // Cinta de estado en la esquina (pendiente, jugando, terminado, 100 %, abandonado).
             if (showStatus) game.playStatus?.let { StatusCorner(it, (frontW * 0.30f).coerceIn(14.dp, 44.dp)) }
+            overlay?.invoke(this)
         }
     }
 }

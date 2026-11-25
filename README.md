@@ -111,8 +111,23 @@ para las consolas portátiles Android con doble pantalla.
 - Dibujadas a partir de fotos de referencia, con sonidos propios. Se saltan tocando la pantalla o con cualquier botón,
   y se pueden ver todas en Ajustes → Pantalla (siempre, la primera vez del día o nunca).
 
+### 🎨 Temas
+- Nogal, madera clara, madera oscura, metal cepillado, cristal, tienda retro… o **tu propio tema**: eliges la textura
+  y los colores de la pared, las baldas y la luz (Ajustes → Temas).
+
+### 📅 Calendario y tu año en Repisa
+- **Calendario de partidas**: cada día, qué jugaste y cuánto (y, de antes, el último día que jugaste cada juego).
+- **Tu año en Repisa**: el resumen del año animado y con música (horas, top 5, mes a mes, rachas…), con una tarjeta
+  final para guardar o compartir.
+
+### ⭐ Lista de deseos de Steam
+- Su propia repisa, con el **precio en tu moneda** sobre cada carátula y las ofertas marcadas; se ordena por precio,
+  nombre o descuento, y **avisa cuando un juego baja de precio** (también con Repisa cerrada, cada 6 horas).
+
 ### Hecha para consolas portátiles
-- **Doble pantalla**: en la AYN Thor, la pantalla de abajo muestra la ficha del juego seleccionado.
+- **Doble pantalla**: en la AYN Thor, la pantalla de abajo muestra la ficha del juego seleccionado, con el reloj, la
+  cobertura y la batería arriba.
+- **Salvapantallas**: tras el tiempo que elijas, las carátulas flotan por la vitrina en las dos pantallas.
 - **Mando**: cruceta para moverte, A ficha, X jugar, Y favorito, B atrás, L1/R1 filtrar por plataforma,
   Select cambiar el tipo de repisa, Start ajustes.
 - **9 idiomas**: español (España y Latinoamérica), English (US y UK), français, Deutsch, italiano y português
@@ -226,7 +241,8 @@ cover art, real box sizes per console, up-to-date playtime, Metacritic and HowLo
 ratings with stars. Track each game's status (backlog, playing, finished, 100 %, abandoned, not applicable), make your
 own collections, let the 🎲 roulette pick your next game, watch each console load its cartridge or disc when you press
 Play (70+ systems, from the Atari 2600 to Switch 2 and PS5), see stats and achievements (Steam, RetroAchievements and
-Repisa's own). Built for Android handhelds such as the dual-screen **AYN Thor** (bottom screen shows the selected
+Repisa's own), a play calendar and your animated *year in Repisa*, your Steam wishlist with prices in your currency and
+price-drop alerts, display-cabinet themes (or your own) and a screensaver. Built for Android handhelds such as the dual-screen **AYN Thor** (bottom screen shows the selected
 game) and fully playable with a controller. Available in 9 languages.
 
 [Download the latest APK](../../releases/latest) · [Changelog](CHANGELOG.md)

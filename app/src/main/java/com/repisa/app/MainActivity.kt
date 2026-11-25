@@ -81,9 +81,31 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Joystick derecho: con el calendario abierto, desplaza la lista de partidas del día. */
+    override fun dispatchGenericMotionEvent(ev: android.view.MotionEvent): Boolean {
+        vm.poke()
+        if (vm.calendar.value != null && ev.isFromSource(android.view.InputDevice.SOURCE_JOYSTICK) &&
+            ev.actionMasked == android.view.MotionEvent.ACTION_MOVE) {
+            val rz = ev.getAxisValue(android.view.MotionEvent.AXIS_RZ)
+            val ry = ev.getAxisValue(android.view.MotionEvent.AXIS_RY)
+            val v = if (kotlin.math.abs(rz) >= kotlin.math.abs(ry)) rz else ry
+            vm.rightStick.value = if (kotlin.math.abs(v) < 0.2f) 0f else v
+        }
+        return super.dispatchGenericMotionEvent(ev)
+    }
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        vm.poke()
+        if (vm.screensaver.value) {
+            if (ev.actionMasked == android.view.MotionEvent.ACTION_UP) vm.screensaver.value = false
+            return true
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
     override fun onStart() { super.onStart(); secondScreen.start() }
     override fun onStop() { secondScreen.stop(); super.onStop() }
-    override fun onResume() { super.onResume(); vm.onResume() }
+    override fun onResume() { super.onResume(); vm.poke(); vm.screensaver.value = false; vm.onResume() }
 
     override fun onDestroy() {
         vm.launcher.starter = null
@@ -99,6 +121,15 @@ class MainActivity : ComponentActivity() {
     /** Solo en la versión de pruebas: congelar la animación al jugar en un momento (para revisar sus fotogramas). */
     private fun debugAnimation(intent: android.content.Intent?) {
         if (!BuildConfig.DEBUG || intent == null) return
+        // Vistas previas de las novedades (solo para revisar capturas).
+        intent.getStringExtra("theme")?.let { t -> vm.setTheme(com.repisa.app.ui.ShelfTheme.of(t)) }
+        when (intent.getStringExtra("preview")) {
+            "wrapped" -> { com.repisa.app.ui.WrappedDebug.slide = intent.getIntExtra("slide", -1); vm.wrapped.value = true }
+            "calendar" -> vm.calendar.value = true
+            "screensaver" -> window.decorView.postDelayed({ vm.screensaver.value = true }, 2000)
+            "settings" -> { vm.debugPage = intent.getStringExtra("page"); vm.inSettings.value = true }
+            "close" -> { vm.wrapped.value = null; vm.calendar.value = null; vm.screensaver.value = false; vm.inSettings.value = false }
+        }
         val kind = intent.getStringExtra("anim_kind")?.let { runCatching { com.repisa.app.ui.LaunchKind.valueOf(it) }.getOrNull() } ?: return
         vm.previewLaunch(kind, intent.getStringExtra("anim_console"))
         com.repisa.app.ui.LaunchDebug.freezeAt = intent.getFloatExtra("anim_at", -1f).takeIf { it >= 0f }
@@ -109,10 +140,31 @@ class MainActivity : ComponentActivity() {
      * aunque todavía no haya ninguna caja enfocada.
      */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        vm.poke()
+        // Salvapantallas: cualquier botón lo quita (y no hace nada más).
+        if (vm.screensaver.value) {
+            if (event.action == KeyEvent.ACTION_UP) vm.screensaver.value = false
+            return true
+        }
         val code = event.keyCode
+        // Calendario: L1/R1 cambian de mes siempre; la cruceta o A, si nada tiene el foco (tras tocar la pantalla),
+        // se lo devuelven (antes el mando dejaba de responder hasta salir).
+        if (vm.calendar.value != null) {
+            val mine = when (code) {
+                KeyEvent.KEYCODE_BUTTON_L1, KeyEvent.KEYCODE_BUTTON_R1 -> true
+                KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
+                KeyEvent.KEYCODE_BUTTON_A -> !vm.calendarFocused
+                else -> false
+            }
+            if (mine) {
+                if (event.action == KeyEvent.ACTION_UP) vm.calendarKeys.tryEmit(code)
+                return true
+            }
+        }
         val global = code == KeyEvent.KEYCODE_BUTTON_START || code == KeyEvent.KEYCODE_BUTTON_SELECT ||
             code == KeyEvent.KEYCODE_BUTTON_L1 || code == KeyEvent.KEYCODE_BUTTON_R1
-        if (!global) return super.dispatchKeyEvent(event)
+        // Con el resumen del año o el calendario abiertos, L1/R1 y compañía son para ellos.
+        if (!global || vm.wrapped.value != null || vm.calendar.value != null) return super.dispatchKeyEvent(event)
         if (event.action != KeyEvent.ACTION_UP) return true
         when (code) {
             KeyEvent.KEYCODE_BUTTON_START -> {
@@ -158,6 +210,19 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
         if (inSettings || inStats || inAch || inRated) vm.focused.value = null
     }
 
+    // Salvapantallas al pasar el tiempo elegido sin tocar nada (no durante la animación al jugar).
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(5_000)
+            val minutes = vm.settings.screensaverMinutes
+            if (minutes > 0 && !vm.screensaver.value && vm.launching.value == null &&
+                System.currentTimeMillis() - vm.lastInteraction > minutes * 60_000L) vm.screensaver.value = true
+        }
+    }
+    val wrapped by vm.wrapped.collectAsState()
+    val calendar by vm.calendar.collectAsState()
+    val screensaver by vm.screensaver.collectAsState()
+
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); vm.message.value = null }
     }
@@ -189,6 +254,8 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
             if (e.type != KeyEventType.KeyUp) return@onPreviewKeyEvent false
             when (e.key.nativeKeyCode) {
                 KeyEvent.KEYCODE_BUTTON_B -> when {
+                    vm.wrapped.value != null -> { vm.wrapped.value = null; true }
+                    vm.calendar.value != null -> { vm.calendar.value = null; true }
                     selected != null -> { vm.selectedId.value = null; true }
                     vm.selecting.value -> { vm.endSelection(); true }
                     inRandom -> { inRandom = false; true }
@@ -226,6 +293,9 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
             androidx.activity.compose.BackHandler { vm.finishLaunchAnimation() }
             com.repisa.app.ui.LaunchAnimation(r.game, r.kind, onFinish = { vm.finishLaunchAnimation() })
         }
+        calendar?.let { sample -> com.repisa.app.ui.PlayCalendar(vm, sample, onClose = { vm.calendar.value = null }) }
+        wrapped?.let { sample -> com.repisa.app.ui.WrappedScreen(vm, sample, onClose = { vm.wrapped.value = null }) }
+        if (screensaver) com.repisa.app.ui.Screensaver(vm, onClose = { vm.screensaver.value = false; vm.poke() })
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp))
         update?.let { r -> com.repisa.app.ui.UpdateDialog(r, updateProgress, onUpdate = { vm.installUpdate() }) }
     }

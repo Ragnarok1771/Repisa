@@ -287,6 +287,15 @@ object SteamLogin {
 
     private suspend fun cookies(url: String): String? = withContext(Dispatchers.Main) { CookieManager.getInstance().getCookie(url) }
 
+    /**
+     * País de la tienda de Steam de la cuenta (cookie `steamCountry`, p. ej. «CL|…»): con él los precios salen
+     * en la moneda de la persona (pesos chilenos, dólares, euros...).
+     */
+    suspend fun storeCountry(): String? = runCatching {
+        cookieValue(cookies(STORE), "steamCountry")?.let { URLDecoder.decode(it, "UTF-8") }?.substringBefore('|')
+            ?.uppercase()?.takeIf { it.length == 2 }
+    }.getOrNull()
+
     /** true cuando el WebView ya tiene la cookie de sesión de Steam (aunque esté caducada). */
     fun isLoggedInWeb(): Boolean =
         CookieManager.getInstance().getCookie(STORE)?.contains("steamLoginSecure=") == true

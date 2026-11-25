@@ -1235,6 +1235,202 @@ s("rated_sort_low", "Lowest first", "Más baja primero", "Moins bonne d’abord"
 s("rated_filter_none", "No ratings in this range.", "No hay calificaciones en este rango.", "Aucune note dans cette plage.",
   "Keine Bewertungen in diesem Bereich.", "Nessuna valutazione in questo intervallo.", "Não há avaliações neste intervalo.")
 
+# ------------------------------------------------------------------ Temas, calendario, resumen del año, compartir, lista de deseos, salvapantallas
+s("menu_themes", "Themes", "Temas", "Thèmes", "Themen", "Temi", "Temas")
+s("menu_themes_sub", "Wood, metal, glass or retro shop", "Madera, metal, cristal o tienda retro", "Bois, métal, verre ou boutique rétro",
+  "Holz, Metall, Glas oder Retro-Laden", "Legno, metallo, vetro o negozio retrò", "Madeira, metal, vidro ou loja retrô", ptPT="Madeira, metal, vidro ou loja retro")
+s("themes_hint", "Choose how your display cabinet looks. It changes every screen, including the bottom one.",
+  "Elige cómo se ve tu vitrina. Cambia todas las pantallas, también la de abajo.",
+  "Choisissez l'apparence de votre vitrine. Cela change tous les écrans, y compris celui du bas.",
+  "Wähle das Aussehen deiner Vitrine. Es ändert alle Bildschirme, auch den unteren.",
+  "Scegli l'aspetto della tua vetrina. Cambia tutte le schermate, anche quella in basso.",
+  "Escolha a aparência da sua estante. Muda todas as telas, inclusive a de baixo.", ptPT="Escolha o aspeto da sua vitrine. Muda todos os ecrãs, incluindo o de baixo.")
+s("theme_walnut", "Walnut", "Nogal", "Noyer", "Nussbaum", "Noce", "Nogueira")
+s("theme_oak", "Light oak", "Madera clara", "Chêne clair", "Helle Eiche", "Rovere chiaro", "Carvalho claro")
+s("theme_ebony", "Dark wood", "Madera oscura", "Bois sombre", "Dunkles Holz", "Legno scuro", "Madeira escura")
+s("theme_metal", "Brushed metal", "Metal cepillado", "Métal brossé", "Gebürstetes Metall", "Metallo spazzolato", "Metal escovado")
+s("theme_glass", "Glass", "Cristal", "Verre", "Glas", "Vetro", "Vidro")
+s("theme_retro", "Retro game shop", "Tienda retro", "Boutique rétro", "Retro-Laden", "Negozio retrò", "Loja retrô", ptPT="Loja retro")
+
+s("preview_sample_tag", "(sample data)", "(datos de ejemplo)", "(données d'exemple)", "(Beispieldaten)", "(dati di esempio)", "(dados de exemplo)")
+
+s("cal_title", "Play calendar", "Calendario de partidas", "Calendrier de jeu", "Spielkalender", "Calendario delle partite", "Calendário de partidas")
+s("cal_no_games_day", "No games this day.", "Este día no jugaste.", "Aucune partie ce jour-là.", "An diesem Tag nicht gespielt.",
+  "Nessuna partita in questo giorno.", "Nenhuma partida neste dia.")
+s("cal_day_total", "%1$s in %2$d sessions", "%1$s en %2$d partidas", "%1$s en %2$d parties", "%1$s in %2$d Sitzungen",
+  "%1$s in %2$d partite", "%1$s em %2$d partidas")
+s("cal_month_total", "This month: %1$s over %2$d days", "Este mes: %1$s en %2$d días", "Ce mois-ci : %1$s sur %2$d jours",
+  "Diesen Monat: %1$s an %2$d Tagen", "Questo mese: %1$s in %2$d giorni", "Este mês: %1$s em %2$d dias")
+s("cal_month_top", "Most played: %1$s (%2$s)", "El más jugado: %1$s (%2$s)", "Le plus joué : %1$s (%2$s)", "Am meisten gespielt: %1$s (%2$s)",
+  "Il più giocato: %1$s (%2$s)", "O mais jogado: %1$s (%2$s)")
+s("cal_session_synced", "%1$s · new hours seen at %2$s", "%1$s · horas nuevas vistas a las %2$s", "%1$s · nouvelles heures vues à %2$s",
+  "%1$s · neue Stunden um %2$s erkannt", "%1$s · nuove ore rilevate alle %2$s", "%1$s · horas novas vistas às %2$s")
+s("cal_game_sessions", "Sessions: %1$s", "Partidas: %1$s", "Parties : %1$s", "Sitzungen: %1$s", "Partite: %1$s", "Partidas: %1$s")
+s("cal_game_none", "No sessions recorded yet. They are noted when you play from Repisa, or when a sync finds new hours (played on PC, in Steam…).",
+  "Aún no hay partidas anotadas. Se apuntan al jugar desde Repisa o cuando al sincronizar aparecen horas nuevas (jugado en el PC, en Steam…).",
+  "Aucune partie enregistrée pour l'instant. Elles sont notées quand vous jouez depuis Repisa ou quand une synchronisation trouve de nouvelles heures.",
+  "Noch keine Sitzungen. Sie werden notiert, wenn du über Repisa spielst oder die Synchronisierung neue Stunden findet.",
+  "Ancora nessuna partita registrata. Vengono annotate quando giochi da Repisa o quando la sincronizzazione trova nuove ore.",
+  "Ainda não há partidas anotadas. São registradas ao jogar pelo Repisa ou quando a sincronização encontra horas novas.",
+  ptPT="Ainda não há partidas anotadas. São registadas ao jogar a partir do Repisa ou quando a sincronização encontra horas novas.")
+s("cal_game_button", "Sessions", "Partidas", "Parties", "Sitzungen", "Partite", "Partidas")
+
+s("wrapped_name", "Your year in Repisa", "Tu año en Repisa", "Votre année sur Repisa", "Dein Jahr in Repisa", "Il tuo anno su Repisa", "Seu ano no Repisa",
+  ptPT="O seu ano no Repisa")
+s("wrapped_intro_title", "Your %1$d in Repisa", "Tu %1$d en Repisa", "Votre %1$d sur Repisa", "Dein %1$d in Repisa", "Il tuo %1$d su Repisa",
+  "Seu %1$d no Repisa", ptPT="O seu %1$d no Repisa")
+s("wrapped_intro_sub", "Let's see what happened on your shelves this year", "Vamos a ver qué ha pasado en tu repisa este año",
+  "Voyons ce qui s'est passé sur vos étagères cette année", "Mal sehen, was dieses Jahr in deinem Regal passiert ist",
+  "Vediamo cos'è successo sui tuoi scaffali quest'anno", "Vamos ver o que aconteceu na sua estante este ano")
+s("wrapped_hours_pre", "In %1$d you played", "En %1$d jugaste", "En %1$d, vous avez joué", "%1$d hast du", "Nel %1$d hai giocato",
+  "Em %1$d você jogou", ptPT="Em %1$d jogou")
+s("wrapped_hours_unit", "hours", "horas", "heures", "Stunden gespielt", "ore", "horas")
+s("wrapped_hours_detail", "%1$d sessions · %2$d days with games · %3$d different games",
+  "%1$d partidas · %2$d días con juego · %3$d juegos distintos", "%1$d parties · %2$d jours de jeu · %3$d jeux différents",
+  "%1$d Sitzungen · %2$d Spieltage · %3$d verschiedene Spiele", "%1$d partite · %2$d giorni di gioco · %3$d giochi diversi",
+  "%1$d partidas · %2$d dias com jogo · %3$d jogos diferentes")
+s("wrapped_hours_days", "That's %1$s whole days non-stop!", "¡Eso son %1$s días enteros sin parar!", "Soit %1$s jours entiers sans s'arrêter !",
+  "Das sind %1$s ganze Tage am Stück!", "Sono %1$s giorni interi senza sosta!", "Isso dá %1$s dias inteiros sem parar!")
+s("wrapped_top_title", "Your top 5 of the year", "Tu top 5 del año", "Votre top 5 de l'année", "Deine Top 5 des Jahres", "La tua top 5 dell'anno",
+  "Seu top 5 do ano", ptPT="O seu top 5 do ano")
+s("wrapped_nothing", "No sessions recorded this year yet.", "Aún no hay partidas anotadas este año.", "Aucune partie enregistrée cette année.",
+  "Dieses Jahr noch keine Sitzungen.", "Ancora nessuna partita registrata quest'anno.", "Ainda não há partidas registradas este ano.",
+  ptPT="Ainda não há partidas registadas este ano.")
+s("wrapped_months_title", "Month by month", "Mes a mes", "Mois par mois", "Monat für Monat", "Mese per mese", "Mês a mês")
+s("wrapped_months_best", "Your busiest month: %1$s (%2$s)", "Tu mes más jugón: %1$s (%2$s)", "Votre mois le plus joueur : %1$s (%2$s)",
+  "Dein spielreichster Monat: %1$s (%2$s)", "Il tuo mese più giocato: %1$s (%2$s)", "Seu mês mais jogado: %1$s (%2$s)", ptPT="O seu mês mais jogado: %1$s (%2$s)")
+s("wrapped_facts_title", "Your year in a nutshell", "Tu año en datos", "Votre année en bref", "Dein Jahr in Zahlen", "Il tuo anno in breve", "Seu ano em números",
+  ptPT="O seu ano em números")
+s("wrapped_fact_genre", "favorite genre", "género favorito", "genre préféré", "Lieblingsgenre", "genere preferito", "gênero favorito", ptPT="género favorito")
+s("wrapped_fact_console", "most played system", "sistema más jugado", "système le plus joué", "meistgespieltes System", "sistema più giocato", "sistema mais jogado")
+s("wrapped_fact_finished", "games finished", "juegos terminados", "jeux terminés", "Spiele beendet", "giochi finiti", "jogos terminados")
+s("wrapped_fact_streak", "longest streak", "racha más larga", "plus longue série", "längste Serie", "serie più lunga", "maior sequência")
+s("wrapped_fact_streak_value", "%1$d days", "%1$d días", "%1$d jours", "%1$d Tage", "%1$d giorni", "%1$d dias")
+s("wrapped_card_title", "My %1$d in games", "Mi %1$d en juegos", "Mon %1$d en jeux", "Mein %1$d in Spielen", "Il mio %1$d nei giochi", "Meu %1$d em jogos",
+  ptPT="O meu %1$d em jogos")
+s("wrapped_card_line", "%1$s · %2$d games · %3$d days playing", "%1$s · %2$d juegos · %3$d días jugando", "%1$s · %2$d jeux · %3$d jours de jeu",
+  "%1$s · %2$d Spiele · %3$d Spieltage", "%1$s · %2$d giochi · %3$d giorni di gioco", "%1$s · %2$d jogos · %3$d dias jogando",
+  ptPT="%1$s · %2$d jogos · %3$d dias a jogar")
+s("wrapped_card_finished", "%1$d finished", "%1$d terminados", "%1$d terminés", "%1$d beendet", "%1$d finiti", "%1$d terminados")
+s("wrapped_card_streak", "%1$d-day streak", "racha de %1$d días", "série de %1$d jours", "%1$d Tage am Stück", "serie di %1$d giorni", "sequência de %1$d dias")
+s("wrapped_share_text", "My %1$d in games, made with Repisa 🎮", "Mi %1$d en juegos, hecho con Repisa 🎮", "Mon %1$d en jeux, fait avec Repisa 🎮",
+  "Mein %1$d in Spielen, erstellt mit Repisa 🎮", "Il mio %1$d nei giochi, creato con Repisa 🎮", "Meu %1$d em jogos, feito com o Repisa 🎮",
+  ptPT="O meu %1$d em jogos, feito com o Repisa 🎮")
+
+s("share_save", "Save to gallery", "Guardar en la galería", "Enregistrer dans la galerie", "In Galerie speichern", "Salva nella galleria",
+  "Salvar na galeria", ptPT="Guardar na galeria")
+s("share_share", "Share", "Compartir", "Partager", "Teilen", "Condividi", "Compartilhar", ptPT="Partilhar")
+s("share_saved", "Saved in Pictures › Repisa", "Guardada en Imágenes › Repisa", "Enregistrée dans Images › Repisa", "In Bilder › Repisa gespeichert",
+  "Salvata in Immagini › Repisa", "Salva em Imagens › Repisa", ptPT="Guardada em Imagens › Repisa")
+s("share_failed", "Couldn't save the image", "No se pudo guardar la imagen", "Impossible d'enregistrer l'image", "Bild konnte nicht gespeichert werden",
+  "Impossibile salvare l'immagine", "Não foi possível salvar a imagem", ptPT="Não foi possível guardar a imagem")
+
+s("wish_shelf", "Wishlist", "Lista de deseos", "Liste de souhaits", "Wunschliste", "Lista dei desideri", "Lista de desejos")
+s("wish_on_sale", "%1$d on sale", "%1$d en oferta", "%1$d en promo", "%1$d im Angebot", "%1$d in offerta", "%1$d em promoção")
+s("wish_no_price", "No price yet", "Sin precio", "Pas de prix", "Kein Preis", "Senza prezzo", "Sem preço")
+s("wish_desc", "Your Steam wishlist as a shelf of its own, with the current price of each game. Tapping a box opens its store page.",
+  "Tu lista de deseos de Steam en una repisa propia, con el precio actual de cada juego. Al tocar una caja se abre su página de la tienda.",
+  "Votre liste de souhaits Steam sur une étagère à part, avec le prix actuel de chaque jeu. Touchez une boîte pour ouvrir sa page du magasin.",
+  "Deine Steam-Wunschliste als eigenes Regal mit dem aktuellen Preis jedes Spiels. Antippen öffnet die Shopseite.",
+  "La tua lista dei desideri di Steam in uno scaffale tutto suo, con il prezzo attuale di ogni gioco. Tocca una scatola per aprire la pagina del negozio.",
+  "Sua lista de desejos da Steam numa estante própria, com o preço atual de cada jogo. Tocar numa caixa abre a página da loja.")
+s("wish_show", "Show the wishlist shelf", "Mostrar la repisa de la lista de deseos", "Afficher l'étagère de la liste de souhaits",
+  "Wunschlisten-Regal anzeigen", "Mostra lo scaffale della lista dei desideri", "Mostrar a estante da lista de desejos")
+s("wish_alerts", "Notify me when a price drops", "Avisarme cuando baje un precio", "M'avertir quand un prix baisse", "Benachrichtigen, wenn ein Preis sinkt",
+  "Avvisami quando un prezzo scende", "Avisar quando um preço baixar")
+s("wish_alerts_hint", "Prices are checked every time Repisa syncs (when you open it).", "Los precios se miran cada vez que Repisa sincroniza (al abrirla).",
+  "Les prix sont vérifiés à chaque synchronisation de Repisa (à l'ouverture).", "Die Preise werden bei jeder Synchronisierung geprüft (beim Öffnen).",
+  "I prezzi vengono controllati a ogni sincronizzazione di Repisa (all'apertura).", "Os preços são verificados sempre que o Repisa sincroniza (ao abrir).")
+s("wish_none_yet", "Not loaded yet.", "Todavía no se ha cargado.", "Pas encore chargée.", "Noch nicht geladen.", "Non ancora caricata.", "Ainda não carregada.")
+s("wish_loaded", "%1$d games on your wishlist", "%1$d juegos en tu lista de deseos", "%1$d jeux dans votre liste de souhaits",
+  "%1$d Spiele auf deiner Wunschliste", "%1$d giochi nella tua lista dei desideri", "%1$d jogos na sua lista de desejos")
+s("wish_refresh", "Update now", "Actualizar ahora", "Mettre à jour", "Jetzt aktualisieren", "Aggiorna ora", "Atualizar agora")
+s("wish_empty", "Your Steam wishlist is empty (or private).", "Tu lista de deseos de Steam está vacía (o es privada).",
+  "Votre liste de souhaits Steam est vide (ou privée).", "Deine Steam-Wunschliste ist leer (oder privat).",
+  "La tua lista dei desideri di Steam è vuota (o privata).", "Sua lista de desejos da Steam está vazia (ou é privada).")
+s("wish_error", "Couldn't load the wishlist: %1$s", "No se pudo cargar la lista de deseos: %1$s", "Impossible de charger la liste de souhaits : %1$s",
+  "Wunschliste konnte nicht geladen werden: %1$s", "Impossibile caricare la lista dei desideri: %1$s", "Não foi possível carregar a lista de desejos: %1$s")
+s("wish_no_account", "Link your Steam account first", "Vincula primero tu cuenta de Steam", "Liez d'abord votre compte Steam",
+  "Verknüpfe zuerst dein Steam-Konto", "Collega prima il tuo account Steam", "Vincule primeiro sua conta Steam", ptPT="Associe primeiro a sua conta Steam")
+s("wish_channel", "Wishlist price drops", "Bajadas de precio de la lista de deseos", "Baisses de prix de la liste de souhaits",
+  "Preissenkungen der Wunschliste", "Cali di prezzo della lista dei desideri", "Quedas de preço da lista de desejos")
+s("wish_drop_title", "💸 %1$s is cheaper", "💸 %1$s ha bajado de precio", "💸 %1$s est moins cher", "💸 %1$s ist günstiger",
+  "💸 %1$s costa meno", "💸 %1$s baixou de preço")
+s("wish_drop_text", "%1$s → %2$s", "%1$s → %2$s", "%1$s → %2$s", "%1$s → %2$s", "%1$s → %2$s", "%1$s → %2$s")
+
+s("screensaver_title", "Screensaver", "Salvapantallas", "Économiseur d'écran", "Bildschirmschoner", "Salvaschermo", "Proteção de tela",
+  ptPT="Proteção de ecrã")
+s("screensaver_desc", "After a while without touching anything, your covers float slowly across the cabinet with a big clock. Any button or touch closes it.",
+  "Tras un rato sin tocar nada, tus carátulas flotan despacio por la vitrina con un reloj grande. Cualquier botón o toque lo quita.",
+  "Après un moment sans rien toucher, vos jaquettes flottent lentement dans la vitrine avec une grande horloge. N'importe quel bouton ou toucher le ferme.",
+  "Nach einer Weile ohne Eingabe schweben deine Cover langsam durch die Vitrine, mit großer Uhr. Jede Taste oder Berührung beendet ihn.",
+  "Dopo un po' senza toccare nulla, le copertine fluttuano lentamente nella vetrina con un grande orologio. Qualsiasi tasto o tocco lo chiude.",
+  "Depois de um tempo sem tocar em nada, suas capas flutuam devagar pela estante com um relógio grande. Qualquer botão ou toque o fecha.",
+  ptPT="Depois de algum tempo sem tocar em nada, as capas flutuam devagar pela vitrine com um relógio grande. Qualquer botão ou toque fecha-a.")
+s("screensaver_never", "Never", "Nunca", "Jamais", "Nie", "Mai", "Nunca")
+s("screensaver_min", "%1$d min", "%1$d min", "%1$d min", "%1$d Min.", "%1$d min", "%1$d min")
+s("screensaver_off", "Screensaver off", "Salvapantallas desactivado", "Économiseur désactivé", "Bildschirmschoner aus", "Salvaschermo disattivato",
+  "Proteção de tela desativada", ptPT="Proteção de ecrã desativada")
+s("screensaver_after", "Starts after %1$d min without touching anything", "Salta a los %1$d min sin tocar nada", "Démarre après %1$d min d'inactivité",
+  "Startet nach %1$d Min. ohne Eingabe", "Parte dopo %1$d min senza toccare nulla", "Começa após %1$d min sem tocar em nada")
+s("screensaver_try", "Try the screensaver", "Probar salvapantallas", "Essayer l'économiseur", "Bildschirmschoner testen", "Prova il salvaschermo",
+  "Testar proteção de tela", ptPT="Experimentar proteção de ecrã")
+s("screensaver_hint", "Press any button to come back", "Pulsa cualquier botón para volver", "Appuyez sur un bouton pour revenir",
+  "Beliebige Taste drücken, um zurückzukehren", "Premi un tasto qualsiasi per tornare", "Pressione qualquer botão para voltar", ptPT="Prima qualquer botão para voltar")
+
+s("ra_link", "Link RetroAchievements", "Vincular RetroAchievements", "Lier RetroAchievements", "RetroAchievements verknüpfen", "Collega RetroAchievements",
+  "Vincular RetroAchievements", ptPT="Associar RetroAchievements")
+s("ra_linked", "Linked as %1$s", "Vinculado como %1$s", "Lié en tant que %1$s", "Verknüpft als %1$s", "Collegato come %1$s", "Vinculado como %1$s",
+  ptPT="Associado como %1$s")
+s("field_tap_to_write", "Press to type", "Pulsa para escribir", "Appuyez pour écrire", "Zum Schreiben drücken", "Premi per scrivere", "Toque para escrever",
+  ptPT="Prima para escrever")
+
+
+s("theme_custom", "Custom", "Personalizado", "Personnalisé", "Eigenes", "Personalizzato", "Personalizado")
+s("theme_custom_hint", "Choose a texture and the colors of the wall, the shelves and the light. Changes apply at once.",
+  "Elige una textura y los colores de la pared, las baldas y la luz. Los cambios se aplican al momento.",
+  "Choisissez une texture et les couleurs du mur, des étagères et de la lumière. Les changements s'appliquent tout de suite.",
+  "Wähle eine Textur und die Farben von Wand, Regalböden und Licht. Änderungen gelten sofort.",
+  "Scegli una texture e i colori della parete, dei ripiani e della luce. Le modifiche si applicano subito.",
+  "Escolha uma textura e as cores da parede, das prateleiras e da luz. As mudanças são aplicadas na hora.",
+  ptPT="Escolha uma textura e as cores da parede, das prateleiras e da luz. As alterações aplicam-se logo.")
+s("theme_texture", "Texture", "Textura", "Texture", "Textur", "Texture", "Textura")
+s("texture_wood", "Wood", "Madera", "Bois", "Holz", "Legno", "Madeira")
+s("texture_metal", "Metal", "Metal", "Métal", "Metall", "Metallo", "Metal")
+s("texture_glass", "Glass", "Cristal", "Verre", "Glas", "Vetro", "Vidro")
+s("texture_pegboard", "Pegboard", "Panel perforado", "Panneau perforé", "Lochwand", "Pannello forato", "Painel perfurado")
+s("theme_color_wall", "Wall color", "Color de la pared", "Couleur du mur", "Wandfarbe", "Colore della parete", "Cor da parede")
+s("theme_color_shelf", "Shelf color", "Color de las baldas", "Couleur des étagères", "Farbe der Regalböden", "Colore dei ripiani", "Cor das prateleiras")
+s("theme_color_light", "Light color", "Color de la luz", "Couleur de la lumière", "Lichtfarbe", "Colore della luce", "Cor da luz")
+s("cal_day_last_only", "Last day you played %1$d game(s) (time not known)", "Último día que jugaste %1$d juego(s) (sin duración)",
+  "Dernier jour où vous avez joué à %1$d jeu(x) (durée inconnue)", "Letzter Spieltag für %1$d Spiel(e) (Dauer unbekannt)",
+  "Ultimo giorno in cui hai giocato a %1$d gioco/i (durata sconosciuta)", "Último dia em que você jogou %1$d jogo(s) (sem duração)",
+  ptPT="Último dia em que jogou %1$d jogo(s) (sem duração)")
+s("cal_last_played", "Last time played (from Steam / the emulator, no duration)", "Última vez que lo jugaste (según Steam o el emulador, sin duración)",
+  "Dernière partie (selon Steam ou l'émulateur, sans durée)", "Zuletzt gespielt (laut Steam/Emulator, ohne Dauer)",
+  "Ultima volta giocato (secondo Steam o l'emulatore, senza durata)", "Última vez que jogou (segundo a Steam ou o emulador, sem duração)")
+s("wish_checked", "checked %1$s · store: %2$s", "consultada %1$s · tienda: %2$s", "vérifiée %1$s · magasin : %2$s", "geprüft %1$s · Shop: %2$s",
+  "controllata %1$s · negozio: %2$s", "consultada %1$s · loja: %2$s")
+
+s("wish_sort_steam", "Steam order", "Orden de Steam", "Ordre de Steam", "Steam-Reihenfolge", "Ordine di Steam", "Ordem da Steam")
+s("wish_sort_name", "Name", "Nombre", "Nom", "Name", "Nome", "Nome")
+s("wish_sort_price_desc", "Price: high to low", "Precio: de mayor a menor", "Prix décroissant", "Preis: absteigend", "Prezzo: dal più alto",
+  "Preço: maior para menor")
+s("wish_sort_price_asc", "Price: low to high", "Precio: de menor a mayor", "Prix croissant", "Preis: aufsteigend", "Prezzo: dal più basso",
+  "Preço: menor para maior")
+s("wish_sort_discount", "Biggest discount", "Mayor descuento", "Plus grosse remise", "Größter Rabatt", "Sconto maggiore", "Maior desconto")
+s("wish_refresh_prices", "Update prices", "Actualizar precios", "Actualiser les prix", "Preise aktualisieren", "Aggiorna prezzi", "Atualizar preços")
+s("wish_refreshing", "Checking…", "Consultando…", "Vérification…", "Wird geprüft…", "Controllo…", "Consultando…")
+s("wish_background", "Also check with Repisa closed", "Revisar también con Repisa cerrada", "Vérifier aussi avec Repisa fermée",
+  "Auch bei geschlossenem Repisa prüfen", "Controlla anche con Repisa chiusa", "Verificar também com o Repisa fechado")
+s("wish_background_hint", "Every 6 hours, when there's internet. You'll get a notification for each game that drops in price.",
+  "Cada 6 horas, cuando haya internet. Te llega una notificación por cada juego que baje de precio.",
+  "Toutes les 6 heures, avec internet. Une notification par jeu dont le prix baisse.",
+  "Alle 6 Stunden, wenn Internet da ist. Eine Benachrichtigung pro Spiel, das günstiger wird.",
+  "Ogni 6 ore, quando c'è internet. Una notifica per ogni gioco che cala di prezzo.",
+  "A cada 6 horas, quando houver internet. Você recebe uma notificação por jogo que baixar de preço.",
+  ptPT="A cada 6 horas, quando houver internet. Recebe uma notificação por cada jogo que baixe de preço.")
+
 # ------------------------------------------------------------------ Géneros (clave interna en español → texto)
 GENRES = [
     ("Acción", "Action", "Acción", "Action", "Action", "Azione", "Ação"),

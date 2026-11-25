@@ -55,7 +55,7 @@ object Backup {
     }
 
     fun export(games: List<Game>, prefs: SharedPreferences, appVersion: String, coversDir: java.io.File? = null,
-               archive: List<Game> = emptyList()): String {
+               archive: List<Game> = emptyList(), sessions: List<PlaySession> = emptyList()): String {
         val skip = Settings.SECRET_KEYS + Settings.DEVICE_KEYS
         val savedPrefs = prefs.all.filterKeys { it !in skip }.mapNotNull { (k, v) ->
             val typed: JsonObject = when (v) {
@@ -80,18 +80,30 @@ object Backup {
             "covers" to JsonObject(ownCovers(games, coversDir)),
             // Lo tuyo de juegos que ahora no están (cuenta desvinculada...), para recuperarlo si vuelven.
             "archive" to Http.json.encodeToJsonElement(gamesSerializer, archive.map { it.stored() }),
+            // Registro de partidas (calendario y resumen del año).
+            "sessions" to Http.json.encodeToJsonElement(sessionsSerializer, sessions),
         ))
         return root.toString()
     }
 
-    class Parsed(val games: List<Game>, val settings: Map<String, JsonElement>, val version: String?, val archive: List<Game> = emptyList())
+    class Parsed(val games: List<Game>, val settings: Map<String, JsonElement>, val version: String?, val archive: List<Game> = emptyList(),
+                 val sessions: List<PlaySession> = emptyList())
+
+    private val sessionsSerializer = kotlinx.serialization.builtins.ListSerializer(PlaySession.serializer())
+
+    /** Une las partidas de la copia con las que ya hay (sin repetir la misma partida). */
+    fun mergeSessions(current: List<PlaySession>, restored: List<PlaySession>): List<PlaySession> {
+        val known = current.map { it.gameId to it.start }.toSet()
+        return (current + restored.filter { (it.gameId to it.start) !in known }).sortedBy { it.start }
+    }
 
     fun parse(text: String): Parsed {
         val root = Http.json.parseToJsonElement(text).jsonObject
         require(root["app"]?.jsonPrimitive?.content == "Repisa") { "no es una copia de Repisa" }
         val games = Http.json.decodeFromJsonElement(gamesSerializer, root["games"] ?: JsonArray(emptyList()))
         val archive = runCatching { Http.json.decodeFromJsonElement(gamesSerializer, root["archive"] ?: JsonArray(emptyList())) }.getOrDefault(emptyList())
-        return Parsed(games, root["settings"]?.jsonObject ?: emptyMap(), root["version"]?.jsonPrimitive?.content, archive)
+        val sessions = runCatching { Http.json.decodeFromJsonElement(sessionsSerializer, root["sessions"] ?: JsonArray(emptyList())) }.getOrDefault(emptyList())
+        return Parsed(games, root["settings"]?.jsonObject ?: emptyMap(), root["version"]?.jsonPrimitive?.content, archive, sessions)
     }
 
     /** Escribe los ajustes de la copia (nunca claves ni carpetas, aunque vinieran en el archivo). */

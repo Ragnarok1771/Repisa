@@ -333,7 +333,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         val app = getApplication<android.app.Application>()
         runCatching {
             val text = com.repisa.app.data.Backup.export(_games.value, settings.prefsForBackup, com.repisa.app.BuildConfig.VERSION_NAME,
-                java.io.File(app.filesDir, "covers"), archive.values.toList())
+                java.io.File(app.filesDir, "covers"), archive.values.toList(), sessions.value)
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 app.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(text.toByteArray()) }
             }
@@ -350,7 +350,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             }
             val parsed = com.repisa.app.data.Backup.parse(text).let {
                 com.repisa.app.data.Backup.Parsed(
-                    com.repisa.app.data.Backup.restoreCovers(text, it.games, java.io.File(app.filesDir, "covers")), it.settings, it.version, it.archive)
+                    com.repisa.app.data.Backup.restoreCovers(text, it.games, java.io.File(app.filesDir, "covers")), it.settings, it.version, it.archive,
+                    it.sessions)
             }
             com.repisa.app.data.Backup.restoreSettings(parsed.settings, settings.prefsForBackup)
             mutex.withLock {
@@ -360,8 +361,17 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 val extra = parsed.archive.filter { it.id !in inLibrary && it.id !in archive }
                 if (extra.isNotEmpty()) { archive = archive + extra.associateBy { it.id }; store.saveArchive(archive) }
             }
+            if (parsed.sessions.isNotEmpty()) {
+                sessions.value = com.repisa.app.data.Backup.mergeSessions(sessions.value, parsed.sessions)
+                sessionLog.save(sessions.value)
+            }
             // Refrescar lo que depende de los ajustes recién restaurados.
             hidden.value = settings.hiddenGames
+            ShelfTheme.custom = CustomTheme.decode(settings.customTheme).build()
+            ShelfTheme.current = ShelfTheme.of(settings.shelfTheme)
+            wishlistOn.value = settings.wishlistShelf
+            wishSort.value = settings.wishlistSort
+            com.repisa.app.data.WishlistJob.schedule(app)
             onboarding.value = !settings.onboardingDone
             ratingScale.value = runCatching { com.repisa.app.model.RatingScale.valueOf(settings.ratingScale) }.getOrDefault(ratingScale.value)
             _options.update { it.copy(
@@ -379,6 +389,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         com.repisa.app.model.StatusRules.auto = settings.autoStatus
+        ShelfTheme.custom = CustomTheme.decode(settings.customTheme).build()
+        ShelfTheme.current = ShelfTheme.of(settings.shelfTheme)
         com.repisa.app.model.StatusRules.order = com.repisa.app.model.StatusRules.parseOrder(settings.statusOrder)
     }
 
@@ -420,6 +432,28 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         hidden.value = emptySet()
     }
 
+    /** Lista de deseos de Steam (ver [refreshWishlist]). */
+    val wishlist = MutableStateFlow<List<com.repisa.app.sources.WishItem>>(emptyList())
+    val wishlistOn = MutableStateFlow(settings.wishlistShelf)
+    /** Orden de la repisa de la lista de deseos (ver [Settings.wishlistSort]). */
+    val wishSort = MutableStateFlow(settings.wishlistSort)
+    fun setWishSort(s: String) { settings.wishlistSort = s; wishSort.value = s }
+    /** true mientras se vuelve a consultar la lista de deseos desde su repisa. */
+    val wishRefreshing = MutableStateFlow(false)
+    fun refreshWishlistNow() = viewModelScope.launch {
+        if (wishRefreshing.value) return@launch
+        wishRefreshing.value = true
+        try { refreshWishlist(quiet = false) } finally { wishRefreshing.value = false }
+    }
+    /** Precio de cada caja de la lista de deseos, por id de juego («wish:<appid>»). */
+    val wishPrices: StateFlow<Map<String, com.repisa.app.sources.WishItem>> = wishlist
+        .map { l -> l.associateBy { "wish:${it.appId}" } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+    /** Registro de partidas (calendario y resumen del año). */
+    val sessions = MutableStateFlow<List<com.repisa.app.data.PlaySession>>(emptyList())
+    private val sessionLog = com.repisa.app.data.SessionLog(app)
+    private val wishStore = com.repisa.app.data.WishlistStore(app)
+
     /** Biblioteca tal como se muestra: copias del mismo juego unidas en una sola caja. */
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val displayGames: StateFlow<List<Game>> = combine(_games, hidden) { g, h -> g to h }
@@ -429,10 +463,33 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     // También se reconstruye al cambiar de idioma (los títulos de las repisas están traducidos).
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val shelves: StateFlow<List<ShelfGroup>> = combine(displayGames, _options, L10n.version) { g, o, _ -> g to o }
+    private val baseShelves: StateFlow<List<ShelfGroup>> = combine(displayGames, _options, L10n.version) { g, o, _ -> g to o }
         .mapLatest { (g, o) -> buildShelves(g, o) }
         .flowOn(kotlinx.coroutines.Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Repisas con la «Lista de deseos» de Steam al final (si está activada). */
+    val shelves: StateFlow<List<ShelfGroup>> = combine(baseShelves, wishlist, _options, wishlistOn, wishSort) { base, wish, o, on, sort ->
+        if (!on || wish.isEmpty() || (o.source != null && o.source != Source.STEAM)) return@combine base
+        val q = o.query.trim().lowercase()
+        val items = wish.filter { q.isEmpty() || it.name.lowercase().contains(q) }.let { l ->
+            // Los que no tienen precio (gratis, sin salir...) siempre al final al ordenar por precio o descuento.
+            when (sort) {
+                "NAME" -> l.sortedBy { it.name.lowercase() }
+                "PRICE_DESC" -> l.sortedWith(compareBy<com.repisa.app.sources.WishItem> { it.priceCents == null }.thenByDescending { it.priceCents ?: 0 })
+                "PRICE_ASC" -> l.sortedWith(compareBy<com.repisa.app.sources.WishItem> { it.priceCents == null }.thenBy { it.priceCents ?: 0 })
+                "DISCOUNT" -> l.sortedWith(compareByDescending<com.repisa.app.sources.WishItem> { it.discountPct }.thenBy { it.name.lowercase() })
+                else -> l
+            }
+        }
+        if (items.isEmpty()) return@combine base
+        val onSale = items.count { it.discountPct > 0 }
+        base + ShelfGroup(
+            "⭐ " + L10n.s(R.string.wish_shelf),
+            L10n.games(items.size) + if (onSale > 0) " · " + L10n.s(R.string.wish_on_sale, onSale) else "",
+            items.map { it.toGame() }, key = "wishlist",
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private var enrichJob: Job? = null
     private var loaded = false
@@ -458,6 +515,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _games.value = store.load()
             archive = store.loadArchive()
+            sessions.value = sessionLog.load()
+            wishlist.value = wishStore.load()
             loaded = true
             libraryLoaded.complete(Unit)
             if (!autoSync()) startEnrichment()
@@ -572,6 +631,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             if (settings.steamConfigured) syncSource(Source.STEAM, quiet)?.let(errors::add)
             if (epic.isLoggedIn) syncSource(Source.EPIC, quiet)?.let(errors::add)
             if (settings.hasEmulatorSources) syncSource(Source.EMULATOR, quiet)?.let(errors::add)
+            if (settings.steamConfigured && settings.wishlistShelf) refreshWishlist(quiet = true)
             if (errors.isNotEmpty()) message.value = errors.joinToString("\n")
             else if (!hasAnySource()) message.value = L10n.s(R.string.msg_connect_sources)
             else if (quiet) {
@@ -645,6 +705,17 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                     if (g.status == com.repisa.app.model.PlayStatus.BACKLOG.name && before != null && g.totalMinutes > before)
                         g.copy(status = com.repisa.app.model.PlayStatus.PLAYING.name) else g
                 }
+                // Horas nuevas que trae la fuente (jugado en el PC, en Steam...): se anotan como partida para el calendario,
+                // salvo que Repisa ya midiera esa partida hace poco.
+                val now = System.currentTimeMillis()
+                val recent = sessions.value.filter { it.measured && now - it.end < 6 * 3_600_000L }.map { it.gameId }.toSet()
+                val newSessions = merged.mapNotNull { g ->
+                    val old = current[g.id] ?: return@mapNotNull null
+                    val delta = g.playtimeMinutes - old.playtimeMinutes
+                    if (delta <= 0 || g.id in recent) null
+                    else com.repisa.app.data.PlaySession(g.id, g.title, g.consoleId, now - delta * 60_000L, delta, measured = false)
+                }
+                if (newSessions.isNotEmpty()) addSessions(newSessions)
                 val freshIds = merged.map { it.id }.toSet()
                 // Lo que la fuente ya no devuelve sale de la repisa (juego desinstalado, ROM borrada...), pero lo tuyo
                 // se guarda por si vuelve.
@@ -971,6 +1042,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         launcher.consumeSession()?.let { s ->
             val g = _games.value.firstOrNull { it.id == s.gameId } ?: return@let
             updateGame(g.copy(trackedMinutes = g.trackedMinutes + s.minutes, lastPlayed = System.currentTimeMillis()))
+            if (s.minutes > 0) addSessions(listOf(com.repisa.app.data.PlaySession(g.id, g.title, g.consoleId,
+                System.currentTimeMillis() - s.minutes * 60_000L, s.minutes, s.measured)))
             message.value = L10n.s(R.string.msg_session_added, g.title, formatPlaytime(s.minutes)) +
                 if (s.measured) "" else L10n.s(R.string.msg_session_approx)
         }
@@ -1100,7 +1173,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             val candidates = _games.value.filter { !it.customCover && !it.userEdited }
             val missing = candidates.filter { g ->
                 val url = g.coverUrl
-                url == null || (url.startsWith("http") && !com.repisa.app.data.Http.exists(url))
+                url == null || (url.startsWith("http") && com.repisa.app.data.Http.definitelyMissing(url))
             }
             var found = 0
             missing.forEachIndexed { i, g ->
@@ -1135,4 +1208,88 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun consolesInLibrary(): List<String> = _games.value.filter { it.source == Source.EMULATOR }
         .map { it.consoleId }.distinct().sortedBy { Consoles.byId(it).year }
+
+    // ------------------------------------------------------------------ Temas, partidas, resumen del año, salvapantallas
+
+    fun setTheme(t: ShelfTheme) { ShelfTheme.current = t; settings.shelfTheme = t.name }
+
+    fun setCustomTheme(c: CustomTheme) {
+        settings.customTheme = c.encode()
+        ShelfTheme.custom = c.build()
+        setTheme(ShelfTheme.custom)
+    }
+
+    private fun addSessions(new: List<com.repisa.app.data.PlaySession>) {
+        sessions.update { (it + new).sortedBy { s -> s.start } }
+        val snapshot = sessions.value
+        viewModelScope.launch { sessionLog.save(snapshot) }
+    }
+
+    /**
+     * Partidas anotadas más, de cada juego, el último día que se jugó según Steam, Epic o el emulador (si ese día
+     * no hay ya una partida anotada): así el calendario muestra también lo jugado antes de anotar partidas.
+     */
+    fun withLastPlayed(real: List<com.repisa.app.data.PlaySession>, games: List<Game>): List<com.repisa.app.data.PlaySession> {
+        val known = real.map { it.gameId to com.repisa.app.data.dayKey(it.start) }.toSet()
+        val extra = games.mapNotNull { g ->
+            val t = g.lastPlayed?.takeIf { it > 0 } ?: return@mapNotNull null
+            if (g.id to com.repisa.app.data.dayKey(t) in known) null
+            else com.repisa.app.data.PlaySession(g.id, g.title, g.consoleId, t, 0, measured = false, lastOnly = true)
+        }
+        return (real + extra).sortedBy { it.start }
+    }
+
+    /** Partidas de ejemplo con tus juegos (para ver el calendario y el resumen del año sin haber jugado aún). */
+    fun sampleSessions() = com.repisa.app.data.SampleSessions.make(displayGames.value)
+
+    /** Resumen del año abierto: null = cerrado; true = con datos de ejemplo. */
+    val wrapped = MutableStateFlow<Boolean?>(null)
+    /** Calendario de partidas abierto: null = cerrado; true = con datos de ejemplo. */
+    val calendar = MutableStateFlow<Boolean?>(null)
+    /** Botones del mando para el calendario (L1/R1 y recuperar el foco), enviados desde la actividad. */
+    val calendarKeys = kotlinx.coroutines.flow.MutableSharedFlow<Int>(extraBufferCapacity = 8)
+    /** true si algo del calendario tiene el foco del mando (si no, la cruceta se lo devuelve). */
+    @Volatile var calendarFocused = false
+    /** Joystick derecho (-1..1, 0 en reposo): desplaza la lista de partidas del día. */
+    val rightStick = MutableStateFlow(0f)
+    val screensaver = MutableStateFlow(false)
+    /** Solo pruebas: submenú de Ajustes que se abre directamente. */
+    var debugPage: String? = null
+    @Volatile var lastInteraction = System.currentTimeMillis()
+    fun poke() { lastInteraction = System.currentTimeMillis() }
+
+    // ------------------------------------------------------------------ Lista de deseos de Steam
+
+    /** Resultado de la última consulta de la lista de deseos (se muestra en Ajustes). */
+    val wishStatus = MutableStateFlow<String?>(null)
+
+    fun setWishlistShelf(on: Boolean) {
+        settings.wishlistShelf = on; wishlistOn.value = on
+        com.repisa.app.data.WishlistJob.schedule(getApplication())
+        if (on && wishlist.value.isEmpty()) viewModelScope.launch { refreshWishlist(quiet = false) }
+    }
+
+    /** Descarga la lista de deseos, avisa de lo que ha bajado de precio y la guarda. */
+    suspend fun refreshWishlist(quiet: Boolean) {
+        try {
+            val (fresh, country) = com.repisa.app.data.WishlistCheck.run(getApplication(), settings)
+            wishlist.value = fresh
+            val now = java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT).format(java.util.Date())
+            wishStatus.value = (if (fresh.isEmpty()) L10n.s(R.string.wish_empty) else L10n.s(R.string.wish_loaded, fresh.size)) +
+                " · " + L10n.s(R.string.wish_checked, now, country)
+            if (!quiet) message.value = if (fresh.isEmpty()) L10n.s(R.string.wish_empty) else L10n.s(R.string.wish_loaded, fresh.size)
+        } catch (e: Exception) {
+            wishStatus.value = L10n.s(R.string.wish_error, e.message ?: e.javaClass.simpleName)
+            if (!quiet) message.value = wishStatus.value
+        }
+    }
+
 }
+
+/** Caja de la lista de deseos: un juego de Steam que no está en la biblioteca (id «wish:<appid>»). */
+fun com.repisa.app.sources.WishItem.toGame() = Game(
+    id = "wish:$appId", source = Source.STEAM, title = name, consoleId = "pc", coverUrl = cover,
+    storeUrl = "https://store.steampowered.com/app/$appId", status = com.repisa.app.model.PlayStatus.NOT_APPLICABLE.name,
+)
+
+val Game.isWish: Boolean get() = id.startsWith("wish:")

@@ -2,4 +2,6 @@
 <!-- APK descargados para actualizar Repisa (se comparten con el instalador de Android). -->
 <paths>
     <cache-path name="updates" path="updates/" />
+    <!-- Imágenes para compartir (resumen del año, repisas). -->
+    <cache-path name="share" path="share/" />
 </paths>

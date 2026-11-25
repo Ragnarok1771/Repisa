@@ -32,6 +32,8 @@ class RepisaApp : Application(), SingletonImageLoader.Factory, androidx.lifecycl
         super.onCreate()
         L10n.init(this)
         com.repisa.app.sources.SteamLogin.init(this)
+        // Revisión de precios de la lista de deseos en segundo plano (si está activada).
+        runCatching { com.repisa.app.data.WishlistJob.schedule(this) }
     }
 
     /**

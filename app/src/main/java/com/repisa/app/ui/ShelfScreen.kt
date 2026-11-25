@@ -117,9 +117,17 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
                 androidx.compose.runtime.CompositionLocalProvider(LocalSelection provides selState) {
                 val collapsed by vm.collapsed.collectAsState()
                 LocalBlur = { vm.blurGame(it) }
-                Shelves(shelves, collapsed, { vm.toggleCollapsed(it) }, boxHeight, focused?.id, onFocus = { vm.focusGame(it) }, onOpen = onOpenGame,
-                    onPlay = { vm.play(it) }, onFavorite = { vm.toggleFavorite(it) },
-                    onAspect = { g, a -> vm.setCoverAspect(g.id, a) })
+                val prices by vm.wishPrices.collectAsState()
+                // Cajas de la lista de deseos: abren la tienda de Steam en vez de la ficha.
+                val openStore: (Game) -> Unit = { g -> g.storeUrl?.let { vm.launcher.openSteamStore(it) } }
+                androidx.compose.runtime.CompositionLocalProvider(LocalPriceTags provides prices) {
+                Shelves(shelves, collapsed, { vm.toggleCollapsed(it) }, boxHeight, focused?.id, onFocus = { vm.focusGame(it) },
+                    onOpen = { if (it.isWish) openStore(it) else onOpenGame(it) },
+                    onPlay = { if (it.isWish) openStore(it) else vm.play(it) },
+                    onFavorite = { if (!it.isWish) vm.toggleFavorite(it) },
+                    onAspect = { g, a -> if (!g.isWish) vm.setCoverAspect(g.id, a) },
+                    plaqueExtra = { gr -> if (gr.key == "wishlist") WishlistControls(vm) })
+                }
                 }
             }
         }
@@ -274,6 +282,7 @@ private fun Shelves(
     onPlay: (Game) -> Unit,
     onFavorite: (Game) -> Unit,
     onAspect: (Game, Float) -> Unit,
+    plaqueExtra: @Composable (ShelfGroup) -> Unit = {},
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val sidePad = 28.dp
@@ -303,7 +312,7 @@ private fun Shelves(
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
             items(items, key = { it.key }) { item ->
                 when (item) {
-                    is ShelfItem.Header -> GroupPlaque(item.group, item.group.key in collapsed) { onToggle(item.group.key) }
+                    is ShelfItem.Header -> GroupPlaque(item.group, item.group.key in collapsed, { plaqueExtra(item.group) }) { onToggle(item.group.key) }
                     is ShelfItem.Row -> ShelfRow(item.games, boxHeight, sidePad, gap, focusedId, onFocus, onOpen, onPlay, onFavorite, onAspect)
                 }
             }
@@ -313,7 +322,7 @@ private fun Shelves(
 }
 
 @Composable
-private fun GroupPlaque(group: ShelfGroup, isCollapsed: Boolean, onToggle: () -> Unit) {
+private fun GroupPlaque(group: ShelfGroup, isCollapsed: Boolean, extra: @Composable () -> Unit = {}, onToggle: () -> Unit) {
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val focusedPlaque by interaction.collectIsFocusedAsState()
     Row(Modifier.fillMaxWidth().padding(start = 28.dp, top = 14.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -322,14 +331,15 @@ private fun GroupPlaque(group: ShelfGroup, isCollapsed: Boolean, onToggle: () ->
             Modifier
                 .clip(RoundedCornerShape(4.dp))
                 .clickable(interactionSource = interaction, indication = null, onClick = onToggle)
-                .background(Brush.verticalGradient(listOf(Color(0xFFE9C46A), Color(0xFFB08436))), RoundedCornerShape(4.dp))
-                .border(if (focusedPlaque) 3.dp else 1.dp, if (focusedPlaque) Color.White else Color(0xFF6E4F1E), RoundedCornerShape(4.dp))
+                .background(Brush.verticalGradient(ShelfTheme.current.plaque), RoundedCornerShape(4.dp))
+                .border(if (focusedPlaque) 3.dp else 1.dp, if (focusedPlaque) Color.White else ShelfTheme.current.plaqueBorder, RoundedCornerShape(4.dp))
                 .padding(horizontal = 12.dp, vertical = 3.dp),
         ) {
-            Text((if (isCollapsed) "▸ " else "▾ ") + group.title, color = Color(0xFF2B1A08), fontWeight = FontWeight.Bold, fontSize = 14.sp, fontFamily = DisplayFont)
+            Text((if (isCollapsed) "▸ " else "▾ ") + group.title, color = ShelfTheme.current.plaqueText, fontWeight = FontWeight.Bold, fontSize = 14.sp, fontFamily = DisplayFont)
         }
         Spacer(Modifier.width(10.dp))
         Text(group.subtitle, color = Color(0xFFBFA98A), fontSize = 11.sp)
+        extra()
     }
 }
 
@@ -350,7 +360,7 @@ private fun ShelfRow(
         Modifier.fillMaxWidth()
             .drawBehind {
                 // Luz cálida que baja desde la tira LED de la balda de arriba.
-                drawRect(Brush.verticalGradient(listOf(Color(0x30FFC680), Color.Transparent), endY = size.height * 0.75f))
+                drawRect(Brush.verticalGradient(listOf(ShelfTheme.current.ledGlow.copy(alpha = ShelfTheme.current.ledGlow.alpha * 0.55f), Color.Transparent), endY = size.height * 0.75f))
             }
             .padding(top = 18.dp),
     ) {
@@ -367,6 +377,8 @@ private fun ShelfRow(
                 Box {
                     GameBox(
                         g, boxHeight * g.console.case.heightScale,
+                        showStatus = !g.isWish && LocalShowStatus.current,
+                        overlay = LocalPriceTags.current[g.id]?.let { w -> { PriceBand(w, Modifier.align(Alignment.BottomCenter)) } },
                         lifted = isFocused || selected,
                         onCoverAspect = { onAspect(g, it) },
                         modifier = Modifier
@@ -386,7 +398,7 @@ private fun ShelfRow(
                             .combinedClickable(
                                 interactionSource = remember { MutableInteractionSource() }, indication = null,
                                 // Mantener pulsada una caja empieza la selección de varias.
-                                onLongClick = { if (!sel.active) sel.start(g) else sel.toggle(g) },
+                                onLongClick = { if (g.isWish) Unit else if (!sel.active) sel.start(g) else sel.toggle(g) },
                             ) { onFocus(g); if (sel.active) sel.toggle(g) else onOpen(g) },
                     )
                     if (selected) Text(
@@ -401,39 +413,49 @@ private fun ShelfRow(
     }
 }
 
-/** Balda de madera: superficie, canto con veta, tira de luz LED cálida debajo y su resplandor. */
+/** Balda: superficie, canto con veta, tira de luz LED debajo y su resplandor. Colores del tema de vitrina. */
 @Composable
-private fun WoodPlank() {
-    Canvas(Modifier.fillMaxWidth().height(34.dp)) {
-        val top = 9.dp.toPx()
-        val front = 15.dp.toPx()
+fun WoodPlank(theme: ShelfTheme = ShelfTheme.current, modifier: Modifier = Modifier.fillMaxWidth().height(34.dp)) {
+    Canvas(modifier) {
+        val top = size.height * (9f / 34f)
+        val front = size.height * (15f / 34f)
         val w = size.width
         // Superficie (vista desde arriba)
-        drawRect(Brush.verticalGradient(listOf(Color(0xFF4A2C16), Color(0xFF8C5A30)), endY = top), size = Size(w, top))
+        drawRect(Brush.verticalGradient(theme.plankTop, endY = top), size = Size(w, top))
         // Canto frontal
         drawRect(
-            Brush.verticalGradient(listOf(Color(0xFFC08A55), Color(0xFF9A673A), Color(0xFF6E4422)), startY = top, endY = top + front),
+            Brush.verticalGradient(theme.plankFront, startY = top, endY = top + front),
             topLeft = Offset(0f, top), size = Size(w, front),
         )
-        // Veta: líneas finas onduladas
-        for (i in 0 until 5) {
+        // Veta: líneas finas onduladas (el metal lleva rayado recto; el cristal, nada)
+        if (theme.plankGrain.alpha > 0f) for (i in 0 until 5) {
             val y0 = top + front * (0.18f + i * 0.16f)
             var x = 0f
             val step = 40f
+            val wave = if (theme.panel == PanelStyle.BRUSHED) 0f else 1.2f
             while (x < w) {
-                val dy = kotlin.math.sin((x + i * 57) / 90f) * 1.2f
-                drawLine(Color(0x1F2A1408), Offset(x, y0 + dy), Offset(x + step, y0 + kotlin.math.sin((x + step + i * 57) / 90f) * 1.2f), 1f)
+                val dy = kotlin.math.sin((x + i * 57) / 90f) * wave
+                drawLine(theme.plankGrain, Offset(x, y0 + dy), Offset(x + step, y0 + kotlin.math.sin((x + step + i * 57) / 90f) * wave), 1f)
                 x += step
             }
         }
-        drawLine(Color(0x66FFE2B8), Offset(0f, top), Offset(w, top), strokeWidth = 1.5f)
+        // Cristal: un reflejo en diagonal sobre el canto.
+        if (theme.panel == PanelStyle.GLASS) {
+            var x = w * 0.05f
+            while (x < w) {
+                drawLine(Color(0x55FFFFFF), Offset(x, top + front), Offset(x + front * 0.8f, top), 2f)
+                x += w * 0.23f
+            }
+        }
+        drawLine(theme.plankEdge, Offset(0f, top), Offset(w, top), strokeWidth = 1.5f)
         // Tira LED bajo la balda y su luz cayendo sobre la pared
         val led = top + front
-        drawRect(Color(0xFF3A2414), topLeft = Offset(0f, led), size = Size(w, 2.dp.toPx()))
-        drawLine(Color(0xCCFFD9A0), Offset(w * 0.04f, led + 1.dp.toPx()), Offset(w * 0.96f, led + 1.dp.toPx()), strokeWidth = 1.2.dp.toPx())
+        val ledH = size.height * (2f / 34f)
+        drawRect(theme.ledBase, topLeft = Offset(0f, led), size = Size(w, ledH))
+        drawLine(theme.led, Offset(w * 0.04f, led + ledH / 2), Offset(w * 0.96f, led + ledH / 2), strokeWidth = ledH * 0.6f)
         drawRect(
-            Brush.verticalGradient(listOf(Color(0x55FFC680), Color.Transparent), startY = led + 2.dp.toPx(), endY = size.height),
-            topLeft = Offset(0f, led + 2.dp.toPx()), size = Size(w, size.height - led - 2.dp.toPx()),
+            Brush.verticalGradient(listOf(theme.ledGlow, Color.Transparent), startY = led + ledH, endY = size.height),
+            topLeft = Offset(0f, led + ledH), size = Size(w, size.height - led - ledH),
         )
     }
 }
@@ -476,55 +498,112 @@ private fun EmptyRoom(hasGames: Boolean, onOpenSettings: () -> Unit) {
 }
 
 /**
- * Fondo de vitrina: panel trasero de tablones verticales de nogal con veta, juntas entre tablones
- * y una luz cálida desde arriba. Se usa en todas las pantallas.
+ * Fondo de vitrina con el tema elegido: tablones de madera con veta, chapa de metal cepillado,
+ * cristal con reflejos o el panel perforado de una tienda retro; con luz desde arriba y viñeta.
+ * Se usa en todas las pantallas.
  */
-fun Modifier.roomBackground(): Modifier = this
-    .background(Brush.verticalGradient(listOf(Color(0xFF3B2516), Color(0xFF2A1A0F), Color(0xFF1B110A))))
-    .drawBehind {
-        val plank = 132.dp.toPx()
-        val h = size.height
-        var x = 0f
-        var i = 0
-        while (x < size.width) {
-            // Cada tablón con un tono ligeramente distinto
-            val tint = when (i % 3) { 0 -> Color(0x0FFFFFFF); 1 -> Color(0x12000000); else -> Color(0x06FFD0A0) }
-            drawRect(tint, topLeft = Offset(x, 0f), size = Size(plank, h))
-            // Veta vertical ondulada
-            for (g in 0 until 7) {
-                val gx = x + plank * (0.1f + g * 0.13f) + ((i * 31 + g * 17) % 9)
-                var y = 0f
-                val step = 60f
-                while (y < h) {
-                    val dx1 = kotlin.math.sin((y + g * 40 + i * 70) / 140f) * 3f
-                    val dx2 = kotlin.math.sin((y + step + g * 40 + i * 70) / 140f) * 3f
-                    drawLine(Color(if (g % 2 == 0) 0x14000000 else 0x0AFFE0B0), Offset(gx + dx1, y), Offset(gx + dx2, y + step), 1.2f)
-                    y += step
-                }
-            }
-            // Junta entre tablones
-            drawLine(Color(0x66000000), Offset(x, 0f), Offset(x, h), 2.dp.toPx())
-            drawLine(Color(0x14FFFFFF), Offset(x + 2.dp.toPx(), 0f), Offset(x + 2.dp.toPx(), h), 1f)
-            x += plank; i++
-        }
-        // Luz cálida desde arriba y viñeta en los bordes
-        drawRect(Brush.radialGradient(listOf(Color(0x33FFC67A), Color.Transparent),
-            center = Offset(size.width / 2, 0f), radius = size.width * 0.75f))
-        drawRect(Brush.horizontalGradient(
-            0f to Color(0x66000000), 0.08f to Color.Transparent, 0.92f to Color.Transparent, 1f to Color(0x66000000)))
-    }
+fun Modifier.roomBackground(theme: ShelfTheme = ShelfTheme.current): Modifier = this
+    .background(Brush.verticalGradient(theme.wall))
+    .drawBehind { drawRoom(theme) }
 
-/** Laterales de madera de la vitrina, fijos a los lados de la pantalla. */
+fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRoom(theme: ShelfTheme) {
+    val h = size.height
+    val unit = 1.dp.toPx()
+    when (theme.panel) {
+        PanelStyle.PLANKS -> {
+            val plank = 132 * unit
+            var x = 0f
+            var i = 0
+            while (x < size.width) {
+                // Cada tablón con un tono ligeramente distinto
+                val tint = when (i % 3) { 0 -> Color(0x0FFFFFFF); 1 -> Color(0x12000000); else -> Color(0x06FFD0A0) }
+                drawRect(tint, topLeft = Offset(x, 0f), size = Size(plank, h))
+                // Veta vertical ondulada
+                for (g in 0 until 7) {
+                    val gx = x + plank * (0.1f + g * 0.13f) + ((i * 31 + g * 17) % 9)
+                    var y = 0f
+                    val step = 60f
+                    while (y < h) {
+                        val dx1 = kotlin.math.sin((y + g * 40 + i * 70) / 140f) * 3f
+                        val dx2 = kotlin.math.sin((y + step + g * 40 + i * 70) / 140f) * 3f
+                        drawLine(if (g % 2 == 0) theme.grainDark else theme.grainLight, Offset(gx + dx1, y), Offset(gx + dx2, y + step), 1.2f)
+                        y += step
+                    }
+                }
+                // Junta entre tablones
+                drawLine(theme.joint, Offset(x, 0f), Offset(x, h), 2 * unit)
+                drawLine(Color(0x14FFFFFF), Offset(x + 2 * unit, 0f), Offset(x + 2 * unit, h), 1f)
+                x += plank; i++
+            }
+        }
+        PanelStyle.BRUSHED -> {
+            // Chapa cepillada: rayas horizontales finas y paneles con remaches.
+            var y = 0f
+            var k = 0
+            while (y < h) {
+                drawLine(if (k % 3 == 0) theme.grainLight else theme.grainDark, Offset(0f, y), Offset(size.width, y), 1f)
+                y += 3 * unit + (k * 7 % 5); k++
+            }
+            val panel = 220 * unit
+            var x = 0f
+            while (x < size.width) {
+                drawLine(theme.joint, Offset(x, 0f), Offset(x, h), 2 * unit)
+                drawLine(Color(0x22FFFFFF), Offset(x + 2 * unit, 0f), Offset(x + 2 * unit, h), 1f)
+                var ry = 40 * unit
+                while (ry < h) {
+                    drawCircle(Color(0x55000000), 3 * unit, Offset(x + 12 * unit, ry + unit))
+                    drawCircle(Color(0x66D8DEE4), 2.2f * unit, Offset(x + 12 * unit, ry))
+                    ry += 160 * unit
+                }
+                x += panel
+            }
+        }
+        PanelStyle.GLASS -> {
+            // Cristal oscuro con reflejos en diagonal.
+            var x = -h
+            var k = 0
+            while (x < size.width) {
+                val wdt = if (k % 3 == 0) 26 * unit else 8 * unit
+                drawLine(Color(if (k % 3 == 0) 0x0CFFFFFF else 0x08BFE6FF), Offset(x, h), Offset(x + h * 0.6f, 0f), wdt)
+                x += 170 * unit; k++
+            }
+            val panel = 300 * unit
+            var px = 0f
+            while (px < size.width) { drawLine(theme.joint, Offset(px, 0f), Offset(px, h), 1.5f * unit); px += panel }
+        }
+        PanelStyle.PEGBOARD -> {
+            // Panel perforado de tienda de videojuegos de los 90.
+            val step = 22 * unit
+            var y = step / 2
+            while (y < h) {
+                var x = step / 2
+                while (x < size.width) {
+                    drawCircle(theme.grainDark, 2.6f * unit, Offset(x, y))
+                    drawCircle(theme.grainLight, 2.6f * unit, Offset(x + 0.8f * unit, y + 0.8f * unit))
+                    x += step
+                }
+                y += step
+            }
+        }
+    }
+    // Luz desde arriba y viñeta en los bordes
+    drawRect(Brush.radialGradient(listOf(theme.topLight, Color.Transparent),
+        center = Offset(size.width / 2, 0f), radius = size.width * 0.75f))
+    drawRect(Brush.horizontalGradient(
+        0f to Color(0x66000000), 0.08f to Color.Transparent, 0.92f to Color.Transparent, 1f to Color(0x66000000)))
+}
+
+/** Laterales del mueble (con los colores del tema), fijos a los lados de la pantalla. */
 @Composable
-fun CabinetSides(modifier: Modifier = Modifier) {
+fun CabinetSides(modifier: Modifier = Modifier, theme: ShelfTheme = ShelfTheme.current) {
     Canvas(modifier.fillMaxSize()) {
         val w = 14.dp.toPx()
-        val wood = Brush.horizontalGradient(listOf(Color(0xFF5A3720), Color(0xFF8C5A32), Color(0xFF5A3720)))
+        val wood = Brush.horizontalGradient(listOf(theme.sideOuter, theme.sideInner, theme.sideOuter), endX = w)
         drawRect(wood, size = Size(w, size.height))
         drawRect(Brush.horizontalGradient(listOf(Color(0x66000000), Color.Transparent), startX = w, endX = w + 10.dp.toPx()),
             topLeft = Offset(w, 0f), size = Size(10.dp.toPx(), size.height))
         val rx = size.width - w
-        drawRect(Brush.horizontalGradient(listOf(Color(0xFF5A3720), Color(0xFF8C5A32), Color(0xFF5A3720)), startX = rx, endX = size.width),
+        drawRect(Brush.horizontalGradient(listOf(theme.sideOuter, theme.sideInner, theme.sideOuter), startX = rx, endX = size.width),
             topLeft = Offset(rx, 0f), size = Size(w, size.height))
         drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color(0x66000000)), startX = rx - 10.dp.toPx(), endX = rx),
             topLeft = Offset(rx - 10.dp.toPx(), 0f), size = Size(10.dp.toPx(), size.height))
@@ -604,4 +683,51 @@ fun CollectionNameDialog(initial: String = "", onDismiss: () -> Unit, onSave: (S
         confirmButton = { androidx.compose.material3.TextButton(onClick = { onSave(name) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.save)) } },
         dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+/** Precios de la lista de deseos por id de caja (ver LibraryViewModel.wishPrices). */
+val LocalPriceTags = androidx.compose.runtime.staticCompositionLocalOf<Map<String, com.repisa.app.sources.WishItem>> { emptyMap() }
+
+/**
+ * Franja de precio sobre la carátula de la lista de deseos: negra, de lado a lado, con el precio en blanco.
+ * De oferta: el precio de antes tachado, el descuento en verde y el precio nuevo.
+ */
+@Composable
+private fun PriceBand(w: com.repisa.app.sources.WishItem, modifier: Modifier = Modifier) {
+    Column(
+        modifier.fillMaxWidth().background(Color(0xE6000000)).padding(horizontal = 3.dp, vertical = 3.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (w.discountPct > 0) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("−${w.discountPct}%", color = Color(0xFF0E2A12), fontSize = 10.sp, fontWeight = FontWeight.Black, maxLines = 1,
+                    modifier = Modifier.background(Color(0xFFA4E86A), RoundedCornerShape(3.dp)).padding(horizontal = 3.dp))
+                w.originalPrice?.let {
+                    Text(it, color = Color(0xFFAAAAAA), fontSize = 10.sp, maxLines = 1,
+                        style = TextStyle(textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough))
+                }
+            }
+            Text(w.price.orEmpty(), color = Color(0xFFBEEE62), fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        } else {
+            Text(w.price ?: L10n.s(R.string.wish_no_price), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        }
+    }
+}
+
+/** Junto al nombre de la repisa de la lista de deseos: ordenar y volver a consultar los precios. */
+@Composable
+private fun WishlistControls(vm: LibraryViewModel) {
+    val sort by vm.wishSort.collectAsState()
+    val refreshing by vm.wishRefreshing.collectAsState()
+    val options = listOf(
+        "STEAM" to R.string.wish_sort_steam, "NAME" to R.string.wish_sort_name, "PRICE_DESC" to R.string.wish_sort_price_desc,
+        "PRICE_ASC" to R.string.wish_sort_price_asc, "DISCOUNT" to R.string.wish_sort_discount,
+    )
+    Spacer(Modifier.width(8.dp))
+    Picker(stringResource(R.string.sort_label), stringResource(options.firstOrNull { it.first == sort }?.second ?: R.string.wish_sort_steam),
+        options.map { stringResource(it.second) }) { vm.setWishSort(options[it].first) }
+    TextButton(onClick = { vm.refreshWishlistNow() }, enabled = !refreshing) {
+        Text(if (refreshing) "⏳ " + stringResource(R.string.wish_refreshing) else "🔄 " + stringResource(R.string.wish_refresh_prices),
+            color = Color(0xFFE8D5B5), fontSize = 12.sp)
+    }
 }

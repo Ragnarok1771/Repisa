@@ -169,10 +169,20 @@ class Launcher(private val context: Context, private val settings: Settings) {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
     }
 
+    private val STEAM_APP = "com.valvesoftware.android.steam.community"
+
     fun openUrl(url: String) {
         runCatching {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
+    }
+
+    /** Página de la tienda de Steam: en la app de Steam si está instalada; si no, en el navegador. */
+    fun openSteamStore(url: String) {
+        val inApp = runCatching {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).setPackage(STEAM_APP).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }.isSuccess
+        if (!inApp) openUrl(url)
     }
 
     /** Apps instaladas que se pueden elegir como emulador. */

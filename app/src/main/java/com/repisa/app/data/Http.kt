@@ -40,6 +40,18 @@ object Http {
 
     suspend fun getJson(url: String): JsonElement = getJson(Request.Builder().url(url).build())
 
+    /**
+     * true solo si el servidor responde y dice que no está (404...). Sin conexión o sin respuesta = false:
+     * así una carátula que ya teníamos no se borra por abrir Repisa sin internet.
+     */
+    suspend fun definitelyMissing(url: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            client.newCall(Request.Builder().url(url).head().build()).execute().use { !it.isSuccessful && it.code in 400..499 }
+        } catch (_: IOException) {
+            false
+        }
+    }
+
     /** true si la URL responde 200 (para comprobar si existe una portada). */
     suspend fun exists(url: String): Boolean = withContext(Dispatchers.IO) {
         try {

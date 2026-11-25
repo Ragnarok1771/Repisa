@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -101,9 +102,23 @@ class SecondScreen(private val activity: ComponentActivity, private val vm: Libr
 
 @Composable
 private fun FocusPanel(vm: LibraryViewModel) {
+    // Salvapantallas también abajo (sin hora: esa va arriba), encima del panel para que se oscurezca poco a poco
+    // como el de arriba (antes sustituía al panel y se veía un destello blanco). Tocar aquí también lo quita.
+    val saver by vm.screensaver.collectAsState()
+    Box(Modifier.fillMaxSize().background(Color(0xFF16100C))) {
+        FocusPanelContent(vm)
+        if (saver) Screensaver(vm, onClose = { vm.screensaver.value = false; vm.poke() }, main = false)
+    }
+}
+
+@Composable
+private fun FocusPanelContent(vm: LibraryViewModel) {
     val game by vm.focused.collectAsState()
     val all by vm.displayGames.collectAsState()
-    Box(Modifier.fillMaxSize().roomBackground().padding(20.dp)) {
+    Column(Modifier.fillMaxSize().roomBackground().padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 20.dp)) {
+    // Reloj, red y batería arriba del todo.
+    DeviceStatusBar()
+    Box(Modifier.fillMaxWidth().weight(1f).padding(top = 6.dp)) {
         val g = game
         if (g == null) {
             Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -174,6 +189,7 @@ private fun FocusPanel(vm: LibraryViewModel) {
             }
         }
     }
+}
 }
 
 @Composable

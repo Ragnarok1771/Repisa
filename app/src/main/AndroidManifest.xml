@@ -3,6 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Barra de la pantalla de abajo: saber si hay conexión y cuánta señal de wifi llega. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Aviso cuando baja el precio de un juego de la lista de deseos de Steam (Android lo pregunta). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- La revisión periódica de precios sigue programada tras reiniciar la consola. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Instalar versiones nuevas de Repisa descargadas de GitHub (Android pide confirmación). -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- "Acceso a datos de uso": medir el tiempo real que cada emulador está en pantalla. Lo concede el usuario. -->
@@ -13,6 +20,8 @@
         <!-- GameNative: abre los juegos de Steam instalados. -->
         <package android:name="app.gamenative" />
         <package android:name="app.nativerunner" />
+        <!-- App de Steam: la lista de deseos abre ahí la página del juego si está instalada. -->
+        <package android:name="com.valvesoftware.android.steam.community" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
@@ -72,5 +81,10 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        <!-- Revisión de la lista de deseos cada 6 horas con Repisa cerrada. -->
+        <service
+            android:name=".data.WishlistJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 </manifest>

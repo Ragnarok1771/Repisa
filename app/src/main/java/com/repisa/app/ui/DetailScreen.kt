@@ -41,6 +41,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -154,6 +155,12 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                             "  " + stringResource(R.string.stat_tracked, formatPlaytime(game.trackedMinutes)) else "")
                     Stat(stringResource(R.string.stat_last_played),
                         game.lastPlayed?.let { DateFormat.getDateInstance(DateFormat.LONG).format(Date(it)) } ?: "—")
+                    // Partidas de este juego (las del calendario).
+                    var showSessions by remember { mutableStateOf(false) }
+                    TextButton(onClick = { showSessions = true }, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)) {
+                        Text("📅 " + stringResource(R.string.cal_game_button), color = Color(0xFFFFD27A), fontSize = 13.sp)
+                    }
+                    if (showSessions) GameSessionsDialog(vm, game) { showSessions = false }
                     Stat(stringResource(R.string.stat_studio), game.developer ?: "—")
                     game.publisher?.takeIf { it != game.developer }?.let { Stat(stringResource(R.string.stat_publisher), it) }
                     Stat(stringResource(R.string.stat_year), game.releaseYear?.toString() ?: "—")

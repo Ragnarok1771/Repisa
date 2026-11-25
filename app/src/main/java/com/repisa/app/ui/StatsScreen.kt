@@ -62,6 +62,11 @@ fun StatsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White) }
                 Text(stringResource(R.string.stats_title), color = Color(0xFFFFD27A), fontSize = 26.sp, fontWeight = FontWeight.Bold, fontFamily = DisplayFont)
             }
+            // Calendario de partidas y resumen del año.
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                androidx.compose.material3.Button(onClick = { vm.calendar.value = false }) { Text("📅 " + stringResource(R.string.cal_title)) }
+                androidx.compose.material3.Button(onClick = { vm.wrapped.value = false }) { Text("✨ " + stringResource(R.string.wrapped_name)) }
+            }
             // Cifras principales
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Tile(L10n.games(all.size), stringResource(R.string.stats_in_library))

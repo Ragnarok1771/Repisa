@@ -72,7 +72,7 @@ class Metadata(private val settings: Settings, private val covers: CoverSearch, 
         if (needsFacts(g)) out = facts(out)
         if (g.source == Source.STEAM && !g.metaFetched) {
             // Si no hay carátula vertical, que la busque el buscador (abajo) en vez de estirar la cabecera.
-            if (out.coverUrl != null && !Http.exists(out.coverUrl!!)) out = out.copy(coverUrl = null)
+            if (out.coverUrl != null && Http.definitelyMissing(out.coverUrl!!)) out = out.copy(coverUrl = null)
         }
         if (g.source == Source.EMULATOR && out.coverUrl == null && settings.useLibretroCovers) {
             libretroCover(out)?.let { out = out.copy(coverUrl = it) }

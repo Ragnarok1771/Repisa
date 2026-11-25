@@ -2,6 +2,53 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.15.1]
+
+**🎨 Temas** (Ajustes → Temas, menú nuevo) — la vitrina ya no es solo de nogal: **madera clara**, **madera oscura**,
+**metal cepillado**, **cristal** y **tienda retro** (pared perforada, baldas rojas y luz neón). Y un tema
+**personalizado**: eliges la textura (madera, metal, cristal o panel perforado) y los colores de la pared, las baldas
+y la luz. Cambia todas las pantallas, también la de abajo.
+
+**📅 Calendario de partidas** (Estadísticas)
+- El mes en una cuadrícula: cada día más dorado cuanto más jugaste; al elegir un día salen sus juegos con la carátula,
+  la hora y lo que duró cada partida.
+- Repisa anota ahora cada partida: las que abres desde Repisa y las horas nuevas que trae la sincronización (jugado en
+  el PC, en Steam…). De antes, sale **el último día que jugaste cada juego** según Steam, Epic o el emulador.
+- Con el mando: **L1 / R1** cambian de mes y el **joystick derecho** desplaza la lista del día.
+- En la ficha de cada juego, «📅 Partidas» muestra su historial.
+
+**✨ Tu año en Repisa** (Estadísticas) — el resumen del año en seis pantallas animadas, con música: horas jugadas, tu
+top 5 en la balda, mes a mes, género y sistema favoritos, juegos terminados y tu racha más larga. La última es una
+tarjeta que se puede **guardar en la galería** o **compartir**. Se pasa sola, tocando o con A / L1 / R1; Y silencia la
+música.
+
+**⭐ Lista de deseos de Steam**
+- Una repisa propia al final con tu lista de deseos: **precio en tu moneda** (el de la cuenta de Steam) en una franja
+  sobre la carátula; si está de oferta, el descuento, el precio de antes tachado y el nuevo. Al tocar una caja se abre
+  su página en la app de Steam (si la tienes) o en el navegador.
+- **Ordenar** por orden de Steam, nombre, precio (de mayor a menor o al revés) o mayor descuento, y
+  «🔄 Actualizar precios» en la misma línea.
+- **Aviso cuando baja un precio**: Repisa lo revisa al sincronizar y también **cada 6 horas con Repisa cerrada**
+  (Ajustes → Pantalla → Lista de deseos). Una notificación por cada juego que baje.
+
+**🌙 Salvapantallas** — tras un rato sin tocar nada, tus carátulas flotan despacio por la vitrina a oscuras, en las dos
+pantallas; arriba, con la hora y la batería. Nunca, 3, 5, 10, 15 o 20 minutos, o el tiempo que quieras con la barra
+(Ajustes → Pantalla), y botón para probarlo.
+
+**Pantalla de abajo** — arriba del todo, un **reloj de 24 horas**, la **cobertura de la red** (tres barritas; en
+amarillo si hay wifi sin internet, tachadas sin conexión) y la **batería** con su porcentaje (verde, amarilla desde el
+50 %, roja desde el 20 %, y con el rayito al cargar).
+
+**Más cómodo con el mando**
+- Ajustes recuerda dónde estabas al volver de un submenú (y el foco vuelve a ese submenú).
+- **RetroAchievements** se vincula como Steam y Epic: un botón que abre la ventana para el usuario y la clave; ya
+  vinculado, «Sincronizar» y «Desvincular».
+- Los campos de texto de Ajustes ya no abren el teclado al pasar por encima con el mando: solo al pulsar A.
+
+**Arreglos**
+- Las carátulas ya no se pierden si Repisa las revisa sin conexión (solo se quita una si la tienda dice que no existe).
+- La copia de seguridad incluye ahora el registro de partidas y el tema elegido.
+
 ## [0.15.0]
 
 **▶ Animación al jugar** — al pulsar «Jugar», la caja del juego se abre, el cartucho, el disco o el disquete vuela

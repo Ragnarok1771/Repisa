@@ -199,4 +199,27 @@ class Settings(context: Context) {
     var pendingSessionStart: Long
         get() = prefs.getLong("session_start", 0)
         set(v) = prefs.edit { putLong("session_start", v) }
+
+    // --- Temas, salvapantallas y lista de deseos ---
+    /** Tema de vitrina ([com.repisa.app.ui.ShelfTheme]). */
+    var shelfTheme: String? get() = str("shelf_theme"); set(v) = put("shelf_theme", v)
+    /** Tema personalizado: «textura|pared|baldas|luz» (colores ARGB). */
+    var customTheme: String? get() = str("custom_theme"); set(v) = put("custom_theme", v)
+    /** Minutos sin tocar nada hasta que salta el salvapantallas (0 = nunca). */
+    var screensaverMinutes: Int
+        get() = prefs.getInt("screensaver_min", 5)
+        set(v) = prefs.edit { putInt("screensaver_min", v) }
+    /** Repisa «Lista de deseos» de Steam y avisos de bajada de precio. */
+    var wishlistShelf: Boolean
+        get() = prefs.getBoolean("wishlist_shelf", true)
+        set(v) = prefs.edit { putBoolean("wishlist_shelf", v) }
+    var wishlistAlerts: Boolean
+        get() = prefs.getBoolean("wishlist_alerts", true)
+        set(v) = prefs.edit { putBoolean("wishlist_alerts", v) }
+    /** Revisar los precios también con Repisa cerrada (cada 6 horas). */
+    var wishlistBackground: Boolean
+        get() = prefs.getBoolean("wishlist_background", true)
+        set(v) = prefs.edit { putBoolean("wishlist_background", v) }
+    /** Orden de la repisa de la lista de deseos: STEAM, NAME, PRICE_DESC, PRICE_ASC, DISCOUNT. */
+    var wishlistSort: String get() = str("wishlist_sort") ?: "STEAM"; set(v) = put("wishlist_sort", v)
 }
