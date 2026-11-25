@@ -109,6 +109,18 @@ fun RandomPicker(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (Game) -> Un
     val slot = 132.dp
     val slotPx = with(density) { slot.toPx() }
 
+    // «Tic» cada vez que una carátula pasa por la marca del centro (rápido al principio, cada vez más lento).
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val tick = remember { TickSound(context) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { tick.release() } }
+    androidx.compose.runtime.LaunchedEffect(slotPx) {
+        var last = (offset.value / slotPx).toInt()
+        androidx.compose.runtime.snapshotFlow { (offset.value / slotPx).toInt() }.collect { i ->
+            if (i != last && rolling) tick.play()
+            last = i
+        }
+    }
+
     fun roll() {
         val w = pick() ?: return
         winner = null
@@ -127,6 +139,7 @@ fun RandomPicker(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (Game) -> Un
             offset.animateTo(winnerAt * slotPx, tween(350))
             winner = w
             rolling = false
+            tick.playWin() // sonido de premio al salir el juego
             vm.focused.value = w // la pantalla de abajo muestra el juego elegido
         }
     }
@@ -221,4 +234,26 @@ fun RandomPicker(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (Game) -> Un
             }
         }
     }
+}
+
+/** Sonido corto de la ruleta (propio de Repisa). Como mucho uno cada 25 ms para que no se amontonen. */
+private class TickSound(context: android.content.Context) {
+    private val pool = android.media.SoundPool.Builder().setMaxStreams(3).setAudioAttributes(
+        android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_GAME)
+            .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build(),
+    ).build()
+    private val id = runCatching { pool.load(context, R.raw.anim_tick, 1) }.getOrDefault(0)
+    private val win = runCatching { pool.load(context, R.raw.anim_win, 1) }.getOrDefault(0)
+
+    fun playWin() { if (win != 0) pool.play(win, 0.8f, 0.8f, 2, 0, 1f) }
+    private var lastAt = 0L
+
+    fun play() {
+        val now = android.os.SystemClock.uptimeMillis()
+        if (id == 0 || now - lastAt < 25) return
+        lastAt = now
+        pool.play(id, 0.55f, 0.55f, 1, 0, 1f)
+    }
+
+    fun release() = pool.release()
 }

@@ -364,6 +364,14 @@
     <string name="collection_no_games">No games yet: use “Add games”.</string>
     <string name="collection_pick_title">Games in “%1$s”</string>
     <string name="msg_removed_collection">%1$d game(s) removed from “%2$s”</string>
+    <string name="launch_anim">Animation when playing</string>
+    <string name="launch_anim_hint">The case opens, the cartridge or disc goes into its console and the screen turns on. Tap or press any button to skip it.</string>
+    <string name="launch_anim_always">Always</string>
+    <string name="launch_anim_daily">First time each day</string>
+    <string name="launch_anim_never">Never</string>
+    <string name="launch_anim_preview_all">See the animations</string>
+    <string name="launch_anim_others">Others</string>
+    <string name="launch_anim_preview">See it:</string>
     <string name="status_order">Order of the shelves by status</string>
     <string name="status_order_hint">Used when grouping by status. Move each one with ▲ ▼.</string>
     <string name="status_order_reset">Restore order</string>

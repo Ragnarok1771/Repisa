@@ -59,6 +59,14 @@ class MainActivity : ComponentActivity() {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         secondScreen = SecondScreen(this, vm)
+        // Los juegos se abren desde esta pantalla y sin transición (Android deslizaba Repisa y el juego de lado).
+        vm.launcher.starter = { intent, options ->
+            startActivity(intent, options)
+            @Suppress("DEPRECATION") overridePendingTransition(0, 0)
+            if (android.os.Build.VERSION.SDK_INT >= 34) overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, 0)
+        }
+        vm.releaseSecondScreen = { secondScreen.stop() }
+        debugAnimation(intent)
         setContent {
             com.repisa.app.i18n.Localized {
                 RepisaTheme {
@@ -76,6 +84,25 @@ class MainActivity : ComponentActivity() {
     override fun onStart() { super.onStart(); secondScreen.start() }
     override fun onStop() { secondScreen.stop(); super.onStop() }
     override fun onResume() { super.onResume(); vm.onResume() }
+
+    override fun onDestroy() {
+        vm.launcher.starter = null
+        vm.releaseSecondScreen = null
+        super.onDestroy()
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        debugAnimation(intent)
+    }
+
+    /** Solo en la versión de pruebas: congelar la animación al jugar en un momento (para revisar sus fotogramas). */
+    private fun debugAnimation(intent: android.content.Intent?) {
+        if (!BuildConfig.DEBUG || intent == null) return
+        val kind = intent.getStringExtra("anim_kind")?.let { runCatching { com.repisa.app.ui.LaunchKind.valueOf(it) }.getOrNull() } ?: return
+        vm.previewLaunch(kind, intent.getStringExtra("anim_console"))
+        com.repisa.app.ui.LaunchDebug.freezeAt = intent.getFloatExtra("anim_at", -1f).takeIf { it >= 0f }
+    }
 
     /**
      * Botones globales del mando. Se tratan aquí (y no en Compose) para que funcionen
@@ -126,6 +153,11 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
     val update by vm.update.collectAsState()
     val updateProgress by vm.updateProgress.collectAsState()
 
+    // En Ajustes, estadísticas, logros o calificaciones no hay carátula seleccionada: la pantalla de abajo muestra el resumen.
+    LaunchedEffect(inSettings, inStats, inAch, inRated) {
+        if (inSettings || inStats || inAch || inRated) vm.focused.value = null
+    }
+
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); vm.message.value = null }
     }
@@ -149,6 +181,11 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
 
     Box(
         Modifier.fillMaxSize().background(Color(0xFF16100C)).safeDrawingPadding().onPreviewKeyEvent { e ->
+            // Durante la animación al jugar, cualquier botón la salta (y no llega a lo que hay debajo).
+            if (vm.launching.value != null) {
+                if (e.type == KeyEventType.KeyUp) vm.finishLaunchAnimation()
+                return@onPreviewKeyEvent true
+            }
             if (e.type != KeyEventType.KeyUp) return@onPreviewKeyEvent false
             when (e.key.nativeKeyCode) {
                 KeyEvent.KEYCODE_BUTTON_B -> when {
@@ -184,6 +221,11 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
         val onboarding by vm.onboarding.collectAsState()
         if (onboarding && !inSettings) com.repisa.app.ui.OnboardingScreen(vm, openSettings = { vm.inSettings.value = true },
             onDone = { vm.finishOnboarding() })
+        val launching by vm.launching.collectAsState()
+        launching?.let { r ->
+            androidx.activity.compose.BackHandler { vm.finishLaunchAnimation() }
+            com.repisa.app.ui.LaunchAnimation(r.game, r.kind, onFinish = { vm.finishLaunchAnimation() })
+        }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp))
         update?.let { r -> com.repisa.app.ui.UpdateDialog(r, updateProgress, onUpdate = { vm.installUpdate() }) }
     }

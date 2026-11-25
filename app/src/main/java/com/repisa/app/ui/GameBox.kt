@@ -47,7 +47,17 @@ import com.repisa.app.model.playStatus
 import kotlin.math.abs
 
 /** Proporción (ancho/alto) del frontal: la de la carátula real si ya se conoce, si no la típica del sistema. */
-fun frontAspect(game: Game): Float = game.coverAspect?.coerceIn(0.5f, 1.5f) ?: game.console.case.aspect
+fun frontAspect(game: Game): Float {
+    val case = game.console.case.aspect
+    val cover = game.coverAspect ?: return case
+    // Consolas en las que todas las cajas tienen la misma forma (Switch, 3DS, Wii, PS2...): la caja la mantiene aunque
+    // la imagen venga cuadrada o un poco más ancha (p. ej. las de Wikipedia); la imagen se recorta para llenarla.
+    if (game.consoleId in FIXED_CASE && kotlin.math.abs(cover - case) / case > 0.06f) return case
+    return cover.coerceIn(0.5f, 1.5f)
+}
+
+/** Sistemas con estuche de tamaño único. */
+private val FIXED_CASE = setOf("switch", "switch2", "3ds", "nds", "wii", "wiiu", "gc", "ps2", "ps3", "ps4", "ps5", "psp", "psvita", "xbox", "xbox360")
 
 /** Tamaño total (frontal + lateral 3D) que ocupa una caja de altura [height]. */
 fun boxSize(game: Game, height: Dp): Pair<Dp, Dp> {

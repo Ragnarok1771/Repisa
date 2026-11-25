@@ -363,6 +363,14 @@
     <string name="collection_no_games">Aún no tiene juegos: usa «Añadir juegos».</string>
     <string name="collection_pick_title">Juegos de «%1$s»</string>
     <string name="msg_removed_collection">%1$d juego(s) quitados de «%2$s»</string>
+    <string name="launch_anim">Animación al jugar</string>
+    <string name="launch_anim_hint">La caja se abre, el cartucho o el disco entra en su consola y se enciende la pantalla. Toca o pulsa cualquier botón para saltarla.</string>
+    <string name="launch_anim_always">Siempre</string>
+    <string name="launch_anim_daily">La primera vez del día</string>
+    <string name="launch_anim_never">Nunca</string>
+    <string name="launch_anim_preview_all">Ver las animaciones</string>
+    <string name="launch_anim_others">Otras</string>
+    <string name="launch_anim_preview">Verla:</string>
     <string name="status_order">Orden de las repisas por estado</string>
     <string name="status_order_hint">Se usa al agrupar por estado. Mueve cada uno con ▲ ▼.</string>
     <string name="status_order_reset">Restaurar orden</string>

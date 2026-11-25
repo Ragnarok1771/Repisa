@@ -8,6 +8,7 @@ import android.os.Looper
 import android.view.Display
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -111,10 +112,22 @@ private fun FocusPanel(vm: LibraryViewModel) {
                     color = Color(0xFFBFA98A))
                 // Resumen por estado: ⏳ 12 · ▶ 3 · ✓ 40 ...
                 val byStatus = androidx.compose.runtime.remember(all) { all.mapNotNull { it.playStatus }.groupingBy { it }.eachCount() }
-                if (byStatus.isNotEmpty()) Text(
-                    com.repisa.app.model.PlayStatus.entries.filter { it in byStatus }.joinToString("  ·  ") { "${it.icon} ${it.label} ${byStatus[it]}" },
-                    color = Color(0xFFE8D9C0), fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp),
-                )
+                // En dos líneas de tres (la pantalla de abajo de la AYN Thor es casi cuadrada):
+                // Pendiente · Jugando · Terminado / 100 % · Abandonado · No aplica.
+                if (byStatus.isNotEmpty()) Column(Modifier.padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
+                    com.repisa.app.model.PlayStatus.entries.chunked(3).forEach { line ->
+                        androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            line.forEach { st ->
+                                androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(Modifier.size(9.dp).background(Color(st.color), androidx.compose.foundation.shape.CircleShape))
+                                    Text(" ${st.label}: ${byStatus[st] ?: 0}", color = Color(0xFFE8D9C0), fontSize = 13.sp, maxLines = 1)
+                                }
+                            }
+                        }
+                    }
+                }
                 Spacer(Modifier.height(12.dp))
                 val top = androidx.compose.runtime.remember(all) {
                     all.filter { it.playStatus != com.repisa.app.model.PlayStatus.NOT_APPLICABLE }.sortedByDescending { it.totalMinutes }.take(3)

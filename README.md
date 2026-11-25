@@ -38,8 +38,12 @@ para las consolas portátiles Android con doble pantalla.
   la web oficial de Steam (también con el QR de la app de Steam) y **la sesión se renueva sola**: no hay que volver a
   vincular.
 - **Epic Games**: juegos y horas jugadas, iniciando sesión en la web oficial de Epic.
+- **Juegos de PC instalados en la consola**: los de Steam instalados con **GameNative** (accesos `.steamappid` de
+  Steam Shortcut Generator) se abren directamente desde Repisa.
 - **Emuladores**: carpetas de ROMs ordenadas por sistema, **ES-DE**, **RetroArch** (playlists y tiempo de juego) y
   **Cocoon** / Batocera (`gamelist.xml` exportados y copias de seguridad de Cocoon, con su tiempo de juego).
+  Más de 70 sistemas: de la Atari 2600 y la NES a la **Switch 2 (Banana Native)**, PS5 y Xbox 360, pasando por
+  recreativas, ordenadores antiguos (Amstrad, Commodore, Amiga, MSX, Spectrum…) y motores de juego (ScummVM, Doom…).
   Ajustes → Emuladores explica los pasos y muestra qué encontró Repisa.
 - **Lo tuyo no se pierde**: si desvinculas una cuenta o un juego desaparece de su tienda, su estado, tu nota, tus
   notas, colecciones y favoritos quedan guardados y vuelven solos cuando el juego regresa.
@@ -100,6 +104,13 @@ para las consolas portátiles Android con doble pantalla.
 - Escala de 0 a 5, de 0 a 10 o de 0 a 100, y **estrellas que se llenan en proporción** (95/100 = 4¾ estrellas).
 - *Mis calificaciones*: ordenadas de mayor a menor (o al revés) y filtrables por estrellas.
 
+### ▶ Animación al jugar
+- Al pulsar «Jugar», la caja se abre y el cartucho, el disco o el disquete **entra en su consola**: cada sistema con
+  su forma y su manera de cargar (cartuchos que se quedan asomando, tapas que se levantan, bandejas, ranuras, portátiles
+  que se abren, la moneda de las recreativas…). La pantalla se enciende y la cámara se acerca hasta abrir el juego.
+- Dibujadas a partir de fotos de referencia, con sonidos propios. Se saltan tocando la pantalla o con cualquier botón,
+  y se pueden ver todas en Ajustes → Pantalla (siempre, la primera vez del día o nunca).
+
 ### Hecha para consolas portátiles
 - **Doble pantalla**: en la AYN Thor, la pantalla de abajo muestra la ficha del juego seleccionado.
 - **Mando**: cruceta para moverte, A ficha, X jugar, Y favorito, B atrás, L1/R1 filtrar por plataforma,
@@ -137,6 +148,7 @@ Las versiones nuevas se instalan encima de la anterior sin perder tu biblioteca 
 | GameTDB | Carátulas de Nintendo | Nada |
 | libretro-thumbnails | Carátulas de consolas clásicas | Nada |
 | SteamGridDB | Carátulas de cualquier juego | Clave gratuita |
+| Wikipedia | Carátulas de juegos muy recientes | Nada |
 | Metacritic | Nota de prensa y de usuarios | Nada |
 | HowLongToBeat | Duración del juego | Nada |
 
@@ -212,7 +224,8 @@ marcas pertenecen a sus dueños.
 (including Family Sharing), **Epic Games** and **emulator** libraries (ROM folders, ES-DE, RetroArch, Cocoon) with real
 cover art, real box sizes per console, up-to-date playtime, Metacritic and HowLongToBeat data, and your own weighted
 ratings with stars. Track each game's status (backlog, playing, finished, 100 %, abandoned, not applicable), make your
-own collections, let the 🎲 roulette pick your next game, see stats and achievements (Steam, RetroAchievements and
+own collections, let the 🎲 roulette pick your next game, watch each console load its cartridge or disc when you press
+Play (70+ systems, from the Atari 2600 to Switch 2 and PS5), see stats and achievements (Steam, RetroAchievements and
 Repisa's own). Built for Android handhelds such as the dual-screen **AYN Thor** (bottom screen shows the selected
 game) and fully playable with a controller. Available in 9 languages.
 

@@ -24,6 +24,8 @@ data class EmuProfile(
     val openOnly: Boolean = false,
     /** RetroArch: se arranca con el core de [RetroCores]. */
     val retroArch: Boolean = false,
+    /** Extras sí/no que necesita el emulador para arrancar el juego directamente. */
+    val boolExtras: Map<String, Boolean> = emptyMap(),
 )
 
 object Emulators {
@@ -37,6 +39,11 @@ object Emulators {
         // Nintendo Switch
         EmuProfile("Eden", listOf("dev.eden.eden_emulator", "dev.legacy.eden_emulator", "dev.eden.eden_nightly", "com.miHoYo.Yuanshen"),
             setOf("switch"), listOf(YUZU_ACT, "dev.eden.eden_emulator.activities.EmulationActivity"), NFC),
+        // Switch 2 (Banana Native y sus variantes): se le pasa la ruta de la carpeta del juego o del .nup en «game».
+        EmuProfile("Banana Native", listOf("dev.bananative.android", "dev.nxnative.android.play", "dev.nxnative.android", "com.swap2native"),
+            setOf("switch2"), listOf("dev.bananative.android.Launch", "dev.nxnative.android.play.Launch", "dev.nxnative.android.Launch",
+                "com.swap2native.Launch", "dev.nxnative.android.MainActivity", "dev.bananative.android.MainActivity", "com.swap2native.MainActivity"),
+            Intent.ACTION_MAIN, pathExtra = "game", boolExtras = mapOf("run" to true)),
         EmuProfile("Citron", listOf("org.citron.citron_emu", "org.citron.emu"), setOf("switch"),
             listOf("org.citron.citron_emu.activities.EmulationActivity", YUZU_ACT), NFC),
         EmuProfile("Sudachi", listOf("org.sudachi.sudachi_emu", "org.sudachi.sudachi_emu.ea"), setOf("switch"),
@@ -54,7 +61,8 @@ object Emulators {
             listOf(CITRA_ACT, "org.citra.emu.ui.EmulationActivity")),
         EmuProfile("Panda3DS", listOf("com.panda3ds.pandroid"), setOf("3ds"), listOf("com.panda3ds.pandroid.app.GameActivity")),
         // Nintendo DS
-        EmuProfile("melonDS", listOf("me.magnum.melonds", "me.magnum.melonds.nightly"), setOf("nds"),
+        // WatermelonDS (melonDS con soporte de dos pantallas) primero; usa el mismo arranque que melonDS.
+        EmuProfile("melonDS", listOf("me.magnum.melondualds", "me.magnum.melondualds.nightly", "me.magnum.melonds", "me.magnum.melonds.nightly"), setOf("nds"),
             listOf("me.magnum.melonds.ui.emulator.EmulatorActivity"), Intent.ACTION_MAIN, uriExtra = "uri"),
         EmuProfile("DraStic", listOf("com.dsemu.drastic"), setOf("nds"),
             listOf("com.dsemu.drastic.DraSticActivity"), Intent.ACTION_MAIN, pathExtra = "GAMEPATH"),

@@ -35,7 +35,7 @@ class Settings(context: Context) {
         val SECRET_KEYS = setOf("steam_key", "steam_refresh", "epic_access", "epic_refresh", "sgdb_key", "ra_api_key")
         /** Carpetas: los permisos de Android no sobreviven a reinstalar, así que no se exportan. */
         val DEVICE_KEYS = setOf("rom_folders", "esde_folder", "ra_folder", "cocoon_folder", "session_game", "session_pkg",
-            "session_start", "last_auto_sync", "frontend_report", "cover_pass", "facts_pass", "ach_pass", "last_update_check", "onboarding_step")
+            "session_start", "last_auto_sync", "frontend_report", "cover_pass", "facts_pass", "ach_pass", "last_update_check", "onboarding_step", "steam_installed")
     }
 
     val prefsForBackup: android.content.SharedPreferences get() = prefs
@@ -114,6 +114,16 @@ class Settings(context: Context) {
     var collapsedShelves: Set<String>
         get() = prefs.getStringSet("collapsed_shelves", emptySet()) ?: emptySet()
         set(v) = prefs.edit { putStringSet("collapsed_shelves", v) }
+    /**
+     * Juegos de Steam instalados en esta consola (su número de Steam), leídos de los accesos directos `.steamappid`
+     * que crea Steam Shortcut Generator en la carpeta de ROMs. Se abren con GameNative.
+     */
+    var steamInstalledIds: Set<String>
+        get() = prefs.getStringSet("steam_installed", emptySet()) ?: emptySet()
+        set(v) = prefs.edit { putStringSet("steam_installed", v) }
+    /** Animación al pulsar «Jugar»: "always" (siempre), "daily" (la primera vez de cada día) o "never". */
+    var launchAnimation: String get() = str("launch_animation") ?: "always"; set(v) = put("launch_animation", v)
+    var lastLaunchAnimationDay: String? get() = str("launch_animation_day"); set(v) = put("launch_animation_day", v)
     /** Cinta de estado en la esquina de las cajas. */
     var showStatusOnBoxes: Boolean
         get() = prefs.getBoolean("status_on_boxes", true)

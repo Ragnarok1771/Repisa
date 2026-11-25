@@ -49,6 +49,16 @@ class SafTree(private val context: Context, val treeUri: Uri) {
         return cur
     }
 
+    /** Los primeros [max] bytes de un archivo (para leer cabeceras binarias). */
+    fun readBytes(doc: Doc, max: Int = 4096): ByteArray? = runCatching {
+        context.contentResolver.openInputStream(doc.uri)?.use { input ->
+            val buf = ByteArray(max)
+            var n = 0
+            while (n < max) { val r = input.read(buf, n, max - n); if (r < 0) break; n += r }
+            buf.copyOf(n)
+        }
+    }.getOrNull()
+
     fun readText(doc: Doc): String? = runCatching {
         context.contentResolver.openInputStream(doc.uri)?.bufferedReader()?.use { it.readText() }?.removePrefix("\uFEFF")
     }.getOrNull()

@@ -363,6 +363,14 @@
     <string name="collection_no_games">Pas encore de jeux : utilisez « Ajouter des jeux ».</string>
     <string name="collection_pick_title">Jeux de « %1$s »</string>
     <string name="msg_removed_collection">%1$d jeu(x) retiré(s) de « %2$s »</string>
+    <string name="launch_anim">Animation au lancement</string>
+    <string name="launch_anim_hint">La boîte s\'ouvre, la cartouche ou le disque entre dans sa console et l\'écran s\'allume. Touchez ou appuyez sur un bouton pour passer.</string>
+    <string name="launch_anim_always">Toujours</string>
+    <string name="launch_anim_daily">La première fois du jour</string>
+    <string name="launch_anim_never">Jamais</string>
+    <string name="launch_anim_preview_all">Voir les animations</string>
+    <string name="launch_anim_others">Autres</string>
+    <string name="launch_anim_preview">La voir :</string>
     <string name="status_order">Ordre des étagères par statut</string>
     <string name="status_order_hint">Utilisé pour le regroupement par statut. Déplacez avec ▲ ▼.</string>
     <string name="status_order_reset">Rétablir l\'ordre</string>

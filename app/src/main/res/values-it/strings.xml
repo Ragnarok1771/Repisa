@@ -363,6 +363,14 @@
     <string name="collection_no_games">Ancora nessun gioco: usa «Aggiungi giochi».</string>
     <string name="collection_pick_title">Giochi in «%1$s»</string>
     <string name="msg_removed_collection">%1$d gioco/i tolti da «%2$s»</string>
+    <string name="launch_anim">Animazione all\'avvio</string>
+    <string name="launch_anim_hint">La custodia si apre, la cartuccia o il disco entra nella console e lo schermo si accende. Tocca o premi un tasto per saltarla.</string>
+    <string name="launch_anim_always">Sempre</string>
+    <string name="launch_anim_daily">La prima volta al giorno</string>
+    <string name="launch_anim_never">Mai</string>
+    <string name="launch_anim_preview_all">Vedi le animazioni</string>
+    <string name="launch_anim_others">Altre</string>
+    <string name="launch_anim_preview">Guardala:</string>
     <string name="status_order">Ordine degli scaffali per stato</string>
     <string name="status_order_hint">Usato quando raggruppi per stato. Sposta con ▲ ▼.</string>
     <string name="status_order_reset">Ripristina ordine</string>

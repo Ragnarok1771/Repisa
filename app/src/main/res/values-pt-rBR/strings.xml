@@ -363,6 +363,14 @@
     <string name="collection_no_games">Ainda sem jogos: use \"Adicionar jogos\".</string>
     <string name="collection_pick_title">Jogos de \"%1$s\"</string>
     <string name="msg_removed_collection">%1$d jogo(s) tirados de \"%2$s\"</string>
+    <string name="launch_anim">Animação ao jogar</string>
+    <string name="launch_anim_hint">A caixa abre, o cartucho ou disco entra no console e a tela acende. Toque ou aperte qualquer botão para pular.</string>
+    <string name="launch_anim_always">Sempre</string>
+    <string name="launch_anim_daily">A primeira vez do dia</string>
+    <string name="launch_anim_never">Nunca</string>
+    <string name="launch_anim_preview_all">Ver as animações</string>
+    <string name="launch_anim_others">Outras</string>
+    <string name="launch_anim_preview">Ver:</string>
     <string name="status_order">Ordem das prateleiras por status</string>
     <string name="status_order_hint">Usado ao agrupar por status. Mova com ▲ ▼.</string>
     <string name="status_order_reset">Restaurar ordem</string>

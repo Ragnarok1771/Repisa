@@ -363,6 +363,14 @@
     <string name="collection_no_games">Noch keine Spiele: „Spiele hinzufügen“ verwenden.</string>
     <string name="collection_pick_title">Spiele in „%1$s“</string>
     <string name="msg_removed_collection">%1$d Spiel(e) aus „%2$s“ entfernt</string>
+    <string name="launch_anim">Animation beim Spielen</string>
+    <string name="launch_anim_hint">Die Hülle öffnet sich, Modul oder Disc kommt in die Konsole und der Bildschirm geht an. Tippen oder Taste drücken zum Überspringen.</string>
+    <string name="launch_anim_always">Immer</string>
+    <string name="launch_anim_daily">Einmal am Tag</string>
+    <string name="launch_anim_never">Nie</string>
+    <string name="launch_anim_preview_all">Animationen ansehen</string>
+    <string name="launch_anim_others">Andere</string>
+    <string name="launch_anim_preview">Ansehen:</string>
     <string name="status_order">Reihenfolge der Regale nach Status</string>
     <string name="status_order_hint">Gilt beim Gruppieren nach Status. Mit ▲ ▼ verschieben.</string>
     <string name="status_order_reset">Reihenfolge zurücksetzen</string>

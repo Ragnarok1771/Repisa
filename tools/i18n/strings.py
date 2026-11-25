@@ -941,6 +941,19 @@ s("collection_no_games", "No games yet: use “Add games”.", "Aún no tiene ju
 s("collection_pick_title", "Games in “%1$s”", "Juegos de «%1$s»", "Jeux de « %1$s »", "Spiele in „%1$s“", "Giochi in «%1$s»", "Jogos de \"%1$s\"")
 s("msg_removed_collection", "%1$d game(s) removed from “%2$s”", "%1$d juego(s) quitados de «%2$s»", "%1$d jeu(x) retiré(s) de « %2$s »",
   "%1$d Spiel(e) aus „%2$s“ entfernt", "%1$d gioco/i tolti da «%2$s»", "%1$d jogo(s) tirados de \"%2$s\"")
+s("launch_anim", "Animation when playing", "Animación al jugar", "Animation au lancement", "Animation beim Spielen", "Animazione all'avvio", "Animação ao jogar")
+s("launch_anim_hint", "The case opens, the cartridge or disc goes into its console and the screen turns on. Tap or press any button to skip it.",
+  "La caja se abre, el cartucho o el disco entra en su consola y se enciende la pantalla. Toca o pulsa cualquier botón para saltarla.",
+  "La boîte s'ouvre, la cartouche ou le disque entre dans sa console et l'écran s'allume. Touchez ou appuyez sur un bouton pour passer.",
+  "Die Hülle öffnet sich, Modul oder Disc kommt in die Konsole und der Bildschirm geht an. Tippen oder Taste drücken zum Überspringen.",
+  "La custodia si apre, la cartuccia o il disco entra nella console e lo schermo si accende. Tocca o premi un tasto per saltarla.",
+  "A caixa abre, o cartucho ou disco entra no console e a tela acende. Toque ou aperte qualquer botão para pular.")
+s("launch_anim_always", "Always", "Siempre", "Toujours", "Immer", "Sempre", "Sempre")
+s("launch_anim_daily", "First time each day", "La primera vez del día", "La première fois du jour", "Einmal am Tag", "La prima volta al giorno", "A primeira vez do dia")
+s("launch_anim_never", "Never", "Nunca", "Jamais", "Nie", "Mai", "Nunca")
+s("launch_anim_preview_all", "See the animations", "Ver las animaciones", "Voir les animations", "Animationen ansehen", "Vedi le animazioni", "Ver as animações")
+s("launch_anim_others", "Others", "Otras", "Autres", "Andere", "Altre", "Outras")
+s("launch_anim_preview", "See it:", "Verla:", "La voir :", "Ansehen:", "Guardala:", "Ver:")
 s("status_order", "Order of the shelves by status", "Orden de las repisas por estado", "Ordre des étagères par statut",
   "Reihenfolge der Regale nach Status", "Ordine degli scaffali per stato", "Ordem das prateleiras por status", ptPT="Ordem das prateleiras por estado")
 s("status_order_hint", "Used when grouping by status. Move each one with ▲ ▼.", "Se usa al agrupar por estado. Mueve cada uno con ▲ ▼.",

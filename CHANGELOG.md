@@ -2,6 +2,54 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.15.0]
+
+**▶ Animación al jugar** — al pulsar «Jugar», la caja del juego se abre, el cartucho, el disco o el disquete vuela
+hasta su consola, entra, se enciende la pantalla y la cámara se acerca hasta que se abre el juego. Cada consola está
+dibujada a partir de fotos de referencia y con sonidos propios (sin logos ni sonidos de las marcas).
+- **Más de 70 sistemas**, cada uno con su forma:
+  - **PC** (Steam y Epic): la caja entra en el monitor.
+  - **Nintendo**: NES, Super Nintendo, N64, GameCube, Wii, Wii U, Switch y Switch 2; Game Boy, Game Boy Color, Game
+    Boy Advance, DS y 3DS (que se abren como un libro), Virtual Boy, Pokémon Mini y Game & Watch.
+  - **Sony**: PlayStation, PS2 Slim, PS3, PS4, PS5, PSP (con su UMD) y PS Vita.
+  - **Microsoft**: Xbox y Xbox 360. **Sega**: Master System, Mega Drive, Game Gear, Saturn, Dreamcast y SG-1000.
+  - **Atari**: 2600, 5200, 7800, Jaguar y Lynx. Y Neo Geo, Neo Geo Pocket, PC Engine, PC-FX, 3DO, CD-i,
+    ColecoVision, Intellivision, Vectrex, Odyssey 2, Channel F, WonderSwan, Supervision y N-Gage.
+  - **Recreativas**: la moneda entra en la ranura y se enciende el cartel. **Ordenadores antiguos y motores de juego**
+    (DOS, Amstrad, Commodore, Amiga, MSX, Spectrum, ScummVM, Doom…): el disquete entra en la disquetera.
+- Cada tipo tiene su movimiento: cartuchos que entran por arriba y se quedan asomando, tapas que se levantan,
+  bandejas que salen hacia delante, ranuras donde el disco entra de canto, portátiles que se abren…
+- **Saltar**: toca la pantalla o pulsa cualquier botón y el juego se abre al momento.
+- **Ajustes → Pantalla → Animación al jugar**: *Siempre*, *La primera vez del día* o *Nunca*, y «▸ Ver las animaciones»
+  para verlas sin abrir ningún juego (por marcas).
+- **Sin deslizamientos**: el juego aparece directamente al terminar la animación, y el panel de la pantalla de abajo
+  aparece quieto.
+
+**Sistemas nuevos**
+- **Switch 2 con Banana Native**: cada carpeta con `exefs/main.npdm` es un juego (da igual cómo se llame la carpeta)
+  y también los `.nup`; el nombre sale del número del juego. Se abren directamente en Banana Native.
+- **PS4, PS5 y Xbox 360**, y todo lo que quedaba de la lista de Cocoon: ordenadores antiguos, motores de juego,
+  Atari, Coleco, Intellivision, Vectrex, 3DO, CD-i, PC-FX, Neo Geo Pocket, WonderSwan, Virtual Boy, Game & Watch…
+- La **DSi** va con la DS, **WiiWare** con la Wii, **Satellaview** con la Super Nintendo, la TurboGrafx y SuperGrafx
+  con la PC Engine, la Neo Geo CD con la Neo Geo y Naomi / Atomiswave con las recreativas.
+
+**Jugar**
+- **Juegos de Steam instalados con GameNative**: Repisa lee los accesos `.steamappid` que crea Steam Shortcut Generator
+  en la carpeta de ROMs y les pone el botón «Jugar»; se abren directamente en GameNative.
+- **WatermelonDS**: se detecta solo y arranca el juego de DS directamente; la pantalla de abajo queda libre para los
+  juegos de DS y 3DS.
+
+**Carátulas**
+- **Wikipedia** como fuente nueva (para juegos muy recientes, como los de Switch 2, que aún no están en otras).
+- En consolas con estuche de tamaño único (Switch, 3DS, PS2…) la caja mantiene su forma aunque la imagen venga
+  cuadrada.
+
+**¿A qué juego? 🎲** — un *tic* cada vez que una carátula pasa por la marca (rápido al principio y cada vez más
+lento) y un sonido de premio al salir el juego.
+
+**Pantalla de abajo** — sin carátula seleccionada (barra de arriba, Ajustes…) vuelve al resumen de la biblioteca, con
+los estados en dos líneas y sus colores: «Pendiente: 641 · Jugando: 60 · Terminado: 28…».
+
 ## [0.14.3]
 
 > Incluye todo lo de las versiones 0.14.0 a 0.14.3.

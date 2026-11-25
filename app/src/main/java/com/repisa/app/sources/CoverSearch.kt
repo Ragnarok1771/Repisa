@@ -2,6 +2,7 @@ package com.repisa.app.sources
 
 import android.content.Context
 import com.repisa.app.data.Http
+import com.repisa.app.data.int
 import com.repisa.app.data.Settings
 import com.repisa.app.data.arr
 import com.repisa.app.data.get
@@ -50,10 +51,11 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
             async { safe("GameTDB") { gameTdbResults(game, q, 8) } + safe("libretro") { libretro(game, q, 12) } },
             async { safe("SteamGridDB") { steamGridDb(q, 12) } },
             async { safe("Steam") { steamStore(q, 6) } },
+            async { safe("Wikipedia") { wikipedia(game, q, 4) } },
         )
-        // libretro primero si es un juego de consola; en PC, Steam/SteamGridDB primero.
-        val (lr, sg, st) = jobs.awaitAll()
-        Outcome(if (game.consoleId == "pc") sg + st + lr else lr + sg + st, failed.toList())
+        // libretro primero si es un juego de consola; en PC, Steam/SteamGridDB primero. Wikipedia al final.
+        val (lr, sg, st, wp) = jobs.awaitAll()
+        Outcome((if (game.consoleId == "pc") sg + st + lr else lr + sg + st) + wp, failed.toList())
     }
 
     val hasSteamGridDb get() = settings.steamGridDbKey != null
@@ -76,7 +78,39 @@ class CoverSearch(private val context: Context, private val settings: Settings) 
         val title = EmulatorSource.cleanTitle(game.title)
         runCatching { steamGridDb(title, 1, minSim = 0.8) }.getOrNull()?.firstOrNull()?.let { return it.url }
         runCatching { steamStore(title, 1, minSim = 0.85) }.getOrNull()?.firstOrNull()?.let { return it.url }
+        // Último recurso (juegos muy nuevos, como los de Switch 2): la carátula del artículo de Wikipedia.
+        runCatching { wikipedia(game, title, 1, minSim = 0.85) }.getOrNull()?.firstOrNull()?.let { return it.url }
         return null
+    }
+
+    // ------------------------------------------------------------------ Wikipedia
+
+    /**
+     * Carátula del artículo del juego en Wikipedia (en inglés), que casi siempre es la portada de la caja.
+     * Si hay varios artículos con el mismo nombre («Ocarina of Time» de 1998 y el de 2026), se prefiere el del año
+     * más cercano al de la consola del juego.
+     */
+    private suspend fun wikipedia(game: Game, query: String, limit: Int, minSim: Double = 0.6): List<CoverResult> {
+        val url = "https://en.wikipedia.org/w/api.php".toHttpUrl().newBuilder()
+            .addQueryParameter("action", "query").addQueryParameter("generator", "search")
+            .addQueryParameter("gsrsearch", "$query video game").addQueryParameter("gsrlimit", "8")
+            .addQueryParameter("prop", "pageimages").addQueryParameter("piprop", "original")
+            .addQueryParameter("pilicense", "any").addQueryParameter("format", "json").build()
+        val pages = Http.getJson(okhttp3.Request.Builder().url(url).header("User-Agent", "Repisa (Android; app de biblioteca de juegos)").build())["query"]["pages"]
+            as? kotlinx.serialization.json.JsonObject ?: return emptyList()
+        val wanted = tokens(query)
+        val consoleYear = game.console.year
+        return pages.values.mapNotNull { p ->
+            val title = p["title"].str ?: return@mapNotNull null
+            val img = p["original"]["source"].str?.substringBefore('?') ?: return@mapNotNull null
+            if (!img.lowercase().let { it.endsWith(".jpg") || it.endsWith(".jpeg") || it.endsWith(".png") || it.endsWith(".webp") }) return@mapNotNull null
+            val sim = similarity(wanted, tokens(title))
+            if (sim < minSim) return@mapNotNull null
+            val year = Regex("""\((\d{4})[^)]*\)""").find(title)?.groupValues?.get(1)?.toIntOrNull()
+            val bonus = when { year == null -> 0.0; year >= consoleYear -> 0.05; else -> -0.05 }
+            Triple(CoverResult(img, img, "Wikipedia", title), sim + bonus, p["index"].int ?: 99)
+        }.sortedWith(compareByDescending<Triple<CoverResult, Double, Int>> { it.second }.thenBy { it.third })
+            .take(limit).map { it.first }
     }
 
     // ------------------------------------------------------------------ GameTDB

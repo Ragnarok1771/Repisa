@@ -79,6 +79,9 @@ import com.repisa.app.model.label
 import com.repisa.app.model.Source
 import com.repisa.app.model.formatPlaytime
 
+/** Al salir el foco de una carátula, la pantalla de abajo vuelve al resumen (ver LibraryViewModel.blurGame). */
+private var LocalBlur: ((Game) -> Unit)? = null
+
 private sealed interface ShelfItem {
     val key: String
     data class Header(val group: ShelfGroup, override val key: String) : ShelfItem
@@ -113,7 +116,8 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
                 val selState = SelectionState(selecting, selection, toggle = { vm.toggleSelected(it) }, start = { vm.startSelection(it) })
                 androidx.compose.runtime.CompositionLocalProvider(LocalSelection provides selState) {
                 val collapsed by vm.collapsed.collectAsState()
-                Shelves(shelves, collapsed, { vm.toggleCollapsed(it) }, boxHeight, focused?.id, onFocus = { vm.focused.value = it }, onOpen = onOpenGame,
+                LocalBlur = { vm.blurGame(it) }
+                Shelves(shelves, collapsed, { vm.toggleCollapsed(it) }, boxHeight, focused?.id, onFocus = { vm.focusGame(it) }, onOpen = onOpenGame,
                     onPlay = { vm.play(it) }, onFavorite = { vm.toggleFavorite(it) },
                     onAspect = { g, a -> vm.setCoverAspect(g.id, a) })
                 }
@@ -366,7 +370,10 @@ private fun ShelfRow(
                         lifted = isFocused || selected,
                         onCoverAspect = { onAspect(g, it) },
                         modifier = Modifier
-                            .onFocusChanged { isFocused = it.isFocused; if (it.isFocused) onFocus(g) }
+                            .onFocusChanged { f ->
+                                if (f.isFocused) onFocus(g) else if (isFocused) LocalBlur?.invoke(g)
+                                isFocused = f.isFocused
+                            }
                             .onKeyEvent { e ->
                                 if (e.type != KeyEventType.KeyUp) return@onKeyEvent false
                                 when (e.key.nativeKeyCode) {

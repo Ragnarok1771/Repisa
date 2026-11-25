@@ -10,6 +10,9 @@
 
     <!-- Para poder listar emuladores instalados y lanzarlos (Android 11+). -->
     <queries>
+        <!-- GameNative: abre los juegos de Steam instalados. -->
+        <package android:name="app.gamenative" />
+        <package android:name="app.nativerunner" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />

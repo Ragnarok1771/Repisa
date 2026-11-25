@@ -848,7 +848,84 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     /** Juego que se está jugando con el panel de la pantalla de abajo abierto (null = ninguno). */
     val playing = MutableStateFlow<String?>(null)
 
+    private var blurJob: Job? = null
+
+    /** Carátula enfocada: la pantalla de abajo muestra su ficha. */
+    fun focusGame(g: Game) { blurJob?.cancel(); focused.value = g }
+
+    /**
+     * Sin carátula enfocada (el mando fue a la barra de arriba, a los filtros...): la pantalla de abajo vuelve al
+     * resumen de la biblioteca. Se espera un momento por si el foco solo está pasando a otra carátula.
+     */
+    fun blurGame(g: Game) {
+        blurJob?.cancel()
+        blurJob = viewModelScope.launch { kotlinx.coroutines.delay(150); if (focused.value?.id == g.id) focused.value = null }
+    }
+
+    /** Animación al jugar en curso (o vista previa desde Ajustes, que no abre ningún juego). */
+    data class LaunchRequest(val game: Game, val kind: LaunchKind, val preview: Boolean = false, val launched: Boolean = false)
+    val launching = MutableStateFlow<LaunchRequest?>(null)
+
+    /** «Jugar»: primero la animación (si el juego tiene y toca según el ajuste) y luego se abre. */
     fun play(game: Game) {
+        val kind = LaunchKind.of(game)
+        val today = java.time.LocalDate.now().toString()
+        val due = when (settings.launchAnimation) {
+            "never" -> false
+            "daily" -> settings.lastLaunchAnimationDay != today
+            else -> true
+        }
+        if (kind != null && due && launcher.canLaunch(game)) {
+            launching.value = LaunchRequest(game, kind)
+            return
+        }
+        playNow(game)
+    }
+
+    /** Termina (o se salta) la animación: abre el juego, salvo en la vista previa. */
+    fun finishLaunchAnimation() {
+        val r = launching.value ?: return
+        if (r.preview) { launching.value = null; return }
+        if (r.launched) return
+        settings.lastLaunchAnimationDay = java.time.LocalDate.now().toString()
+        // El negro del final se queda puesto hasta que el juego tapa Repisa (así no se ve Repisa un instante).
+        if (!playNow(r.game)) { launching.value = null; return }
+        val done = r.copy(launched = true)
+        launching.value = done
+        viewModelScope.launch { kotlinx.coroutines.delay(10_000); if (launching.value === done) launching.value = null }
+    }
+
+    /** Vista previa de una animación desde Ajustes, con un juego de la biblioteca de ese tipo. */
+    /** Vista previa de la animación de una consola (Ajustes → «Verla»). */
+    fun previewConsole(consoleId: String) {
+        val kind = LaunchKind.of(Game(id = "preview", source = if (consoleId == "pc") Source.STEAM else Source.EMULATOR, title = "", consoleId = consoleId))
+            ?: return
+        previewLaunch(kind, consoleId.takeIf { it != "pc" })
+    }
+
+    fun previewLaunch(kind: LaunchKind, consoleId: String? = null) {
+        // Con un juego tuyo de esa consola (con carátula si puede ser); si no tienes ninguno, uno de prueba.
+        val game = consoleId?.let { id ->
+            displayGames.value.filter { it.consoleId == id }.maxByOrNull { if (it.coverUrl != null) 1 else 0 }
+                ?: Game(id = "preview", source = Source.EMULATOR, title = "Repisa", consoleId = id)
+        }
+            ?: displayGames.value.filter { LaunchKind.of(it) == kind }.maxByOrNull { if (it.coverUrl != null) 1 else 0 }
+            ?: Game(id = "preview", source = if (kind == LaunchKind.PC) Source.STEAM else Source.EMULATOR, title = "Repisa",
+                consoleId = when (kind) {
+                    LaunchKind.PC -> "pc"; LaunchKind.SWITCH -> "switch"; LaunchKind.PS2 -> "ps2"
+                    LaunchKind.HANDHELD -> "3ds"; LaunchKind.GAMECUBE -> "gc"; LaunchKind.WII -> "wii"
+                    LaunchKind.PS1 -> "psx"; LaunchKind.PS3 -> "ps3"; LaunchKind.XBOX -> "xbox"; LaunchKind.CART -> "snes"
+                    LaunchKind.ARCADE -> "arcade"; LaunchKind.COMPUTER -> "dos"
+                })
+        launching.value = LaunchRequest(game, kind, preview = true)
+    }
+
+    /** Libera la pantalla de abajo (la pone MainActivity): los juegos de DS y 3DS la usan como segunda pantalla. */
+    var releaseSecondScreen: (() -> Unit)? = null
+
+    /** Abre el juego. Devuelve false si no se pudo (el motivo va en [message]). */
+    private fun playNow(game: Game): Boolean {
+        if (game.consoleId in setOf("nds", "3ds")) releaseSecondScreen?.invoke()
         val app = getApplication<android.app.Application>()
         // Si estaba pendiente, al jugarlo pasa a «Jugando».
         if (game.playStatus == com.repisa.app.model.PlayStatus.BACKLOG) setStatus(game, com.repisa.app.model.PlayStatus.PLAYING)
@@ -856,20 +933,22 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         val companion = settings.companionPanel && game.consoleId !in setOf("nds", "3ds")
         val bottom = if (companion) secondDisplayId(app) else null
         if (bottom == null) {
-            launcher.launch(game)?.let { message.value = it }
-            return
+            launcher.launch(game)?.let { message.value = it; return false }
+            return true
         }
         // Panel en la pantalla de abajo y el juego en la de arriba: las dos siguen activas a la vez.
         playing.value = game.id
         runCatching {
             app.startActivity(
                 android.content.Intent(app, com.repisa.app.CompanionActivity::class.java)
-                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK),
-                android.app.ActivityOptions.makeBasic().setLaunchDisplayId(bottom).toBundle(),
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
+                        android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION),
+                // Sin transición: el panel aparece quieto en la pantalla de abajo (antes entraba deslizándose).
+                android.app.ActivityOptions.makeCustomAnimation(app, 0, 0).setLaunchDisplayId(bottom).toBundle(),
             )
         }
-        val top = android.app.ActivityOptions.makeBasic().setLaunchDisplayId(android.view.Display.DEFAULT_DISPLAY).toBundle()
-        launcher.launch(game, top)?.let { message.value = it; playing.value = null }
+        launcher.launch(game, android.view.Display.DEFAULT_DISPLAY)?.let { message.value = it; playing.value = null; return false }
+        return true
     }
 
     /** La pantalla secundaria (la de abajo en la AYN Thor), si hay. */
@@ -881,6 +960,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun onResume() = viewModelScope.launch {
         playing.value = null // de vuelta en Repisa: se cierra el panel de la partida
+        if (launching.value?.launched == true) launching.value = null
         // Versión nueva: se busca también al volver a Repisa; y si se acaba de dar el permiso de instalar, sigue sola.
         if (installAfterPermission && update.value != null &&
             com.repisa.app.data.Updater.canInstall(getApplication<android.app.Application>())) installUpdate()

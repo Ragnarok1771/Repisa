@@ -35,10 +35,14 @@ class EmulatorSource(private val context: Context, private val settings: Setting
         val games = LinkedHashMap<String, Game>()
         fun add(g: Game) { games[g.id] = games[g.id]?.let { mergeEmu(it, g) } ?: g }
 
+        steamShortcuts.clear()
+        var scannedAll = true
         settings.romFolders.forEach { uri ->
             onProgress(L10n.s(R.string.status_scanning_roms, SafTree.displayName(context, uri)))
-            runCatching { scanRomFolder(SafTree(context, Uri.parse(uri))) }.getOrDefault(emptyList()).forEach(::add)
+            runCatching { scanRomFolder(SafTree(context, Uri.parse(uri))) }.onFailure { scannedAll = false }.getOrDefault(emptyList()).forEach(::add)
         }
+        // Juegos de Steam instalados (accesos directos de Steam Shortcut Generator): se abren con GameNative.
+        if (settings.romFolders.isNotEmpty() && scannedAll) settings.steamInstalledIds = steamShortcuts.toSet()
 
         val raTree = settings.retroarchFolder?.let { SafTree(context, Uri.parse(it)) }
         if (raTree != null) {
@@ -162,8 +166,63 @@ class EmulatorSource(private val context: Context, private val settings: Setting
         return out
     }
 
+    /** Números de Steam leídos de los accesos directos `.steamappid` / `.steam` de la carpeta de PC/Steam. */
+    private val steamShortcuts = mutableSetOf<String>()
+
+    private fun readSteamShortcut(tree: SafTree, doc: SafTree.Doc) {
+        val text = tree.readText(doc)?.trim() ?: return
+        // .steamappid: «[steamappid] 1234567»; .steam: solo el número.
+        (Regex("""\[steamappid]\s*(\d+)""").find(text)?.groupValues?.get(1) ?: text.takeIf { it.all(Char::isDigit) && it.isNotEmpty() })
+            ?.let { steamShortcuts += it }
+    }
+
+    // ---------------------------------------------------------------- Switch 2 (Banana Native)
+
+    /**
+     * Juegos de Switch 2: cada carpeta con `exefs/main.npdm` (o `base/exefs/main.npdm`) es un juego, da igual cómo se
+     * llame la carpeta («SR ROM»); también los archivos `.nup`. El nombre sale del número del juego que lleva main.npdm.
+     */
+    private fun scanSwitch2(tree: SafTree, dir: SafTree.Doc): List<Game> {
+        val out = mutableListOf<Game>()
+        fun npdmOf(d: SafTree.Doc): SafTree.Doc? =
+            tree.child(d, "exefs")?.let { tree.child(it, "main.npdm") }
+                ?: tree.child(d, "base")?.let { b -> tree.child(b, "exefs")?.let { tree.child(it, "main.npdm") } }
+        fun walk(d: SafTree.Doc, depth: Int) {
+            for (c in tree.children(d)) {
+                if (c.name.startsWith(".")) continue
+                if (!c.isDir) {
+                    if (c.name.substringAfterLast('.', "").lowercase() == "nup") {
+                        val name = c.name.substringBeforeLast('.')
+                        val title = Switch2Titles.byName(name) ?: cleanTitle(name)
+                        out += Game("emu:switch2:${romKey(title)}", Source.EMULATOR, title, "switch2", romUri = c.uri.toString(), romName = name)
+                    }
+                    continue
+                }
+                if (c.name.endsWith("-work") || c.name.lowercase() in setOf("work", "mods", "shaders", "profiles", "save-backups")) continue
+                val npdm = npdmOf(c)
+                if (npdm != null) {
+                    val titleId = tree.readBytes(npdm, 8192)?.let(Switch2Titles::programId)
+                    val title = titleId?.let(Switch2Titles::name) ?: Switch2Titles.byName(c.name) ?: cleanTitle(c.name)
+                    out += Game("emu:switch2:${romKey(title)}", Source.EMULATOR, title, "switch2", romUri = c.uri.toString(), romName = c.name)
+                } else if (depth < 2) walk(c, depth + 1)
+            }
+        }
+        walk(dir, 0)
+        return out.distinctBy { it.id }
+    }
+
     private fun scanConsole(tree: SafTree, dir: SafTree.Doc, console: Console): List<Game> {
+        if (console.id == "switch2") return scanSwitch2(tree, dir)
         val files = mutableListOf<SafTree.Doc>()
+        if (console.id == "pc") {
+            fun walkSteam(d: SafTree.Doc, depth: Int) {
+                for (c in tree.children(d)) {
+                    if (c.isDir) { if (depth < 2 && !c.name.startsWith(".")) walkSteam(c, depth + 1) }
+                    else if (c.name.substringAfterLast('.', "").lowercase() in setOf("steamappid", "steam")) runCatching { readSteamShortcut(tree, c) }
+                }
+            }
+            runCatching { walkSteam(dir, 0) }
+        }
         fun walk(d: SafTree.Doc, depth: Int) {
             for (c in tree.children(d)) {
                 if (c.name.startsWith(".")) continue

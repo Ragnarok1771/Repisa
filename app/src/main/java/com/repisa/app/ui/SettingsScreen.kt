@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -566,6 +567,49 @@ private fun DisplayPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
         Hint(stringResource(R.string.box_size_hint))
         Slider(value = h, onValueChange = { h = it }, onValueChangeFinished = { s.shelfHeightDp = h.toInt() },
             valueRange = 90f..240f, modifier = Modifier.widthIn(max = 560.dp))
+        // Animación al pulsar «Jugar» (con vista previa de cada tipo).
+        HorizontalDivider(color = Color(0x33FFFFFF))
+        Text(stringResource(R.string.launch_anim), color = Color.White)
+        Hint(stringResource(R.string.launch_anim_hint))
+        var animMode by remember { mutableStateOf(s.launchAnimation) }
+        androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("always" to R.string.launch_anim_always, "daily" to R.string.launch_anim_daily, "never" to R.string.launch_anim_never)
+                .forEach { (mode, label) ->
+                    androidx.compose.material3.FilterChip(animMode == mode, { animMode = mode; s.launchAnimation = mode },
+                        { Text(stringResource(label)) })
+                }
+        }
+        // Vista previa de cada animación: sección que se abre y se cierra, con las consolas por marca.
+        var showPreviews by rememberSaveable { mutableStateOf(false) }
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable { showPreviews = !showPreviews }.padding(vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Text((if (showPreviews) "▾  " else "▸  ") + stringResource(R.string.launch_anim_preview_all), color = Color(0xFFFFD27A),
+                fontWeight = FontWeight.SemiBold)
+        }
+        if (showPreviews) {
+            listOf(
+                "PC" to listOf("pc" to "PC (Steam / Epic)"),
+                "Nintendo" to listOf("nes" to "NES", "snes" to "Super Nintendo", "n64" to "Nintendo 64", "gb" to "Game Boy", "gbc" to "Game Boy Color",
+                    "gba" to "Game Boy Advance", "nds" to "DS", "3ds" to "3DS", "gc" to "GameCube", "wii" to "Wii", "wiiu" to "Wii U",
+                    "switch" to "Switch", "switch2" to "Switch 2"),
+                "Sony" to listOf("psx" to "PlayStation", "ps2" to "PS2", "psp" to "PSP", "ps3" to "PS3", "psvita" to "PS Vita", "ps4" to "PS4", "ps5" to "PS5"),
+                "Microsoft" to listOf("xbox" to "Xbox", "xbox360" to "Xbox 360"),
+                "Sega" to listOf("mastersystem" to "Master System", "megadrive" to "Mega Drive", "gamegear" to "Game Gear", "saturn" to "Saturn",
+                    "dreamcast" to "Dreamcast"),
+                "Atari" to listOf("atari5200" to "5200", "atari7800" to "7800", "atarijaguar" to "Jaguar", "atarilynx" to "Lynx"),
+                stringResource(R.string.launch_anim_others) to listOf("atari2600" to "Atari 2600", "neogeo" to "Neo Geo", "pcengine" to "PC Engine",
+                    "3do" to "3DO", "colecovision" to "ColecoVision", "intellivision" to "Intellivision", "vectrex" to "Vectrex",
+                    "cdi" to "CD-i", "pcfx" to "PC-FX", "odyssey2" to "Odyssey 2", "channelf" to "Channel F", "sg1000" to "SG-1000",
+                    "ngp" to "Neo Geo Pocket", "wonderswan" to "WonderSwan", "pokemini" to "Pokémon Mini", "virtualboy" to "Virtual Boy",
+                    "gameandwatch" to "Game & Watch", "supervision" to "Supervision", "ngage" to "N-Gage",
+                    "arcade" to "Arcade", "dos" to "DOS / ordenadores", "scummvm" to "ScummVM / motores"),
+            ).forEach { (brand, items) ->
+                Text(brand, color = Color(0xFFBFA98A), fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    items.forEach { (id, label) -> OutlinedButton(onClick = { vm.previewConsole(id) }) { Text(label, color = Color.White) } }
+                }
+            }
+        }
         // Orden de las repisas cuando se agrupa por estado.
         HorizontalDivider(color = Color(0x33FFFFFF))
         Text(stringResource(R.string.status_order), color = Color.White)

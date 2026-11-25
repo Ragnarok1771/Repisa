@@ -26,8 +26,37 @@ class Launcher(private val context: Context, private val settings: Settings) {
 
     fun canLaunch(g: Game): Boolean = when (g.source) {
         Source.EMULATOR -> g.romUri != null || (g.romPath != null && g.corePath != null)
-        else -> false
+        else -> installedSteamId(g) != null && gameNative() != null
     }
+
+    /** GameNative (o su variante NativeRunner), la app que juega los juegos de Steam en Android. */
+    fun gameNative(): String? = listOf("app.gamenative", "app.nativerunner").firstOrNull { isInstalled(it) }
+
+    /** Número de Steam del juego (o de una de sus copias) si está instalado en la consola. */
+    fun installedSteamId(g: Game): String? {
+        val installed = settings.steamInstalledIds
+        return (listOf(g.id) + g.copyIds).filter { it.startsWith("steam:") }.map { it.removePrefix("steam:") }.firstOrNull { it in installed }
+    }
+
+    /**
+     * Opciones al abrir el juego: sin transición (Android deslizaba Repisa a la izquierda y el emulador entraba por la
+     * derecha). La animación de Repisa ya termina en negro, así que el juego aparece directamente.
+     * [displayId]: pantalla en la que abrirlo (la de arriba en la AYN Thor).
+     */
+    /**
+     * Quién abre el juego: la pantalla de Repisa (MainActivity) si está abierta, para poder anular justo después
+     * la transición de Android (si se abre desde la app, Android ignora la petición de no animar).
+     */
+    var starter: ((Intent, android.os.Bundle) -> Unit)? = null
+
+    private fun start(intent: Intent, options: android.os.Bundle) {
+        starter?.let { return it(intent, options) }
+        context.startActivity(intent, options)
+    }
+
+    private fun noTransition(displayId: Int?): android.os.Bundle =
+        android.app.ActivityOptions.makeCustomAnimation(context, 0, 0)
+            .apply { displayId?.let { setLaunchDisplayId(it) } }.toBundle()
 
     fun isInstalled(pkg: String): Boolean = runCatching { pm.getPackageInfo(pkg, 0); true }.getOrDefault(false)
 
@@ -44,7 +73,27 @@ class Launcher(private val context: Context, private val settings: Settings) {
         consoleIds.mapNotNull { id -> emulatorFor(id)?.let { id to it } }.toMap()
 
     /** Lanza el juego directamente en su emulador. Devuelve un mensaje de error o null si todo fue bien. */
-    fun launch(g: Game, options: android.os.Bundle? = null): String? {
+    fun launch(g: Game, displayId: Int? = null): String? {
+        val options = noTransition(displayId)
+        // Juegos de Steam instalados: los abre GameNative con su número de Steam.
+        if (g.source != Source.EMULATOR) {
+            val app = gameNative() ?: return L10n.s(R.string.err_launch_noemu, "Steam")
+            val appId = installedSteamId(g)?.toIntOrNull() ?: return L10n.s(R.string.err_launch_nofile)
+            val intent = Intent("app.gamenative.LAUNCH_GAME").setComponent(ComponentName(app, "app.gamenative.MainActivity"))
+                .putExtra("game_source", "STEAM").putExtra("app_id", appId)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+            return try {
+                settings.pendingSessionStart = System.currentTimeMillis()
+                start(intent, options)
+                settings.pendingSessionGame = g.id
+                settings.pendingSessionPackage = app
+                null
+            } catch (_: ActivityNotFoundException) {
+                L10n.s(R.string.err_launch_noemu, "Steam")
+            } catch (e: SecurityException) {
+                L10n.s(R.string.err_launch_denied, e.message ?: "")
+            }
+        }
         val pkg = emulatorFor(g.consoleId)
         val intent: Intent = when {
             // Juego de una playlist de RetroArch: arrancar RetroArch con su core.
@@ -55,9 +104,10 @@ class Launcher(private val context: Context, private val settings: Settings) {
             g.romUri == null -> return L10n.s(R.string.err_launch_nofile)
             else -> gameIntent(pkg, g) ?: return L10n.s(R.string.err_launch_noemu, g.console.name)
         }
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
         return try {
             settings.pendingSessionStart = System.currentTimeMillis()
-            context.startActivity(intent, options)
+            start(intent, options)
             settings.pendingSessionGame = g.id
             settings.pendingSessionPackage = intent.component?.packageName ?: intent.`package` ?: pkg
             null
@@ -90,6 +140,7 @@ class Launcher(private val context: Context, private val settings: Settings) {
                 .setDataAndType(uri, "application/octet-stream").addFlags(flags).apply {
                     profile.uriExtra?.let { putExtra(it, uri.toString()) }
                     profile.pathExtra?.let { k -> filePath(uri)?.let { putExtra(k, it) } }
+                    profile.boolExtras.forEach { (k, v) -> putExtra(k, v) }
                 }
         }
         val view = Intent(Intent.ACTION_VIEW).setPackage(pkg).setDataAndType(uri, "application/octet-stream").addFlags(flags)

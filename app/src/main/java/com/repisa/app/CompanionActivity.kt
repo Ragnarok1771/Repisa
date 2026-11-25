@@ -67,12 +67,26 @@ import java.util.Date
 class CompanionActivity : ComponentActivity() {
     private val vm: LibraryViewModel by lazy { (application as RepisaApp).library() }
 
+    private fun noTransition(open: Boolean) {
+        if (android.os.Build.VERSION.SDK_INT >= 34) {
+            overrideActivityTransition(if (open) OVERRIDE_TRANSITION_OPEN else OVERRIDE_TRANSITION_CLOSE, 0, 0)
+        }
+        @Suppress("DEPRECATION") overridePendingTransition(0, 0)
+    }
+
+    override fun finish() {
+        super.finish()
+        noTransition(open = false)
+    }
+
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(L10n.wrap(base))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // El panel aparece y se va sin deslizarse.
+        noTransition(open = true)
         setContent {
             Localized {
                 RepisaTheme {
