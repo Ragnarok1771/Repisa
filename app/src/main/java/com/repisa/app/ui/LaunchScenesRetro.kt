@@ -57,18 +57,24 @@ internal data class CartConsole(
         /** NES: caja gris clara con la puerta del cartucho en el frente; parte derecha negra con estrías. */
         private val NES = CartConsole(
             slotX = 1070f, slotY = 652f, slotW = 250f, cartW = 150f, cartH = 160f, cartColor = Color(0xFF8E8E92), front = true,
-            led = Offset(950f, 684f),
+            led = Offset(948f, 681f),
             draw = {
                 box(900f, 480f, 590f, 622f, 700f, 20f, Color(0xFFD0D0CC), Color(0xFFC4C4C0), Color(0xFFAFAFAB))
                 drawPath(Path().apply { moveTo(1270f, 590f); lineTo(1360f, 590f); lineTo(1380f, 622f); lineTo(1262f, 622f); close() }, Color(0xFF1E1E21))
                 drawRect(Color(0xFF1E1E21), Offset(1262f, 622f), Size(118f, 78f))
                 for (i in 0 until 5) drawRect(Color(0xFF2E2E33), Offset(1272f, 632f + i * 12f), Size(100f, 4f))
-                // Puerta del cartucho con estrías
-                drawRect(Color(0xFF8C8C90), Offset(940f, 630f), Size(260f, 44f))
-                for (i in 0 until 4) drawRect(Color(0xFF7A7A7E), Offset(946f, 636f + i * 10f), Size(248f, 3f))
-                // Botones de encendido y reset, puertos de mando
-                listOf(1000f, 1060f).forEach { x -> drawRoundRect(Color(0xFF55555A), Offset(x, 680f), Size(44f, 12f), CornerRadius(3f)) }
-                listOf(1140f, 1190f).forEach { x -> drawRoundRect(Color(0xFF3A3A3E), Offset(x, 680f), Size(36f, 14f), CornerRadius(3f)) }
+                // Franja gris oscura de abajo en todo el frente (con los botones y los puertos de mando)
+                drawRect(Color(0xFF4B4B50), Offset(900f, 664f), Size(362f, 36f))
+                drawRect(Color(0xFF3A3A3E), Offset(900f, 664f), Size(362f, 3f))
+                // Puerta del cartucho con estrías, en la parte gris clara de arriba
+                drawRect(Color(0xFFB9B9B6), Offset(940f, 628f), Size(260f, 32f))
+                for (i in 0 until 5) drawRect(Color(0xFFA2A29F), Offset(946f, 632f + i * 5.6f), Size(248f, 2.4f))
+                // Encendido y reset (gris claro) y los dos puertos de mando
+                listOf(966f, 1018f).forEach { x -> drawRoundRect(Color(0xFFBDBDBA), Offset(x, 674f), Size(40f, 14f), CornerRadius(2f)) }
+                listOf(1150f, 1204f).forEach { x ->
+                    drawRoundRect(Color(0xFF2A2A2D), Offset(x, 672f), Size(40f, 20f), CornerRadius(3f))
+                    drawRoundRect(Color(0xFF6A6A70), Offset(x + 8f, 678f), Size(24f, 8f), CornerRadius(2f))
+                }
             },
         )
 

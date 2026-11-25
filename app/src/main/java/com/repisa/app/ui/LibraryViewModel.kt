@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -55,7 +56,9 @@ enum class GroupMode(private val labelRes: Int) {
 }
 
 /** Una repisa. [key] identifica la repisa para poder plegarla (y que siga plegada al volver). */
-data class ShelfGroup(val title: String, val subtitle: String, val games: List<Game>, val key: String = "grp:$title")
+data class ShelfGroup(val title: String, val subtitle: String, val games: List<Game>, val key: String = "grp:$title",
+                      /** Al agrupar por consola: cuál es (para dibujarla junto a la placa). */
+                      val consoleId: String? = null)
 
 data class ViewOptions(
     val sort: SortMode = SortMode.ALPHA,
@@ -66,6 +69,8 @@ data class ViewOptions(
     /** Se incrementa para forzar a reconstruir las repisas. */
     val rev: Int = 0,
     val collections: List<GameCollection> = emptyList(),
+    /** Solo los juegos de esta consola (al elegirla en «Mis consolas»). */
+    val console: String? = null,
 )
 
 /** Colección propia del usuario (repisa con nombre). */
@@ -232,10 +237,76 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Logros de Repisa del juego con la fecha en que se cumplieron (las guarda la primera vez que se ven). */
     fun repisaAchievements(game: Game): List<Pair<com.repisa.app.model.RepisaAchievement, Long?>> {
+        val ctx = com.repisa.app.model.GameAchContext(game, sessions.value)
         val list = com.repisa.app.model.RepisaAchievement.entries
-        val seen = achievementStore.repisaSeen(game.id, list.filter { it.met(game) }.map { it.name }.toSet())
-        return list.map { it to (if (it.met(game)) seen[it.name] else null) }
+        val met = list.filter { it.met(ctx) }.map { it.name }.toSet()
+        val seen = achievementStore.repisaSeen(game.id, met)
+        return list.map { it to (if (it.name in met) seen[it.name] else null) }
     }
+
+    /** Contexto de logros de un juego (para saber si es platino y qué le falta). */
+    fun achContext(game: Game) = com.repisa.app.model.GameAchContext(game, sessions.value)
+
+    // ------------------------------------------------------------------ «Hoy juego…»
+
+    /**
+     * Recordatorio para la pantalla de abajo: el juego que tienes empezado y llevas 4 días o más sin tocar (el último
+     * que jugaste de esos); si no hay, un pendiente corto que lleva tiempo esperando (cambia cada día).
+     */
+    data class Reminder(val game: Game, val staleDays: Int?, val hltbHours: Float?)
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val reminder: StateFlow<Reminder?> by lazy { displayGames.mapLatest { games ->
+        val now = System.currentTimeMillis()
+        val day = 86_400_000L
+        val stale = games.filter { it.playStatus == com.repisa.app.model.PlayStatus.PLAYING }
+            .mapNotNull { g -> g.lastPlayedAny?.let { g to ((now - it) / day).toInt() } }
+            .filter { it.second >= 4 }
+            .maxByOrNull { it.first.lastPlayedAny ?: 0 }
+        if (stale != null) return@mapLatest Reminder(stale.first, stale.second, null)
+        val backlog = games.filter { it.playStatus == com.repisa.app.model.PlayStatus.BACKLOG }
+        val short = backlog.filter { (it.hltbMain ?: 0f) in 0.5f..20f }.ifEmpty { backlog }.sortedBy { it.id }
+        if (short.isEmpty()) null else short[((now / day) % short.size).toInt()].let { Reminder(it, null, it.hltbMain) }
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, null) }
+
+    // ------------------------------------------------------------------ Platinos y logros de la app
+
+    /** Juegos con platino → fecha en que se consiguió. */
+    val platinums = MutableStateFlow<Map<String, Long>>(emptyMap())
+    /** Logros de la app con su fecha (null = aún no) y su progreso actual. */
+    val appAchievements = MutableStateFlow<List<Triple<com.repisa.app.model.AppAchievement, Long?, Int>>>(emptyList())
+
+    /** Recalcula platinos y logros de la app; avisa de los nuevos (salvo la primera vez, que solo los apunta). */
+    private suspend fun recomputeAchievements() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+        val games = displayGames.value
+        if (games.isEmpty()) return@withContext
+        val ses = sessions.value
+        val plat = games.filter { com.repisa.app.model.Platinum.isPlatinum(com.repisa.app.model.GameAchContext(it, ses)) }
+        val knownPlat = achievementStore.repisaKnown(PLAT_KEY)
+        val seenPlat = achievementStore.repisaSeen(PLAT_KEY, plat.map { it.id }.toSet())
+        val ctx = com.repisa.app.model.AppAchContext(games, ses, plat.size, collections.value.size, wishlist.value.size,
+            ShelfTheme.current.name)
+        val metApp = com.repisa.app.model.AppAchievement.entries.filter { it.met(ctx) }
+        val knownApp = achievementStore.repisaKnown(APP_KEY)
+        val seenApp = achievementStore.repisaSeen(APP_KEY, metApp.map { it.name }.toSet())
+        // Fecha del platino: la del último logro conseguido (Steam, RetroAchievements...), que es cuando de verdad
+        // se completó; si no se conoce (juego sin logros propios o aún sin cargar), cuándo lo vio Repisa.
+        platinums.value = plat.associate { g ->
+            val last = (listOf(g.id) + g.copyIds).mapNotNull { id -> achievementStore.cached(id) }
+                .flatMap { it.items }.mapNotNull { it.unlockedAt?.takeIf { t -> t > 1 } }.maxOrNull()
+            g.id to (last ?: seenPlat[g.id] ?: System.currentTimeMillis())
+        }
+        appAchievements.value = com.repisa.app.model.AppAchievement.entries.map { a ->
+            Triple(a, if (a in metApp) seenApp[a.name] else null, a.value(ctx))
+        }
+        // Avisos: un mensaje con lo nuevo (la primera vez solo se apunta lo que ya tenías).
+        if (settings.rawString("ach_init") == null) { settings.putRawString("ach_init", "1"); return@withContext }
+        val news = plat.filter { it.id !in knownPlat }.map { "💎 " + L10n.s(R.string.plat_new, it.title) } +
+            metApp.filter { it.name !in knownApp }.map { "🏆 " + L10n.s(R.string.aach_new, it.title) }
+        if (news.isNotEmpty()) message.value = news.take(3).joinToString("\n") + if (news.size > 3) "\n…" else ""
+    }
+
+
 
     fun checkRetroAchievements() = viewModelScope.launch {
         val ok = runCatching { com.repisa.app.sources.Achievements.raCheck(settings) }.getOrDefault(false)
@@ -532,12 +603,22 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     fun setGroup(g: GroupMode) { settings.groupMode = g.name; _options.update { it.copy(group = g) } }
     fun setSource(s: Source?) = _options.update { it.copy(source = s) }
     fun setQuery(q: String) = _options.update { it.copy(query = q) }
+    /** Mostrar solo los juegos de una consola (null = todas). */
+    fun setConsoleFilter(id: String?) = _options.update { it.copy(console = id) }
+    /** Sala «Mis consolas» abierta. */
+    val consolesRoom = MutableStateFlow(false)
+    /** Pide volver a Estadísticas (al salir del filtro por consola, se vuelve a «Mis consolas»). */
+    val reopenStats = MutableStateFlow(false)
+    /** Quitar el filtro por consola y volver a «Mis consolas», de donde se eligió. */
+    fun closeConsoleFilter() { setConsoleFilter(null); consolesRoom.value = true; reopenStats.value = true }
 
     private fun buildShelves(all: List<Game>, o: ViewOptions): List<ShelfGroup> {
         val q = o.query.trim().lowercase()
         val filtered = all.filter { g ->
             (o.source == null || g.source == o.source || o.source in g.groupSources) &&
+                (o.console == null || g.consoleId == o.console) &&
                 (q.isEmpty() || g.title.lowercase().contains(q) || g.developer?.lowercase()?.contains(q) == true ||
+                    g.otherTitles.any { it.lowercase().contains(q) } ||
                     g.genres.any { it.lowercase().contains(q) } || g.console.name.lowercase().contains(q))
         }
         val sorted = when (o.sort) {
@@ -552,8 +633,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 g.achTotal?.takeIf { it > 0 }?.let { (g.achUnlocked ?: 0).toFloat() / it } ?: -1f
             }.thenBy { it.sortKey })
         }
-        fun group(title: String, games: List<Game>, key: String = "grp:${o.group.name}:$title") =
-            ShelfGroup(title, "${L10n.games(games.size)} · ${hours(games)}", games, key)
+        fun group(title: String, games: List<Game>, key: String = "grp:${o.group.name}:$title", consoleId: String? = null) =
+            ShelfGroup(title, "${L10n.games(games.size)} · ${hours(games)}", games, key, consoleId)
 
         // «Seguir jugando»: los últimos jugados (90 días), arriba del todo, sin buscar.
         val cont = if (o.continueShelf && q.isEmpty()) {
@@ -578,7 +659,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             }
             GroupMode.CONSOLE -> sorted.groupBy { it.consoleId }.entries
                 .sortedWith(compareBy({ Consoles.byId(it.key).year }, { Consoles.byId(it.key).name }))
-                .map { group(Consoles.byId(it.key).let { c -> if (c.id == "pc") "PC" else if (c.id == "other") c.label else "${c.maker} · ${c.name}" }, it.value) }
+                .map { group(Consoles.byId(it.key).let { c -> if (c.id == "pc") "PC" else if (c.id == "other") c.label else "${c.maker} · ${c.name}" }, it.value,
+                    consoleId = it.key) }
             GroupMode.DEVELOPER -> {
                 // Estudios unificados (ATLUS = Atlus = Atlus Co., Ltd.); un juego de dos estudios va en los dos.
                 val unknownKey = "\u0000"
@@ -787,19 +869,94 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 settings.factsPass = FACTS_PASS
             }
-            val pending = _games.value.filter { metadata.needsWork(it) }
+            // Revisión de géneros (una vez, tras actualizar a la versión que los mejora): la parte rápida, ya.
+            val genreReview = settings.genrePass < GENRE_PASS
+            val fastOk = !genreReview || genrePassFast()
+            // Primero los juegos sin género (lo que más se nota), luego el resto.
+            val pending = _games.value.filter { metadata.needsWork(it) }.sortedBy { it.genres.isNotEmpty() }
             pending.forEachIndexed { i, g ->
                 status.value = L10n.s(R.string.status_metadata, i + 1, pending.size)
                 val enriched = runCatching { metadata.enrich(g) }.getOrElse { g.copy(metaFetched = true) }
                 replace(enriched, save = i % 10 == 9 || i == pending.lastIndex)
             }
             status.value = null
+            // La parte lenta del repaso de géneros (Epic), cuando ya está todo lo demás.
+            if (genreReview && genrePassEpic() && fastOk) settings.genrePass = GENRE_PASS
             achievementsPass()
             // Tras actualizar la app con buscadores de carátulas nuevos, repasar una vez los juegos que no tienen.
             if (settings.coverPass < COVER_PASS) {
                 missingCoversPass(quiet = true)
                 settings.coverPass = COVER_PASS
             }
+        }
+    }
+
+    /**
+     * Repaso de géneros, primera parte (rápida): normaliza los guardados («Gacha game» → Gacha), pone a los de Steam
+     * los géneros de las etiquetas de la comunidad (de 50 en 50) y deja marcados para buscar los que no tienen
+     * género y los de emulador sin identidad (para reconocer sus títulos en español e inglés). Lo puesto a mano no se toca.
+     */
+    private suspend fun genrePassFast(): Boolean {
+        mutex.withLock {
+            _games.update { list -> list.map { g ->
+                val genres = com.repisa.app.model.Genres.normalize(g.genres, keepUnknown = g.userEdited)
+                val redo = genres.isEmpty() || (!g.userEdited && g.source == Source.EMULATOR && g.wikidataId == null)
+                g.copy(genres = genres, factsFetched = g.factsFetched && !redo, idChecked = g.idChecked && !redo,
+                    // Lo que no se encontró en Steam antes se vuelve a intentar con la búsqueda mejorada.
+                    steamChecked = g.steamChecked && g.steamMatch != null)
+            } }
+        }
+        status.value = L10n.s(R.string.status_genres_steam)
+        val steamIds = _games.value.filter { !it.userEdited && it.source == Source.STEAM }
+            .mapNotNull { g -> g.id.removePrefix("steam:").toLongOrNull()?.let { g.id to it } }.toMap()
+        val r = com.repisa.app.sources.SteamSource.tagGenres(steamIds.values.toList())
+        mutex.withLock {
+            _games.update { list -> list.map { g -> steamIds[g.id]?.let(r.genres::get)?.let { g.copy(genres = it) } ?: g } }
+            store.save(_games.value)
+        }
+        status.value = null
+        return !r.failed
+    }
+
+    /**
+     * Repaso de géneros, segunda parte (lenta, al final): los juegos de Epic que tenían los géneros de la ficha de
+     * Steam (o de versiones anteriores) pasan a los de las etiquetas. El emparejado con Steam se guarda en el juego.
+     */
+    private suspend fun genrePassEpic(): Boolean {
+        val epic = _games.value.filter { !it.userEdited && it.source == Source.EPIC && it.genres.isNotEmpty() && !it.steamChecked }
+        var ok = true
+        epic.forEachIndexed { i, g ->
+            status.value = L10n.s(R.string.status_genres, i + 1, epic.size)
+            val r = runCatching { com.repisa.app.sources.SteamSource.searchByName(g.title) }
+            if (r.isFailure) { ok = false; return@forEachIndexed }
+            val m = r.getOrNull()
+            mutex.withLock {
+                _games.update { list -> list.map {
+                    if (it.id != g.id) it
+                    else it.copy(steamMatch = m?.appId, steamChecked = true, genres = m?.genres?.ifEmpty { null } ?: it.genres)
+                } }
+                if (i % 20 == 19) store.save(_games.value)
+            }
+            kotlinx.coroutines.delay(250)
+        }
+        mutex.withLock { store.save(_games.value) }
+        status.value = null
+        return ok
+    }
+
+    /** Ajustes → «Buscar géneros que faltan»: vuelve a buscar ya los juegos sin género. */
+    fun findMissingGenres() {
+        if (enrichJob?.isActive == true) return
+        viewModelScope.launch {
+            mutex.withLock { _games.update { list -> list.map { if (it.genres.isEmpty()) it.copy(factsFetched = false, steamChecked = false, idChecked = false) else it } } }
+            val before = _games.value.count { it.genres.isEmpty() }
+            startEnrichment()
+            enrichJob?.join()
+            val after = _games.value.count { it.genres.isEmpty() }
+            // Los que no se pudieron consultar (Steam o Wikidata pidieron esperar) se reintentan solos más tarde.
+            val retry = _games.value.count { it.genres.isEmpty() && !it.factsFetched }
+            message.value = L10n.s(R.string.msg_genres_found, before - after, before) +
+                if (retry > 0) " " + L10n.s(R.string.msg_genres_retry, retry) else ""
         }
     }
 
@@ -811,6 +968,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         const val FACTS_PASS = 2
         /** Súbelo cuando cambie cómo se leen los logros, para volver a pedirlos. */
         const val ACH_PASS = 2
+        /** Súbelo cuando cambie cómo se deciden los géneros, para repasar los de toda la biblioteca. */
+        const val GENRE_PASS = 2
     }
 
     private suspend fun replace(game: Game, save: Boolean = true) = mutex.withLock {
@@ -821,7 +980,13 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Aplica el resultado de metadatos sin pisar cambios del usuario hechos mientras tanto. */
     private fun mergeEnriched(current: Game, enriched: Game) =
-        if (current.userEdited) current.copy(metaFetched = true)
+        if (current.userEdited) current.copy(
+            metaFetched = true, factsFetched = enriched.factsFetched,
+            genres = current.genres.ifEmpty { enriched.genres },
+            wikidataId = current.wikidataId ?: enriched.wikidataId,
+            altTitles = current.altTitles.ifEmpty { enriched.altTitles }, idChecked = current.idChecked || enriched.idChecked,
+            steamMatch = current.steamMatch ?: enriched.steamMatch, steamChecked = current.steamChecked || enriched.steamChecked,
+        )
         else enriched.copy(
             favorite = current.favorite,
             trackedMinutes = current.trackedMinutes,
@@ -1284,7 +1449,22 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+
+    // Al final de la clase: aquí ya existen la biblioteca, las partidas y la lista de deseos.
+    init {
+        viewModelScope.launch {
+            libraryLoaded.await()
+            @OptIn(kotlinx.coroutines.FlowPreview::class)
+            combine(displayGames, sessions, wishlist, collections) { _, _, _, _ -> Unit }
+                .debounce(1500)
+                .collect { runCatching { recomputeAchievements() } }
+        }
+    }
 }
+
+/** Claves con las que se guardan las fechas de platinos y logros de la app. */
+private const val PLAT_KEY = "__platinum__"
+private const val APP_KEY = "__app__"
 
 /** Caja de la lista de deseos: un juego de Steam que no está en la biblioteca (id «wish:<appid>»). */
 fun com.repisa.app.sources.WishItem.toGame() = Game(

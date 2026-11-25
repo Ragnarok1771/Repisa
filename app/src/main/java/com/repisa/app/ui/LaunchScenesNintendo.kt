@@ -68,6 +68,8 @@ internal data class Handheld(
     val corner: Float = 22f,
     val umd: Boolean = false,
     val draw: DrawScope.() -> Unit = {},
+    /** DS y 3DS: detalles de la tapa abierta (altavoces, cámara...), en unidades de la escena. */
+    val lidDraw: DrawScope.() -> Unit = {},
 ) {
     val zoomScreen: SceneRect get() = screen
 
@@ -100,6 +102,10 @@ internal data class Handheld(
                 dpad(Offset(1112f, 560f), Color(0xFF26262B))
                 drawCircle(Color(0xFF3A3A40), 16f, Offset(1280f, 540f)); drawCircle(Color(0xFF3A3A40), 16f, Offset(1244f, 564f))
                 listOf(1170f, 1210f).forEach { x -> drawRoundRect(Color(0xFF3A3A40), Offset(x - 15f, 618f), Size(30f, 8f), CornerRadius(4f)) }
+                // Altavoz de agujeritos abajo a la derecha y ventana del infrarrojo arriba
+                for (r in 0 until 4) for (c in 0 until 4) if (r + c in 2..5)
+                    drawCircle(Color(0xFF3B1C5C), 4f, Offset(1248f + c * 14f, 636f + r * 14f))
+                drawRoundRect(Color(0xFF2A1240), Offset(1100f, 306f), Size(40f, 8f), CornerRadius(3f))
             },
         )
         // Game Boy Advance (la original, horizontal), medida sobre una foto de frente: arriba plana en el centro y
@@ -137,15 +143,42 @@ internal data class Handheld(
             screen = SceneRect(1045f, 230f, 230f, 172f), bottomScreen = SceneRect(1045f, 486f, 230f, 172f),
             cartW = 90f, cartH = 84f, cartColor = Color(0xFF6C7078),
             slotW = 110f, slotX = 1160f, slotY = 444f, caseInside = Color(0xFFE3E6EA),
-            draw = { dsButtons(Color(0xFF9AA0AA)) },
+            draw = {
+                dsButtons(Color(0xFF9AA0AA))
+                // Bisagra, Start y Select, y luz de encendido
+                drawRoundRect(Color(0xFFD6DAE0), Offset(960f, 444f), Size(400f, 14f), CornerRadius(7f))
+                listOf(626f, 648f).forEach { y -> drawCircle(Color(0xFFB9BEC7), 6f, Offset(1335f, y)) }
+                drawCircle(Color(0xFF7BD389).copy(alpha = 0.5f), 4f, Offset(1370f, 684f))
+            },
+            lidDraw = {
+                // Altavoces de agujeritos a los dos lados de la pantalla de arriba
+                listOf(985f, 1335f).forEach { x -> for (r in 0 until 3) for (c in 0 until 3) drawCircle(Color(0xFFB9BEC7), 3.5f, Offset(x + c * 11f - 11f, 300f + r * 11f)) }
+            },
         )
         private val N3DS = Handheld(
-            body = Color(0xFF1F6A98), edge = Color(0xFF154B6E),
+            body = Color(0xFF1FA3CB), edge = Color(0xFF147A99),
             bodyRect = SceneRect(930f, 444f, 460f, 256f), lid = SceneRect(930f, 188f, 460f, 256f),
             screen = SceneRect(1010f, 238f, 300f, 180f), bottomScreen = SceneRect(1050f, 480f, 220f, 165f),
             cartW = 90f, cartH = 84f, cartColor = Color(0xFFD9DCE1),
             slotW = 110f, slotX = 1160f, slotY = 444f, caseInside = Color(0xFFE3E6EA),
-            draw = { dsButtons(Color(0xFF15161A)) ; drawCircle(Color(0xFF15161A), 22f, Offset(985f, 500f)) },
+            draw = {
+                dsButtons(Color(0xFF16708C))
+                // Palanca circular (gris con su aro), bisagra, tira de Select / Home / Start y botón de encendido
+                drawCircle(Color(0xFF147A99), 27f, Offset(985f, 500f))
+                drawCircle(Color(0xFFA4ACB6), 22f, Offset(985f, 500f))
+                drawCircle(Color(0xFFBEC5CE), 15f, Offset(985f, 498f))
+                drawRoundRect(Color(0xFF1890B5), Offset(960f, 444f), Size(400f, 14f), CornerRadius(7f))
+                drawRoundRect(Color(0xFF1890B5), Offset(1050f, 660f), Size(220f, 22f), CornerRadius(6f))
+                listOf(1085f, 1160f, 1235f).forEach { x -> drawRoundRect(Color(0xFF136F8B), Offset(x - 22f, 666f), Size(44f, 10f), CornerRadius(5f)) }
+                drawCircle(Color(0xFF136F8B), 9f, Offset(1335f, 672f))
+            },
+            lidDraw = {
+                // Cámara arriba en el centro, altavoces a los lados y el deslizador 3D a la derecha
+                drawCircle(Color(0xFF0E1A22), 7f, Offset(1160f, 214f))
+                listOf(972f, 1348f).forEach { x -> for (r in 0 until 3) for (c in 0 until 3) drawCircle(Color(0xFF136F8B), 3.5f, Offset(x + c * 11f - 11f, 300f + r * 11f)) }
+                drawRoundRect(Color(0xFF0E1A22), Offset(1374f, 300f), Size(6f, 70f), CornerRadius(3f))
+                drawRoundRect(Color(0xFFBEC5CE), Offset(1371f, 330f), Size(12f, 16f), CornerRadius(3f))
+            },
         )
 
         // PSP (1000): negra y muy alargada, pantalla ancha, cruceta y palanca a la izquierda, cuatro botones a la
@@ -350,6 +383,74 @@ private fun DrawScope.dsButtons(color: Color) {
     listOf(Offset(1335f, 548f), Offset(1335f, 596f), Offset(1311f, 572f), Offset(1359f, 572f)).forEach { drawCircle(color, 11f, it) }
 }
 
+/** Cuerpo de una portátil (o su mitad de abajo, en DS y 3DS), en unidades de la escena; las pantallas van aparte. */
+internal fun DrawScope.drawHandheldBody(m: Handheld, on: Float) {
+    val b = m.bodyRect
+    if (m == Handheld.of("gba")) {
+        // Botones L y R grises asomando por las esquinas de arriba
+        val gray = Color(0xFFC5C7CC)
+        drawRoundRect(gray, Offset(898f, 428f), Size(112f, 44f), CornerRadius(22f))
+        drawRoundRect(gray, Offset(1310f, 428f), Size(112f, 44f), CornerRadius(22f))
+        // Silueta medida sobre la foto de frente
+        val shape = Path().apply {
+            moveTo(997f, 420f); lineTo(1323f, 420f)
+            cubicTo(1362f, 420f, 1384f, 430f, 1398f, 440f)
+            cubicTo(1424f, 456f, 1438f, 470f, 1442f, 502f)
+            cubicTo(1450f, 560f, 1450f, 640f, 1428f, 676f)
+            cubicTo(1398f, 692f, 1300f, 702f, 1160f, 702f)
+            cubicTo(1020f, 702f, 922f, 692f, 892f, 676f)
+            cubicTo(870f, 640f, 870f, 560f, 878f, 502f)
+            cubicTo(882f, 470f, 896f, 456f, 922f, 440f)
+            cubicTo(936f, 430f, 958f, 420f, 997f, 420f)
+            close()
+        }
+        drawPath(shape, m.body)
+        drawPath(shape, m.edge, style = Stroke(3f))
+    } else {
+        drawRoundRect(m.body, Offset(b.x, b.y), Size(b.w, b.h), CornerRadius(m.corner))
+        drawRoundRect(m.edge, Offset(b.x, b.y), Size(b.w, b.h), CornerRadius(m.corner), style = Stroke(4f))
+        // Brillo del plástico negro (PSP, Vita)
+        if (m.corner > 60f) drawRoundRect(Brush.verticalGradient(listOf(Color(0x22FFFFFF), Color.Transparent), b.y, b.y + b.h * 0.5f),
+            Offset(b.x + 20f, b.y + 6f), Size(b.w - 40f, b.h * 0.45f), CornerRadius(m.corner * 0.8f))
+    }
+    // Ranura por donde entra el cartucho (en el borde de arriba)
+    drawRoundRect(Color(0xFF101114), Offset(m.slotX - m.slotW / 2 - 6f, m.slotY - 3f), Size(m.slotW + 12f, 7f), CornerRadius(3f))
+    m.bezel?.let { z ->
+        if (m.led != null) {
+            // GBA: marco con las esquinas de abajo más redondeadas (deja sitio al nombre de la consola)
+            drawPath(Path().apply {
+                addRoundRect(androidx.compose.ui.geometry.RoundRect(z.x, z.y, z.x + z.w, z.y + z.h,
+                    CornerRadius(26f), CornerRadius(26f), CornerRadius(42f), CornerRadius(42f)))
+            }, m.bezelColor)
+        } else drawRoundRect(m.bezelColor, Offset(z.x, z.y), Size(z.w, z.h), CornerRadius(12f))
+    }
+    m.draw(this)
+    // Luz de encendido
+    drawCircle(if (on > 0f) Color(0xFFFF3B3B) else Color(0xFF5A2020), 5f,
+        m.led ?: Offset(m.bezel?.let { it.x + 14f } ?: (b.x + 40f), m.bezel?.let { it.y + it.h / 2 } ?: (b.y + 40f)))
+}
+
+/**
+ * Para el icono: la portátil en reposo con las pantallas apagadas; DS y 3DS abiertas, con la tapa de pie sobre la
+ * bisagra y su pantalla de arriba.
+ */
+internal fun DrawScope.drawHandheldIdle(m: Handheld) {
+    drawHandheldBody(m, 0f)
+    val dark = Color(0xFF0B0D12)
+    val l = m.lid
+    if (l == null) {
+        drawRoundRect(if (m.greenScreen) Color(0xFF6E7F2A) else dark, Offset(m.screen.x, m.screen.y), Size(m.screen.w, m.screen.h), CornerRadius(3f))
+    } else {
+        drawRoundRect(m.body, Offset(l.x, l.y), Size(l.w, l.h), CornerRadius(22f))
+        drawRoundRect(m.edge, Offset(l.x, l.y), Size(l.w, l.h), CornerRadius(22f), style = Stroke(4f))
+        val s = m.screen
+        drawRoundRect(Color(0xFF15161A), Offset(s.x - 14f, s.y - 14f), Size(s.w + 28f, s.h + 28f), CornerRadius(10f))
+        drawRoundRect(dark, Offset(s.x, s.y), Size(s.w, s.h), CornerRadius(3f))
+        m.lidDraw(this)
+        m.bottomScreen?.let { drawRoundRect(dark, Offset(it.x, it.y), Size(it.w, it.h), CornerRadius(3f)) }
+    }
+}
+
 @Composable
 internal fun HandheldScene(game: Game, p: Float, u: Dp) {
     val m = Handheld.of(game.consoleId)
@@ -396,48 +497,8 @@ internal fun HandheldScene(game: Game, p: Float, u: Dp) {
     Canvas(Modifier.offset(u * b.x, u * b.y).size(u * b.w, u * b.h)) {
         val k = size.width / b.w
         withTransform({ scale(k, k, Offset.Zero); translate(-b.x, -b.y) }) {
-            if (m == Handheld.of("gba")) {
-                // Botones L y R grises asomando por las esquinas de arriba
-                val gray = Color(0xFFC5C7CC)
-                drawRoundRect(gray, Offset(898f, 428f), Size(112f, 44f), CornerRadius(22f))
-                drawRoundRect(gray, Offset(1310f, 428f), Size(112f, 44f), CornerRadius(22f))
-                // Silueta medida sobre la foto de frente
-                val shape = Path().apply {
-                    moveTo(997f, 420f); lineTo(1323f, 420f)
-                    cubicTo(1362f, 420f, 1384f, 430f, 1398f, 440f)
-                    cubicTo(1424f, 456f, 1438f, 470f, 1442f, 502f)
-                    cubicTo(1450f, 560f, 1450f, 640f, 1428f, 676f)
-                    cubicTo(1398f, 692f, 1300f, 702f, 1160f, 702f)
-                    cubicTo(1020f, 702f, 922f, 692f, 892f, 676f)
-                    cubicTo(870f, 640f, 870f, 560f, 878f, 502f)
-                    cubicTo(882f, 470f, 896f, 456f, 922f, 440f)
-                    cubicTo(936f, 430f, 958f, 420f, 997f, 420f)
-                    close()
-                }
-                drawPath(shape, m.body)
-                drawPath(shape, m.edge, style = Stroke(3f))
-            } else {
-                drawRoundRect(m.body, Offset(b.x, b.y), Size(b.w, b.h), CornerRadius(m.corner))
-                drawRoundRect(m.edge, Offset(b.x, b.y), Size(b.w, b.h), CornerRadius(m.corner), style = Stroke(4f))
-                // Brillo del plástico negro (PSP, Vita)
-                if (m.corner > 60f) drawRoundRect(Brush.verticalGradient(listOf(Color(0x22FFFFFF), Color.Transparent), b.y, b.y + b.h * 0.5f),
-                    Offset(b.x + 20f, b.y + 6f), Size(b.w - 40f, b.h * 0.45f), CornerRadius(m.corner * 0.8f))
-            }
-            // Ranura por donde entra el cartucho (en el borde de arriba)
-            drawRoundRect(Color(0xFF101114), Offset(m.slotX - m.slotW / 2 - 6f, m.slotY - 3f), Size(m.slotW + 12f, 7f), CornerRadius(3f))
-            m.bezel?.let { z ->
-                if (m.led != null) {
-                    // GBA: marco con las esquinas de abajo más redondeadas (deja sitio al nombre de la consola)
-                    drawPath(Path().apply {
-                        addRoundRect(androidx.compose.ui.geometry.RoundRect(z.x, z.y, z.x + z.w, z.y + z.h,
-                            CornerRadius(26f), CornerRadius(26f), CornerRadius(42f), CornerRadius(42f)))
-                    }, m.bezelColor)
-                } else drawRoundRect(m.bezelColor, Offset(z.x, z.y), Size(z.w, z.h), CornerRadius(12f))
-            }
-            m.draw(this)
-            // Luz de encendido
-            drawCircle(if (on > 0f) Color(0xFFFF3B3B) else Color(0xFF5A2020), 5f,
-                m.led ?: Offset(m.bezel?.let { it.x + 14f } ?: (b.x + 40f), m.bezel?.let { it.y + it.h / 2 } ?: (b.y + 40f)))
+            drawHandheldBody(m, on)
+
         }
     }
     // Pantallas
@@ -478,6 +539,7 @@ internal fun HandheldScene(game: Game, p: Float, u: Dp) {
                     val k = size.width / l.w
                     val s = m.screen
                     drawRoundRect(Color(0xFF15161A), Offset((s.x - l.x - 14f) * k, (s.y - l.y - 14f) * k), Size((s.w + 28f) * k, (s.h + 28f) * k), CornerRadius(10f * k))
+                    withTransform({ scale(k, k, Offset.Zero); translate(-l.x, -l.y) }) { m.lidDraw(this) }
                 }
                 val s = m.screen
                 Box(Modifier.offset(u * (s.x - l.x), u * (s.y - l.y)).size(u * s.w, u * s.h).clip(RoundedCornerShape(2.dp))) { ScreenContent(game, on) }
@@ -519,6 +581,8 @@ internal data class TopLoader(
     /** Tapa redonda (PS1): radios de la elipse que forma vista desde arriba. */
     val roundLid: Boolean = false, val lidRx: Float = 0f, val lidRy: Float = 0f,
     val details: DrawScope.() -> Unit = {},
+    /** Detalles de la tapa cerrada (aro, botones...), encima de ella. */
+    val lidDraw: DrawScope.() -> Unit = {},
 ) {
     fun backX(x: Float) = front.x + inset + (x - front.x) * (front.w - 2 * inset) / front.w
 
@@ -602,9 +666,25 @@ internal data class TopLoader(
             body = Color(0xFF4A3C8C), top = Color(0xFF5A4AA4), under = Color(0xFF2E2559), edge = Color(0xFF3A2F70),
             led = Offset(1238f, 560f), ledOn = Color(0xFF7CFF8A), tv = LaunchKind.GAMECUBE.screen,
             details = {
-                drawRoundRect(Color(0xFF2B2252), Offset(1066f, 440f), Size(168f, 12f), CornerRadius(6f)) // asa
-                listOf(1056f, 1100f, 1144f, 1188f).forEach { x -> drawRoundRect(Color(0xFF2A2250), Offset(x, 640f), Size(30f, 28f), CornerRadius(4f)) }
+                // Asa de atrás (sobresale por encima)
+                val handle = Path().apply { moveTo(1074f, 456f); lineTo(1074f, 432f); quadraticBezierTo(1074f, 422f, 1086f, 422f)
+                    lineTo(1214f, 422f); quadraticBezierTo(1226f, 422f, 1226f, 432f); lineTo(1226f, 456f) }
+                drawPath(handle, Color(0xFF2B2252), style = Stroke(12f))
+                // Frente: hueco con los cuatro puertos de mando (gris claro) y las dos ranuras de tarjeta de memoria
+                drawRoundRect(Color(0xFF2C2458), Offset(1050f, 600f), Size(200f, 58f), CornerRadius(10f))
+                listOf(1072f, 1118f, 1164f, 1210f).forEach { x ->
+                    drawRoundRect(Color(0xFFC9CBD3), Offset(x - 17f, 612f), Size(34f, 34f), CornerRadius(8f))
+                    drawRoundRect(Color(0xFF55575F), Offset(x - 10f, 624f), Size(20f, 10f), CornerRadius(3f))
+                }
+                listOf(1080f, 1170f).forEach { x -> drawRoundRect(Color(0xFF231C47), Offset(x, 674f), Size(52f, 8f), CornerRadius(3f)) }
                 drawCircle(Color(0xFF3A2F70), 9f, Offset(1072f, 562f))
+            },
+            lidDraw = {
+                // Tapa cerrada: aro redondo del minidisco, botón de abrir y botones de encendido y reset delante
+                drawOval(Color(0xFF3B2F80), Offset(1150f - 66f, 490f - 24f), Size(132f, 48f))
+                drawOval(Color(0xFF4E3F98), Offset(1150f - 56f, 490f - 19f), Size(112f, 38f))
+                drawCircle(Color(0xFF8F86C9), 10f, Offset(1086f, 512f))
+                listOf(1196f, 1222f).forEach { x -> drawCircle(Color(0xFF3B2F80), 9f, Offset(x, 516f)); drawCircle(Color(0xFF6D5FB8), 6f, Offset(x, 515f)) }
             },
         )
 
@@ -622,6 +702,49 @@ internal data class TopLoader(
                 listOf(1330f, 1356f).forEach { x -> drawCircle(Color(0xFF2E3038), 7f, Offset(x, 672f)) }
             },
         )
+    }
+}
+
+/** Cuerpo de una consola de tapa (cara de arriba con el hueco del disco, frente y detalles), en unidades de la escena. */
+internal fun DrawScope.drawTopLoaderBody(m: TopLoader, ledOn: Boolean) {
+    val f = m.front
+    val topFace = Path().apply { moveTo(m.backX(f.x), m.backY); lineTo(m.backX(f.x + f.w), m.backY); lineTo(f.x + f.w, f.y); lineTo(f.x, f.y); close() }
+    drawPath(topFace, m.top)
+    drawOval(Color(0xFF0D0E12), Offset(m.well.x - m.wellW / 2, m.well.y - m.wellH / 2), Size(m.wellW, m.wellH))
+    drawCircle(lerpColor(m.top, Color.White, 0.15f), m.wellH * 0.12f, m.well)
+    drawRect(m.body, Offset(f.x, f.y), Size(f.w, f.h))
+    drawRect(m.edge, Offset(f.x, f.y), Size(f.w, 3f))
+    m.details(this)
+    drawCircle(if (ledOn) m.ledOn else lerpColor(m.ledOn, Color.Black, 0.7f), 6f, m.led)
+}
+
+/** Tapa de una consola de tapa: [lid] 0 = cerrada, 1 = abierta (gira sobre la bisagra de atrás). */
+internal fun DrawScope.drawTopLoaderLid(m: TopLoader, lid: Float) {
+    if (m.roundLid) {
+        // Tapa redonda: vista desde arriba es una elipse; al levantarse sobre su bisagra de atrás se ve cada vez
+        // más alta (de frente, casi un círculo) y por su cara de abajo.
+        val hinge = m.well.y - m.lidRy
+        val topY = lerp(hinge, hinge - m.lidRx * 1.05f, lid)
+        val bottomY = lerp(m.well.y + m.lidRy, hinge, lid)
+        val y0 = minOf(topY, bottomY); val y1 = maxOf(topY, bottomY).coerceAtLeast(y0 + 4f)
+        if (lid > 0.5f) drawOval(Brush.verticalGradient(listOf(lerpColor(m.under, Color.Black, 0.25f), m.under), y0, y1),
+            Offset(m.well.x - m.lidRx, y0), Size(m.lidRx * 2, y1 - y0))
+        else drawOval(m.top, Offset(m.well.x - m.lidRx, y0), Size(m.lidRx * 2, y1 - y0))
+        drawOval(m.edge, Offset(m.well.x - m.lidRx, y0), Size(m.lidRx * 2, y1 - y0), style = Stroke(3f))
+        if (lid < 0.5f) for (i in 1..3) {
+            val f = 1f - i * 0.22f
+            drawOval(lerpColor(m.top, Color.Black, 0.06f), Offset(m.well.x - m.lidRx * f, (y0 + y1) / 2 - (y1 - y0) / 2 * f),
+                Size(m.lidRx * 2 * f, (y1 - y0) * f), style = Stroke(2f))
+        }
+    } else {
+        val f = m.front
+        val fy = lerp(f.y, m.lidOpenY, lid)
+        val lx = lerp(m.lidL, m.backX(m.lidL), lid); val rx = lerp(m.lidR, m.backX(m.lidR), lid)
+        val path = Path().apply { moveTo(m.backX(m.lidL), m.backY); lineTo(m.backX(m.lidR), m.backY); lineTo(rx, fy); lineTo(lx, fy); close() }
+        drawPath(path, if (lid > 0.5f) m.under else m.top)
+        drawPath(path, m.edge, style = Stroke(3f))
+        if (lid < 0.5f) drawCircle(lerpColor(m.top, Color.White, 0.1f), 24f * (1f - lid), Offset((lx + rx) / 2, (m.backY + fy) / 2))
+        if (lid < 0.05f) m.lidDraw(this)
     }
 }
 
@@ -665,46 +788,47 @@ internal fun TopLoaderScene(game: Game, p: Float, u: Dp, m: TopLoader, tvOnAt: F
         withTransform({ scale(k, k, Offset.Zero); translate(-area.x, -area.y) }) { draw() }
     }
     // Cuerpo: cara de arriba, hueco del disco, frente y detalles.
-    layer {
-        val topFace = Path().apply { moveTo(m.backX(f.x), m.backY); lineTo(m.backX(f.x + f.w), m.backY); lineTo(f.x + f.w, f.y); lineTo(f.x, f.y); close() }
-        drawPath(topFace, m.top)
-        drawOval(Color(0xFF0D0E12), Offset(m.well.x - m.wellW / 2, m.well.y - m.wellH / 2), Size(m.wellW, m.wellH))
-        drawCircle(lerpColor(m.top, Color.White, 0.15f), m.wellH * 0.12f, m.well)
-        drawRect(m.body, Offset(f.x, f.y), Size(f.w, f.h))
-        drawRect(m.edge, Offset(f.x, f.y), Size(f.w, 3f))
-        m.details(this)
-        drawCircle(if (p > 0.57f) m.ledOn else lerpColor(m.ledOn, Color.Black, 0.7f), 6f, m.led)
-    }
+    layer { drawTopLoaderBody(m, ledOn = p > 0.57f) }
     if (p >= 0.47f) disc(m.well.x, m.well.y)
     // Tapa: gira sobre la bisagra de atrás (al abrirse se ve su cara de abajo).
-    if (m.roundLid) layer {
-        // Tapa redonda: vista desde arriba es una elipse; al levantarse sobre su bisagra de atrás se ve cada vez
-        // más alta (de frente, casi un círculo) y por su cara de abajo.
-        val hinge = m.well.y - m.lidRy
-        val topY = lerp(hinge, hinge - m.lidRx * 1.05f, lid)
-        val bottomY = lerp(m.well.y + m.lidRy, hinge, lid)
-        val y0 = minOf(topY, bottomY); val y1 = maxOf(topY, bottomY).coerceAtLeast(y0 + 4f)
-        if (lid > 0.5f) drawOval(Brush.verticalGradient(listOf(lerpColor(m.under, Color.Black, 0.25f), m.under), y0, y1),
-            Offset(m.well.x - m.lidRx, y0), Size(m.lidRx * 2, y1 - y0))
-        else drawOval(m.top, Offset(m.well.x - m.lidRx, y0), Size(m.lidRx * 2, y1 - y0))
-        drawOval(m.edge, Offset(m.well.x - m.lidRx, y0), Size(m.lidRx * 2, y1 - y0), style = Stroke(3f))
-        if (lid < 0.5f) for (i in 1..3) {
-            val f = 1f - i * 0.22f
-            drawOval(lerpColor(m.top, Color.Black, 0.06f), Offset(m.well.x - m.lidRx * f, (y0 + y1) / 2 - (y1 - y0) / 2 * f),
-                Size(m.lidRx * 2 * f, (y1 - y0) * f), style = Stroke(2f))
-        }
-    } else layer {
-        val fy = lerp(f.y, m.lidOpenY, lid)
-        val lx = lerp(m.lidL, m.backX(m.lidL), lid); val rx = lerp(m.lidR, m.backX(m.lidR), lid)
-        val path = Path().apply { moveTo(m.backX(m.lidL), m.backY); lineTo(m.backX(m.lidR), m.backY); lineTo(rx, fy); lineTo(lx, fy); close() }
-        drawPath(path, if (lid > 0.5f) m.under else m.top)
-        drawPath(path, m.edge, style = Stroke(3f))
-        if (lid < 0.5f) drawCircle(lerpColor(m.top, Color.White, 0.1f), 24f * (1f - lid), Offset((lx + rx) / 2, (m.backY + fy) / 2))
-    }
+    layer { drawTopLoaderLid(m, lid) }
     if (p in 0.29f..0.47f) disc(dcx, dcy)
 }
 
 // ------------------------------------------------------------------ Wii
+
+/** Consola de pie con ranura vertical: Wii (blanca y estrecha) o PS5 (paneles blancos y centro negro), en unidades de la escena. */
+internal fun DrawScope.drawStandingConsole(ps5: Boolean, glow: Float) {
+    val wx = if (ps5) 1376f else 1410f; val wy = if (ps5) 296f else 340f
+    val ww = if (ps5) 130f else 90f; val wh = if (ps5) 396f else 350f
+    val slotX = if (ps5) wx + ww - 26f else wx + ww / 2
+    val slotTop = if (ps5) wy + 150f else wy + 50f; val slotH = if (ps5) 200f else 240f
+    if (ps5) drawRoundRect(Color(0xFFDADDE2), Offset(wx - 20f, wy + wh - 6f), Size(ww + 40f, 14f), CornerRadius(6f)) // peana
+    else {
+        // Wii: peana gris en la que va encajada
+        drawRoundRect(Color(0xFF9DA2AA), Offset(wx - 26f, wy + wh - 24f), Size(ww + 52f, 34f), CornerRadius(10f))
+        drawRoundRect(Color(0xFFBDC2C9), Offset(wx - 26f, wy + wh - 24f), Size(ww + 52f, 8f), CornerRadius(4f))
+    }
+    if (ps5) {
+        // Centro negro y dos paneles blancos que se abren hacia arriba (más anchos arriba que abajo)
+        drawRoundRect(Color(0xFF111215), Offset(wx + 34f, wy + 20f), Size(ww - 68f, wh - 24f), CornerRadius(8f))
+        drawPath(Path().apply { moveTo(wx, wy); cubicTo(wx + 20f, wy + 10f, wx + 36f, wy + 40f, wx + 38f, wy + 90f); lineTo(wx + 38f, wy + wh - 4f); lineTo(wx + 14f, wy + wh - 4f); cubicTo(wx + 8f, wy + 200f, wx - 6f, wy + 60f, wx, wy); close() }, Color(0xFFF4F5F7))
+        drawPath(Path().apply { moveTo(wx + ww, wy); cubicTo(wx + ww - 20f, wy + 10f, wx + ww - 36f, wy + 40f, wx + ww - 38f, wy + 90f); lineTo(wx + ww - 38f, wy + wh - 4f); lineTo(wx + ww - 14f, wy + wh - 4f); cubicTo(wx + ww - 8f, wy + 200f, wx + ww + 6f, wy + 60f, wx + ww, wy); close() }, Color(0xFFF4F5F7))
+        drawLine(Color(0xFF3FA0FF).copy(alpha = 0.3f + 0.7f * glow), Offset(wx + 36f, wy + 90f), Offset(wx + 36f, wy + wh - 10f), 3f)
+        drawLine(Color(0xFF3FA0FF).copy(alpha = 0.3f + 0.7f * glow), Offset(wx + ww - 36f, wy + 90f), Offset(wx + ww - 36f, wy + wh - 10f), 3f)
+    } else {
+        drawRoundRect(Color(0xFFF4F5F7), Offset(wx, wy), Size(ww, wh - 18f), CornerRadius(10f))
+        drawRoundRect(Color(0xFFCBD0D7), Offset(wx, wy), Size(ww, wh - 18f), CornerRadius(10f), style = Stroke(3f))
+        // Encendido y reset arriba, y la tapa del SD abajo
+        drawCircle(Color(0xFFD5D9DF), 8f, Offset(wx + 22f, wy + 24f)); drawCircle(Color(0xFFB34A4A), 3f, Offset(wx + 22f, wy + 24f))
+        drawRoundRect(Color(0xFFD5D9DF), Offset(wx + 40f, wy + 18f), Size(30f, 12f), CornerRadius(6f))
+        drawRoundRect(Color(0xFFDDE0E5), Offset(wx + 12f, wy + wh - 92f), Size(ww - 24f, 60f), CornerRadius(6f), style = Stroke(2f))
+    }
+    // Ranura (se ilumina en azul al entrar el disco)
+    if (glow > 0f) drawRoundRect(Color(0xFF4FC3F7).copy(alpha = 0.45f * glow), Offset(slotX - 14f, slotTop - 10f), Size(28f, slotH + 20f), CornerRadius(14f))
+    drawRoundRect(lerpColor(Color(0xFF2A2E36), Color(0xFF7FD8FF), glow), Offset(slotX - 4f, slotTop), Size(8f, slotH), CornerRadius(4f))
+    if (!ps5) drawCircle(Color(0xFFBFC4CC), 9f, Offset(slotX, wy + wh - 40f))
+}
 
 @Composable
 internal fun WiiScene(game: Game, p: Float, u: Dp) {
@@ -741,22 +865,7 @@ internal fun WiiScene(game: Game, p: Float, u: Dp) {
     Canvas(Modifier.offset(u * (wx - 20), u * wy).size(u * (ww + 40), u * (wh + 12))) {
         val k = size.width / (ww + 40)
         withTransform({ scale(k, k, Offset.Zero); translate(-(wx - 20), -wy) }) {
-            drawRoundRect(Color(0xFFDADDE2), Offset(wx - 20f, wy + wh - 6f), Size(ww + 40f, 14f), CornerRadius(6f)) // peana
-            if (ps5) {
-                // Centro negro y dos paneles blancos que se abren hacia arriba (más anchos arriba que abajo)
-                drawRoundRect(Color(0xFF111215), Offset(wx + 34f, wy + 20f), Size(ww - 68f, wh - 24f), CornerRadius(8f))
-                drawPath(Path().apply { moveTo(wx, wy); cubicTo(wx + 20f, wy + 10f, wx + 36f, wy + 40f, wx + 38f, wy + 90f); lineTo(wx + 38f, wy + wh - 4f); lineTo(wx + 14f, wy + wh - 4f); cubicTo(wx + 8f, wy + 200f, wx - 6f, wy + 60f, wx, wy); close() }, Color(0xFFF4F5F7))
-                drawPath(Path().apply { moveTo(wx + ww, wy); cubicTo(wx + ww - 20f, wy + 10f, wx + ww - 36f, wy + 40f, wx + ww - 38f, wy + 90f); lineTo(wx + ww - 38f, wy + wh - 4f); lineTo(wx + ww - 14f, wy + wh - 4f); cubicTo(wx + ww - 8f, wy + 200f, wx + ww + 6f, wy + 60f, wx + ww, wy); close() }, Color(0xFFF4F5F7))
-                drawLine(Color(0xFF3FA0FF).copy(alpha = 0.3f + 0.7f * glow), Offset(wx + 36f, wy + 90f), Offset(wx + 36f, wy + wh - 10f), 3f)
-                drawLine(Color(0xFF3FA0FF).copy(alpha = 0.3f + 0.7f * glow), Offset(wx + ww - 36f, wy + 90f), Offset(wx + ww - 36f, wy + wh - 10f), 3f)
-            } else {
-                drawRoundRect(Color(0xFFF4F5F7), Offset(wx, wy), Size(ww, wh), CornerRadius(10f))
-                drawRoundRect(Color(0xFFCBD0D7), Offset(wx, wy), Size(ww, wh), CornerRadius(10f), style = Stroke(3f))
-            }
-            // Ranura (se ilumina en azul al entrar el disco)
-            if (glow > 0f) drawRoundRect(Color(0xFF4FC3F7).copy(alpha = 0.45f * glow), Offset(slotX - 14f, slotTop - 10f), Size(28f, slotH + 20f), CornerRadius(14f))
-            drawRoundRect(lerpColor(Color(0xFF2A2E36), Color(0xFF7FD8FF), glow), Offset(slotX - 4f, slotTop), Size(8f, slotH), CornerRadius(4f))
-            if (!ps5) drawCircle(Color(0xFFBFC4CC), 9f, Offset(slotX, wy + wh - 40f))
+            drawStandingConsole(ps5, glow)
         }
     }
     if (p < 0.29f && open > 0.4f || p in 0.29f..0.52f) {

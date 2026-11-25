@@ -126,6 +126,11 @@ fun DetailScreen(game: Game, vm: LibraryViewModel, onClose: () -> Unit) {
                         }
                         IconButton(onClick = onClose) { Icon(Icons.Default.Close, stringResource(R.string.close), tint = Color.White) }
                     }
+                    // Su nombre en el otro idioma (o el de las copias unidas): «Pokémon Super Mystery Dungeon».
+                    game.otherTitles.takeIf { it.isNotEmpty() }?.let { others ->
+                        Text(stringResource(R.string.also_known_as, others.take(3).joinToString(" · ")), color = Color(0xFFBFA98A),
+                            fontSize = 13.sp, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    }
                     Spacer(Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Tag(game.console.label, Color(0xFF5B3A1E))
@@ -279,6 +284,7 @@ private fun EditDialog(game: Game, totalMode: Boolean, onDismiss: () -> Unit, on
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.field_title)) }, singleLine = true)
                 OutlinedTextField(genres, { genres = it }, label = { Text(stringResource(R.string.field_genres)) })
+                GenrePicker(genres) { genres = it }
                 OutlinedTextField(dev, { dev = it }, label = { Text(stringResource(R.string.stat_studio)) }, singleLine = true)
                 OutlinedTextField(year, { year = it.filter(Char::isDigit).take(4) }, label = { Text(stringResource(R.string.stat_year)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
@@ -307,7 +313,8 @@ private fun EditDialog(game: Game, totalMode: Boolean, onDismiss: () -> Unit, on
                     title = title.ifBlank { game.title },
                     // Si el usuario cambió el nombre, se guarda el suyo y no el de la copia.
                     originalTitle = if (title.isNotBlank() && title != game.title) null else game.originalTitle,
-                    genres = genres.split(',').map { it.trim() }.filter { it.isNotEmpty() },
+                    // «fps», «rpg», «gacha»... escritos a mano se convierten en el género de Repisa; lo demás se queda tal cual.
+                    genres = com.repisa.app.model.Genres.normalize(genres.split(',').map { it.trim() }.filter { it.isNotEmpty() }, keepUnknown = true),
                     developer = dev.ifBlank { null },
                     releaseYear = year.toIntOrNull(),
                     coverUrl = cover.ifBlank { null },
@@ -486,5 +493,28 @@ private fun CollectionsDialog(game: Game, vm: LibraryViewModel, onDismiss: () ->
     )
     if (newColl) CollectionNameDialog(onDismiss = { newColl = false }) { name ->
         val c = vm.createCollection(name); vm.addToCollection(setOf(game.id), c.id); newColl = false
+    }
+}
+
+/** Los géneros que Repisa conoce, como etiquetas que se tocan para añadirlos o quitarlos del campo de texto. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun GenrePicker(text: String, onChange: (String) -> Unit) {
+    val current = text.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+    val chosen = com.repisa.app.model.Genres.normalize(current, keepUnknown = true).toSet()
+    val all = remember { com.repisa.app.model.Genres.known.sortedBy { L10n.genre(it).lowercase() } }
+    Text(stringResource(R.string.genres_pick), fontSize = 12.sp, color = Color(0xFF9C8A70), modifier = Modifier.padding(top = 6.dp, bottom = 4.dp))
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        all.forEach { g ->
+            val on = g in chosen
+            androidx.compose.material3.FilterChip(
+                selected = on,
+                onClick = {
+                    val next = if (on) current.filter { com.repisa.app.model.Genres.normalize(listOf(it)).firstOrNull() != g } else current + g
+                    onChange(next.joinToString(", "))
+                },
+                label = { Text(L10n.genre(g), fontSize = 12.sp) },
+            )
+        }
     }
 }

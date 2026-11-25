@@ -66,6 +66,7 @@ fun StatsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 androidx.compose.material3.Button(onClick = { vm.calendar.value = false }) { Text("📅 " + stringResource(R.string.cal_title)) }
                 androidx.compose.material3.Button(onClick = { vm.wrapped.value = false }) { Text("✨ " + stringResource(R.string.wrapped_name)) }
+                androidx.compose.material3.Button(onClick = { vm.consolesRoom.value = true }) { Text("🎮 " + stringResource(R.string.consoles_title)) }
             }
             // Cifras principales
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {

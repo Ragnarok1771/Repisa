@@ -132,15 +132,6 @@ class Settings(context: Context) {
     var companionPanel: Boolean
         get() = prefs.getBoolean("companion_panel", true)
         set(v) = prefs.edit { putBoolean("companion_panel", v) }
-    /** Buscar versiones nuevas de Repisa al abrir la app. */
-    var checkUpdates: Boolean
-        get() = prefs.getBoolean("check_updates", true)
-        set(v) = prefs.edit { putBoolean("check_updates", v) }
-    var lastUpdateCheck: Long
-        get() = prefs.getLong("last_update_check", 0)
-        set(v) = prefs.edit { putLong("last_update_check", v) }
-    /** Versión que el usuario pidió no volver a avisar. */
-    var skippedVersion: String? get() = str("skipped_version"); set(v) = put("skipped_version", v)
     /** Juegos que el usuario quitó de la repisa (no vuelven al sincronizar). */
     var hiddenGames: Set<String>
         get() = prefs.getStringSet("hidden_games", emptySet()) ?: emptySet()
@@ -161,6 +152,9 @@ class Settings(context: Context) {
     var achPass: Int
         get() = prefs.getInt("ach_pass", 0)
         set(v) = prefs.edit { putInt("ach_pass", v) }
+    var genrePass: Int
+        get() = prefs.getInt("genre_pass", 0)
+        set(v) = prefs.edit { putInt("genre_pass", v) }
     var factsPass: Int
         get() = prefs.getInt("facts_pass", 0)
         set(v) = prefs.edit { putInt("facts_pass", v) }

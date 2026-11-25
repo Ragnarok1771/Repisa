@@ -88,6 +88,8 @@ fun mergeGame(old: Game?, new: Game): Game {
         metaFetched = old.metaFetched,
         factsFetched = old.factsFetched,
         userEdited = old.userEdited,
+        wikidataId = old.wikidataId, altTitles = old.altTitles, idChecked = old.idChecked,
+        steamMatch = old.steamMatch, steamChecked = old.steamChecked,
     )
     return merged.copy(coverAspect = if (merged.coverUrl == old.coverUrl) old.coverAspect else null)
 }

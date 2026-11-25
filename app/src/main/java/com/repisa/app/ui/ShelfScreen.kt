@@ -1,5 +1,17 @@
 package com.repisa.app.ui
 
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.fillMaxHeight
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
@@ -85,7 +97,8 @@ private var LocalBlur: ((Game) -> Unit)? = null
 private sealed interface ShelfItem {
     val key: String
     data class Header(val group: ShelfGroup, override val key: String) : ShelfItem
-    data class Row(val games: List<Game>, override val key: String) : ShelfItem
+    /** [groupKey] solo en la primera balda de cada repisa: ahí baja el foco desde su placa. */
+    data class Row(val games: List<Game>, override val key: String, val groupKey: String? = null) : ShelfItem
 }
 
 @Composable
@@ -120,7 +133,8 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
                 val prices by vm.wishPrices.collectAsState()
                 // Cajas de la lista de deseos: abren la tienda de Steam en vez de la ficha.
                 val openStore: (Game) -> Unit = { g -> g.storeUrl?.let { vm.launcher.openSteamStore(it) } }
-                androidx.compose.runtime.CompositionLocalProvider(LocalPriceTags provides prices) {
+                val platinums by vm.platinums.collectAsState()
+                androidx.compose.runtime.CompositionLocalProvider(LocalPriceTags provides prices, LocalPlatinums provides platinums.keys) {
                 Shelves(shelves, collapsed, { vm.toggleCollapsed(it) }, boxHeight, focused?.id, onFocus = { vm.focusGame(it) },
                     onOpen = { if (it.isWish) openStore(it) else onOpenGame(it) },
                     onPlay = { if (it.isWish) openStore(it) else vm.play(it) },
@@ -184,6 +198,10 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
         // Fila 2: filtros a la izquierda; ordenar y repisas al fondo a la derecha.
         Row(verticalAlignment = Alignment.CenterVertically) {
             LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                // Filtro por consola (desde «Mis consolas»): se quita tocándolo.
+                options.console?.let { id ->
+                    item { SourceChip("🎮 " + com.repisa.app.model.Consoles.byId(id).name + "  ✕", true) { vm.closeConsoleFilter() } }
+                }
                 item { SourceChip(stringResource(R.string.filter_all), options.source == null) { vm.setSource(null) } }
                 items(Source.entries) { s ->
                     val count = all.count { it.source == s || s in it.groupSources }
@@ -271,7 +289,7 @@ private fun Picker(title: String, value: String, choices: List<String>, onPick: 
 }
 
 @Composable
-private fun Shelves(
+internal fun Shelves(
     shelves: List<ShelfGroup>,
     collapsed: Set<String>,
     onToggle: (String) -> Unit,
@@ -298,38 +316,124 @@ private fun Shelves(
                     if (!alone && group.key in collapsed) return@forEachIndexed
                     var row = mutableListOf<Game>()
                     var used = 0.dp
+                    var firstRow = true
                     group.games.forEach { g ->
                         val w = boxSize(g, boxHeight * g.console.case.heightScale).first + gap
                         if (row.isNotEmpty() && used + w > usable) {
-                            add(ShelfItem.Row(row, "r$gi:${size}")); row = mutableListOf(); used = 0.dp
+                            add(ShelfItem.Row(row, "r$gi:${size}", group.key.takeIf { firstRow })); row = mutableListOf(); used = 0.dp
+                            firstRow = false
                         }
                         row += g; used += w
                     }
-                    if (row.isNotEmpty()) add(ShelfItem.Row(row, "r$gi:${size}"))
+                    if (row.isNotEmpty()) add(ShelfItem.Row(row, "r$gi:${size}", group.key.takeIf { firstRow }))
                 }
             }
         }
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+        val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+        // Primer juego de cada repisa: desde la placa, abajo lleva a él (no al que quede más centrado bajo la placa).
+        val firstGame = remember { mutableMapOf<String, FocusRequester>() }
+        LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 24.dp)) {
             items(items, key = { it.key }) { item ->
                 when (item) {
-                    is ShelfItem.Header -> GroupPlaque(item.group, item.group.key in collapsed, { plaqueExtra(item.group) }) { onToggle(item.group.key) }
-                    is ShelfItem.Row -> ShelfRow(item.games, boxHeight, sidePad, gap, focusedId, onFocus, onOpen, onPlay, onFavorite, onAspect)
+                    is ShelfItem.Header -> GroupPlaque(item.group, item.group.key in collapsed, { plaqueExtra(item.group) },
+                        downTo = if (item.group.key in collapsed) null else firstGame.getOrPut(item.group.key) { FocusRequester() }) { onToggle(item.group.key) }
+                    is ShelfItem.Row -> ShelfRow(item.games, boxHeight, sidePad, gap, focusedId, onFocus, onOpen, onPlay, onFavorite, onAspect,
+                        firstFocus = item.groupKey?.let { firstGame.getOrPut(it) { FocusRequester() } })
                 }
             }
         }
         CabinetSides()
+        // Barra para subir y bajar rápido: con el nombre de la repisa por la que vas mientras se arrastra.
+        FastScrollbar(listState, Modifier.align(Alignment.CenterEnd)) { index ->
+            items.subList(0, (index + 1).coerceIn(1, items.size)).lastOrNull { it is ShelfItem.Header }
+                ?.let { (it as ShelfItem.Header).group.title }
+        }
+    }
+}
+
+/**
+ * Barra de desplazamiento que se puede arrastrar (o tocar para saltar), en el lateral derecho del mueble.
+ * [label] da el texto de la burbuja para el elemento al que se llega (el nombre de la repisa).
+ */
+@Composable
+private fun FastScrollbar(state: androidx.compose.foundation.lazy.LazyListState, modifier: Modifier, label: (Int) -> String?) {
+    val total = state.layoutInfo.totalItemsCount
+    val visible = state.layoutInfo.visibleItemsInfo.size
+    if (total == 0 || (!state.canScrollForward && !state.canScrollBackward)) return
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var dragging by remember { mutableStateOf(false) }
+    var dragFraction by remember { mutableStateOf(0f) }
+    // Posición actual (0..1): elemento de arriba + lo que se ha desplazado dentro de él.
+    val first = state.layoutInfo.visibleItemsInfo.firstOrNull()
+    val within = if (first != null && first.size > 0) state.firstVisibleItemScrollOffset.toFloat() / first.size else 0f
+    val scrollable = (total - visible).coerceAtLeast(1)
+    val fraction = if (dragging) dragFraction
+        else if (!state.canScrollForward) 1f else ((state.firstVisibleItemIndex + within) / scrollable).coerceIn(0f, 1f)
+    val active = dragging || state.isScrollInProgress
+    val alpha by androidx.compose.animation.core.animateFloatAsState(if (active) 1f else 0.8f, label = "barra")
+    fun jump(y: Float, height: Float, thumb: Float) {
+        dragFraction = ((y - thumb / 2) / (height - thumb).coerceAtLeast(1f)).coerceIn(0f, 1f)
+        val target = (dragFraction * scrollable).toInt().coerceIn(0, total - 1)
+        scope.launch { state.scrollToItem(target) }
+    }
+    BoxWithConstraints(modifier.fillMaxHeight().width(34.dp).padding(vertical = 6.dp)) {
+        val height = constraints.maxHeight.toFloat()
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        // Tirador proporcional a lo que se ve, pero nunca más pequeño que un dedo.
+        val thumbPx = maxOf(with(density) { 52.dp.toPx() }, height * visible / total).coerceAtMost(height * 0.5f)
+        val top = (height - thumbPx) * fraction
+        Box(
+            Modifier.fillMaxSize()
+                .pointerInput(total) {
+                    detectTapGestures { jump(it.y, height, thumbPx) }
+                }
+                .pointerInput(total) {
+                    detectVerticalDragGestures(
+                        onDragStart = { dragging = true; jump(it.y, height, thumbPx) },
+                        onDragEnd = { dragging = false }, onDragCancel = { dragging = false },
+                    ) { change, _ -> change.consume(); jump(change.position.y, height, thumbPx) }
+                },
+        ) {
+            // Carril oscuro sobre el lateral del mueble, para que se vea que la barra está ahí.
+            Box(Modifier.align(Alignment.TopEnd).padding(end = 4.dp).width(8.dp).fillMaxHeight()
+                .background(Color(0x55000000), RoundedCornerShape(4.dp)))
+            Box(
+                Modifier.align(Alignment.TopEnd).offset { androidx.compose.ui.unit.IntOffset(0, top.toInt()) }
+                    .padding(end = if (active) 1.dp else 2.dp).width(if (active) 14.dp else 12.dp).height(with(density) { thumbPx.toDp() })
+                    .graphicsLayer { this.alpha = alpha }
+                    .background(Brush.verticalGradient(listOf(Color(0xFFFFE2A0), Color(0xFFC99A4A))), RoundedCornerShape(7.dp))
+                    .border(1.dp, Color(0x88000000), RoundedCornerShape(7.dp)),
+            )
+        }
+        // Burbuja con la repisa a la que se llega, a la izquierda del tirador.
+        if (dragging) label((dragFraction * scrollable).toInt().coerceIn(0, total - 1))?.let { text ->
+            Box(
+                Modifier.align(Alignment.TopEnd)
+                    .offset { androidx.compose.ui.unit.IntOffset(-with(density) { 38.dp.roundToPx() }, (top + thumbPx / 2 - with(density) { 20.dp.toPx() }).toInt()) }
+                    .wrapContentWidth(unbounded = true, align = Alignment.End)
+                    .background(Color(0xF02A1C14), RoundedCornerShape(10.dp)).border(1.dp, Color(0xFFFFD27A), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            ) { Text(text, color = Color(0xFFFFD27A), fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, fontFamily = DisplayFont) }
+        }
     }
 }
 
 @Composable
-private fun GroupPlaque(group: ShelfGroup, isCollapsed: Boolean, extra: @Composable () -> Unit = {}, onToggle: () -> Unit) {
+private fun GroupPlaque(group: ShelfGroup, isCollapsed: Boolean, extra: @Composable () -> Unit = {}, downTo: FocusRequester? = null, onToggle: () -> Unit) {
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val focusedPlaque by interaction.collectIsFocusedAsState()
     Row(Modifier.fillMaxWidth().padding(start = 28.dp, top = 14.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        // Repisas por consola: la consola dibujada en pequeño junto a su placa.
+        group.consoleId?.let { id -> if (hasConsoleArt(id)) ConsoleIconBox(id, 46.dp, 26.dp, Modifier.padding(end = 8.dp)) }
         // La placa se toca (o se pulsa con el mando) para plegar o desplegar la repisa.
         Box(
             Modifier
                 .clip(RoundedCornerShape(4.dp))
+                // Abajo con el mando: al primer juego de la repisa. Si no está en pantalla, el movimiento normal.
+                .onPreviewKeyEvent { e ->
+                    downTo != null && e.type == KeyEventType.KeyDown && e.key == Key.DirectionDown &&
+                        runCatching { downTo.requestFocus() }.isSuccess
+                }
                 .clickable(interactionSource = interaction, indication = null, onClick = onToggle)
                 .background(Brush.verticalGradient(ShelfTheme.current.plaque), RoundedCornerShape(4.dp))
                 .border(if (focusedPlaque) 3.dp else 1.dp, if (focusedPlaque) Color.White else ShelfTheme.current.plaqueBorder, RoundedCornerShape(4.dp))
@@ -355,6 +459,7 @@ private fun ShelfRow(
     onPlay: (Game) -> Unit,
     onFavorite: (Game) -> Unit,
     onAspect: (Game, Float) -> Unit,
+    firstFocus: FocusRequester? = null,
 ) {
     Column(
         Modifier.fillMaxWidth()
@@ -378,10 +483,22 @@ private fun ShelfRow(
                     GameBox(
                         g, boxHeight * g.console.case.heightScale,
                         showStatus = !g.isWish && LocalShowStatus.current,
-                        overlay = LocalPriceTags.current[g.id]?.let { w -> { PriceBand(w, Modifier.align(Alignment.BottomCenter)) } },
+                        overlay = run {
+                            val price = LocalPriceTags.current[g.id]
+                            val platinum = g.id in LocalPlatinums.current
+                            if (price == null && !platinum) null else {
+                                {
+                                    price?.let { PriceBand(it, Modifier.align(Alignment.BottomCenter)) }
+                                    // Platino: diamante en la esquina de arriba a la derecha de la carátula.
+                                    if (platinum) Text("💎", fontSize = 16.sp, modifier = Modifier.align(Alignment.TopEnd).padding(3.dp)
+                                        .background(Color(0x99000000), androidx.compose.foundation.shape.CircleShape).padding(3.dp))
+                                }
+                            }
+                        },
                         lifted = isFocused || selected,
                         onCoverAspect = { onAspect(g, it) },
                         modifier = Modifier
+                            .then(if (firstFocus != null && g === games.first()) Modifier.focusRequester(firstFocus) else Modifier)
                             .onFocusChanged { f ->
                                 if (f.isFocused) onFocus(g) else if (isFocused) LocalBlur?.invoke(g)
                                 isFocused = f.isFocused
@@ -684,6 +801,9 @@ fun CollectionNameDialog(initial: String = "", onDismiss: () -> Unit, onSave: (S
         dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
+
+/** Juegos con platino (llevan un 💎 en la caja). */
+val LocalPlatinums = androidx.compose.runtime.staticCompositionLocalOf<Set<String>> { emptySet() }
 
 /** Precios de la lista de deseos por id de caja (ver LibraryViewModel.wishPrices). */
 val LocalPriceTags = androidx.compose.runtime.staticCompositionLocalOf<Map<String, com.repisa.app.sources.WishItem>> { emptyMap() }

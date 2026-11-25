@@ -12,7 +12,6 @@
     <string name="sync_all">Sync all</string>
     <string name="remove">Remove</string>
     <string name="done">Done</string>
-    <string name="ask">Ask</string>
     <string name="hours_played">%1$d h played</string>
     <string name="search_hint">Search title, genre, studio…</string>
     <string name="close_search">Close search</string>
@@ -75,7 +74,6 @@
     <string name="edit_title">Edit %1$s</string>
     <string name="field_title">Title</string>
     <string name="field_genres">Genres (comma separated)</string>
-    <string name="field_extra_hours">Extra hours played (manual)</string>
     <string name="field_cover_url">Cover URL</string>
     <string name="my_score">My rating</string>
     <string name="rate_action">Rate ★</string>
@@ -203,7 +201,6 @@
     <string name="backup_restored">Backup imported (%1$d games). Link Steam/Epic and choose your folders if needed.</string>
     <string name="backup_failed">Couldn\'t complete the backup: %1$s</string>
     <string name="updates_title">Version</string>
-    <string name="updates_auto">Check for new versions when opening</string>
     <string name="updates_hint">Repisa looks at the project\'s releases on GitHub and, if there is a newer one, shows its patch notes and installs it over this one.</string>
     <string name="updates_check_now">Check now</string>
     <string name="update_none">You have the latest version (%1$s).</string>
@@ -213,8 +210,6 @@
     <string name="update_required">Install it to keep using Repisa (your library and settings stay as they are).</string>
     <string name="update_no_notes">No patch notes.</string>
     <string name="update_now">Update</string>
-    <string name="update_later">Later</string>
-    <string name="update_skip">Skip this version</string>
     <string name="update_downloading">Downloading… %1$d%%</string>
     <string name="update_allow_install">Allow Repisa to install apps (Android opens the setting) and come back: the update continues by itself.</string>
     <string name="update_failed">Couldn\'t download the update: %1$s</string>
@@ -293,14 +288,6 @@
     <string name="sort_achievements" formatted="false">Achievements %</string>
     <string name="rach_first">First session</string>
     <string name="rach_first_d">Play it for the first time.</string>
-    <string name="rach_10h">Hooked</string>
-    <string name="rach_10h_d">Reach 10 hours.</string>
-    <string name="rach_50h">Devoted</string>
-    <string name="rach_50h_d">Reach 50 hours.</string>
-    <string name="rach_100h">A hundred hours</string>
-    <string name="rach_100h_d">Reach 100 hours.</string>
-    <string name="rach_hltb">No rush</string>
-    <string name="rach_hltb_d">Play longer than HowLongToBeat\'s story time.</string>
     <string name="rach_finished">To the end</string>
     <string name="rach_finished_d">Mark it as finished.</string>
     <string name="rach_completed">Completionist</string>
@@ -353,7 +340,6 @@
     <string name="collections_empty">You don\'t have collections yet. Create one: it appears as its own shelf at the top.</string>
     <string name="collections_hint">Your own shelves (like Steam collections). Add games from a game\'s details (📂) or by selecting several. Deleting a collection doesn\'t delete its games.</string>
     <string name="delete">Delete</string>
-    <string name="select_many">Select</string>
     <string name="select_all">Select all</string>
     <string name="selected_count">%1$d selected · tap covers to add or remove</string>
     <string name="menu_collections">Collections</string>
@@ -371,7 +357,6 @@
     <string name="launch_anim_never">Never</string>
     <string name="launch_anim_preview_all">See the animations</string>
     <string name="launch_anim_others">Others</string>
-    <string name="launch_anim_preview">See it:</string>
     <string name="status_order">Order of the shelves by status</string>
     <string name="status_order_hint">Used when grouping by status. Move each one with ▲ ▼.</string>
     <string name="status_order_reset">Restore order</string>
@@ -394,7 +379,6 @@
     <string name="emu_auto_option">Automatic (use the detected emulator)</string>
     <string name="msg_emus_detected">Emulators: %1$s</string>
     <string name="emulator_for">Emulator for %1$s</string>
-    <string name="ask_every_time">Ask every time</string>
     <string name="covers_hint">Each game has a \"Find cover\" button in its details. This button looks for covers for every game that doesn\'t have one.</string>
     <string name="find_missing">Find missing covers</string>
     <string name="sgdb_hint">Recommended: SteamGridDB, the cover database Cocoon uses (free). Create an account, go to Preferences → API and paste your key here.</string>
@@ -411,8 +395,6 @@
     <string name="second_screen_hint">On the AYN Thor, the bottom screen shows the selected game\'s details.</string>
     <string name="box_size">Box size: %1$d dp</string>
     <string name="box_size_hint">Height of a DVD case; the other boxes are scaled to their real size.</string>
-    <string name="welcome">Welcome to Repisa</string>
-    <string name="choose_language">Choose your language</string>
     <string name="msg_sync_count">%1$s: %2$d games</string>
     <string name="msg_connect_sources">Connect Steam, Epic or your emulator folders in Settings.</string>
     <string name="msg_time_updated">Playtime updated: %1$s (+%2$s)</string>
@@ -548,6 +530,181 @@
     <string name="wish_refreshing">Checking…</string>
     <string name="wish_background">Also check with Repisa closed</string>
     <string name="wish_background_hint">Every 6 hours, when there\'s internet. You\'ll get a notification for each game that drops in price.</string>
+    <string name="tier_bronze">Bronze</string>
+    <string name="tier_silver">Silver</string>
+    <string name="tier_gold">Gold</string>
+    <string name="tier_platinum">Platinum</string>
+    <string name="plat_title">Platinum</string>
+    <string name="plat_got">Platinum unlocked!</string>
+    <string name="plat_left_platform">%1$d achievements left</string>
+    <string name="plat_left_repisa">%1$d bronze/silver Repisa achievements left</string>
+    <string name="plat_left_status" formatted="false">mark it as 100 %</string>
+    <string name="plat_new">Platinum! %1$s</string>
+    <string name="plat_count">platinums</string>
+    <string name="plat_collection">Platinum collection</string>
+    <string name="plat_none" formatted="false">No platinums yet. A game gets one when it\'s marked 100 % and has all its achievements (Steam, RetroAchievements… or, if it has none, all of Repisa\'s bronze and silver ones).</string>
+    <string name="aach_title">Repisa achievements</string>
+    <string name="aach_count">Repisa achievements</string>
+    <string name="aach_new">Achievement: %1$s</string>
+    <string name="reminder_title">Play today…</string>
+    <string name="reminder_stale">You haven\'t touched it in %1$d days</string>
+    <string name="reminder_backlog_hltb">Waiting in your backlog · about %1$s h</string>
+    <string name="reminder_backlog">Waiting in your backlog</string>
+    <string name="cal_release_day">Wishlist releases (%1$d)</string>
+    <string name="cal_release_soon">Releases this day</string>
+    <string name="cal_release_out">Released this day</string>
+    <string name="week_title">Your week</string>
+    <string name="week_summary">%1$s · %2$d days playing</string>
+    <string name="rd_hours1">Play it for 1 hour.</string>
+    <string name="rd_hours">Play it for %1$d hours.</string>
+    <string name="rd_sessions">%1$d recorded sessions.</string>
+    <string name="rd_days">Play it on %1$d different days.</string>
+    <string name="rd_streak">Play it %1$d days in a row.</string>
+    <string name="rd_months">Play it in %1$d different months.</string>
+    <string name="rd_session_hours">One session of %1$d hours in a row (launched from Repisa).</string>
+    <string name="rd_day_hours">%1$d hours in a single day.</string>
+    <string name="rach_hour1">Warming up</string>
+    <string name="rach_from_repisa">From the shelf</string>
+    <string name="rach_from_repisa_d">Launch it from Repisa and play.</string>
+    <string name="rach_sessions_3">Be right back</string>
+    <string name="rach_days_2">Day two</string>
+    <string name="rach_session_30m">Coffee break</string>
+    <string name="rach_session_30m_d">A 30-minute session (launched from Repisa).</string>
+    <string name="rach_weekend">Weekend</string>
+    <string name="rach_weekend_d">Play it on a Saturday or Sunday.</string>
+    <string name="rach_evening">After hours</string>
+    <string name="rach_evening_d">Play it in the evening (7–11 pm).</string>
+    <string name="rach_collection">Well kept</string>
+    <string name="rach_collection_d">Add it to one of your collections.</string>
+    <string name="rach_status">Labelled</string>
+    <string name="rach_status_d">Set its status yourself.</string>
+    <string name="rach_session_2h">Long session</string>
+    <string name="rach_day_3h">Gaming afternoon</string>
+    <string name="rach_sessions_10">Regular</string>
+    <string name="rach_days_7">A week of play</string>
+    <string name="rach_streak_3">Three in a row</string>
+    <string name="rach_three_a_day">Can\'t stop</string>
+    <string name="rach_three_a_day_d">Three sessions on the same day.</string>
+    <string name="rach_night">Night owl</string>
+    <string name="rach_night_d">Start a session between midnight and 5 am (from Repisa).</string>
+    <string name="rach_morning">Early bird</string>
+    <string name="rach_morning_d">Start a session between 5 and 9 am (from Repisa).</string>
+    <string name="rach_months_3">Old friend</string>
+    <string name="rach_weekdays">All week long</string>
+    <string name="rach_weekdays_d">Play it on every day of the week (Monday to Sunday, any week).</string>
+    <string name="rach_comeback">The comeback</string>
+    <string name="rach_comeback_d">Come back to it after 30 days or more.</string>
+    <string name="rach_hltb_main">The story</string>
+    <string name="rach_hltb_main_d">Play it as long as its main story lasts (HowLongToBeat; 10 h if unknown).</string>
+    <string name="rach_hltb_extra">Explorer</string>
+    <string name="rach_hltb_extra_d">Play it as long as story + extras last (HowLongToBeat; 20 h if unknown).</string>
+    <string name="rach_critic">Critic</string>
+    <string name="rach_critic_d">Rate it with 4 or more criteria.</string>
+    <string name="rach_diary">Game diary</string>
+    <string name="rach_diary_d">Write notes of 300 characters or more.</string>
+    <string name="rach_session_4h">Marathon</string>
+    <string name="rach_session_8h">No sleep</string>
+    <string name="rach_day_6h">All-day gaming</string>
+    <string name="rach_sessions_50">Routine</string>
+    <string name="rach_sessions_100">One hundred sessions</string>
+    <string name="rach_days_30">A month of play</string>
+    <string name="rach_streak_7">Seven in a row</string>
+    <string name="rach_streak_30">Never miss a day</string>
+    <string name="rach_months_6">Half a year</string>
+    <string name="rach_months_12">All year round</string>
+    <string name="rach_seasons">Four seasons</string>
+    <string name="rach_seasons_d">Play it in spring, summer, autumn and winter.</string>
+    <string name="rach_midnight">Midnight chimes</string>
+    <string name="rach_midnight_d">A session that goes past midnight (from Repisa).</string>
+    <string name="rach_new_year">New Year</string>
+    <string name="rach_new_year_d">Play it on January 1st.</string>
+    <string name="rach_anniversary">Anniversary</string>
+    <string name="rach_anniversary_d">Play it a year (or more) after your first recorded session.</string>
+    <string name="rach_hltb_complete">Completionist</string>
+    <string name="rach_hltb_complete_d" formatted="false">Play it as long as a 100 % run takes (HowLongToBeat; 40 h if unknown).</string>
+    <string name="rach_hltb_double">No rush</string>
+    <string name="rach_hltb_double_d" formatted="false">Play it twice as long as a 100 % run (HowLongToBeat; 80 h if unknown).</string>
+    <string name="rach_speedrun">Speedrunner</string>
+    <string name="rach_speedrun_d">Finish it in less time than its main story (HowLongToBeat).</string>
+    <string name="rach_hours_50">50 hours</string>
+    <string name="rach_hours_100">100 hours</string>
+    <string name="rach_hours_250">250 hours</string>
+    <string name="rach_hours_500">500 hours</string>
+    <string name="rach_masterpiece">Masterpiece</string>
+    <string name="rach_masterpiece_d" formatted="false">Give it a rating of 95 % or more.</string>
+    <string name="rach_hunter">Trophy hunter</string>
+    <string name="rach_hunter_d">Unlock all of its own achievements (Steam, RetroAchievements…).</string>
+    <string name="ad_games">Have %1$d games in Repisa.</string>
+    <string name="ad_hours">Add up %1$d hours across all your games.</string>
+    <string name="ad_finished">Finished games: %1$d.</string>
+    <string name="ad_completed">Games at 100 %%: %1$d.</string>
+    <string name="ad_platinum">Platinums: %1$d.</string>
+    <string name="ad_rated">Rated games: %1$d.</string>
+    <string name="ad_systems">Play on %1$d different systems.</string>
+    <string name="ad_streak">Play something %1$d days in a row.</string>
+    <string name="ad_sessions">Recorded sessions: %1$d.</string>
+    <string name="ad_collections">Collections created: %1$d.</string>
+    <string name="ad_ach">Steam / RetroAchievements achievements unlocked: %1$d.</string>
+    <string name="ad_perfect">Games with all their achievements: %1$d.</string>
+    <string name="aach_lib_10">Getting started</string>
+    <string name="aach_lib_50">A proper shelf</string>
+    <string name="aach_lib_100">Collector</string>
+    <string name="aach_lib_250">Museum</string>
+    <string name="aach_lib_500">Living library</string>
+    <string name="aach_tot_100">100 hours on the clock</string>
+    <string name="aach_tot_500">Veteran</string>
+    <string name="aach_tot_1000">A thousand hours</string>
+    <string name="aach_tot_2500">Legend</string>
+    <string name="aach_fin_1">Roll the credits</string>
+    <string name="aach_fin_10">Ten endings</string>
+    <string name="aach_fin_25">Closer</string>
+    <string name="aach_fin_50">Fifty adventures</string>
+    <string name="aach_fin_100">Living history</string>
+    <string name="aach_cmp_1">One hundred percent</string>
+    <string name="aach_cmp_10">Perfectionist</string>
+    <string name="aach_cmp_25">Nothing left</string>
+    <string name="aach_plat_1">First platinum</string>
+    <string name="aach_plat_5">Platinum collector</string>
+    <string name="aach_plat_10">Platinum crown</string>
+    <string name="aach_plat_25">Platinum legend</string>
+    <string name="aach_rate_1">First opinion</string>
+    <string name="aach_rate_10">Reviewer</string>
+    <string name="aach_rate_50">Professor</string>
+    <string name="aach_sys_3">Multiplatform</string>
+    <string name="aach_sys_10">Console hopper</string>
+    <string name="aach_sys_20">Time traveller</string>
+    <string name="aach_streak_7">Gaming week</string>
+    <string name="aach_streak_30">Unstoppable</string>
+    <string name="aach_streak_100">One hundred days</string>
+    <string name="aach_ses_10">Taking notes</string>
+    <string name="aach_ses_100">Logbook</string>
+    <string name="aach_ses_500">Chronicler</string>
+    <string name="aach_coll_1">Organised</string>
+    <string name="aach_coll_5">Archivist</string>
+    <string name="aach_ach_100">Hunter</string>
+    <string name="aach_ach_1000">Great hunter</string>
+    <string name="aach_ach_5000">Hall of fame</string>
+    <string name="aach_perf_1">Perfect game</string>
+    <string name="aach_perf_10">Ten perfect games</string>
+    <string name="aach_abandon">Life\'s too short</string>
+    <string name="aach_abandon_d">Mark a game as abandoned.</string>
+    <string name="aach_theme">Redecorating</string>
+    <string name="aach_theme_d">Use a cabinet theme other than walnut.</string>
+    <string name="aach_custom_theme">Interior designer</string>
+    <string name="aach_custom_theme_d">Use your own custom theme.</string>
+    <string name="aach_wish_10">Dreamer</string>
+    <string name="aach_wish_10_d">Have 10 games on your Steam wishlist.</string>
+    <string name="consoles_title">My consoles</string>
+    <string name="consoles_sub">%1$d systems · %2$s · tap one to see its games</string>
+    <string name="console_card">%1$s · %2$s on this console</string>
+    <string name="status_genres">Checking genres (%1$d/%2$d)…</string>
+    <string name="also_known_as">Also known as: %1$s</string>
+    <string name="genres_pick">Tap to add or remove:</string>
+    <string name="status_genres_steam">Checking Steam genres…</string>
+    <string name="find_missing_genres">Find missing genres</string>
+    <string name="genres_hint">Genres come from Steam community tags (Steam and Epic) and from Wikidata (emulators). Games without one are searched again.</string>
+    <string name="msg_genres_found">Genres found for %1$d of %2$d games without one.</string>
+    <string name="msg_genres_retry">%1$d couldn\'t be checked now (the service asked to wait): they\'ll be retried automatically.</string>
     <string name="genre_0">Action</string>
     <string name="genre_1">Adventure</string>
     <string name="genre_2">Visual novel</string>
@@ -576,6 +733,15 @@
     <string name="genre_25">MOBA</string>
     <string name="genre_26">Early access</string>
     <string name="genre_27">Educational</string>
+    <string name="genre_28">FPS</string>
+    <string name="genre_29">Gacha</string>
+    <string name="genre_30">Soulslike</string>
+    <string name="genre_31">Hack and slash</string>
+    <string name="genre_32">Stealth</string>
+    <string name="genre_33">Fantasy</string>
+    <string name="genre_34">Sci-fi</string>
+    <string name="genre_35">Battle royale</string>
+    <string name="genre_36">Party</string>
     <plurals name="games_count">
         <item quantity="one">%1$d game</item>
         <item quantity="other">%1$d games</item>
@@ -609,5 +775,14 @@
         <item>MOBA</item>
         <item>Acceso anticipado</item>
         <item>Educativo</item>
+        <item>FPS</item>
+        <item>Gacha</item>
+        <item>Soulslike</item>
+        <item>Hack and slash</item>
+        <item>Sigilo</item>
+        <item>Fantasía</item>
+        <item>Ciencia ficción</item>
+        <item>Battle royale</item>
+        <item>Party</item>
     </string-array>
 </resources>

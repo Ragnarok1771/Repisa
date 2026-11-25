@@ -1,5 +1,6 @@
 package com.repisa.app.sources
 
+import kotlinx.coroutines.sync.withLock
 import com.repisa.app.data.Http
 import com.repisa.app.data.Settings
 import com.repisa.app.data.arr
@@ -75,35 +76,78 @@ object Achievements {
     private val edition = setOf("goty", "game", "of", "the", "year", "edition", "definitive", "complete", "deluxe", "ultimate",
         "remastered", "standard", "enhanced", "directors", "cut", "collection", "anniversary", "gold", "premium", "special")
 
-    /** appid de Steam de un juego: el suyo si es de Steam; si es de Epic, el del mismo juego en la tienda de Steam. */
-    suspend fun steamAppId(game: Game): Int? {
+    /**
+     * appid de Steam de un juego: el suyo si es de Steam; si es de Epic, el del mismo juego en la tienda de Steam.
+     * [loose] (para géneros, no para logros): también vale si el nombre de Steam lleva palabras de más
+     * («Batman: The Enemy Within» → «... - The Telltale Series»).
+     */
+    suspend fun steamAppId(game: Game, loose: Boolean = false): Int? {
         if (game.source == Source.STEAM) return game.id.removePrefix("steam:").toIntOrNull()
+        if (loose) game.steamMatch?.let { return it.toInt() } // ya emparejado antes (para géneros)
         val title = game.originalTitle ?: game.title
         // Sin palabras de edición («Game of the Year», «Definitive Edition»...) ni DLC del mismo juego.
         fun core(t: String) = CoverSearch.tokens(t) - edition
         val wanted = core(title)
         if (wanted.isEmpty()) return null
-        steamIdCache[wanted]?.let { return it }
+        val cache = if (loose) looseIdCache else steamIdCache
+        cache[wanted]?.let { return it }
         // Se busca con el nombre entero y, si no sale, solo con lo esencial («Batman Arkham City»).
-        val terms = listOf(title, CoverSearch.norm(title).split(' ').filter { it.isNotEmpty() && it !in edition }.joinToString(" ")).distinct()
+        // Flexible: también sin las primeras palabras («G-MODE Archives+ Persona 3 Aigis...» → «Persona 3 Aigis...»),
+        // porque el buscador de Steam no encuentra nada si una palabra no coincide.
+        val words = EmulatorSource.cleanTitle(title).replace(Regex("[™®©℠]"), "").split(Regex("\\s+")).filter { it.isNotBlank() }
+        val shortened = if (loose) (1..2).map { words.drop(it) }.filter { w -> w.size >= 4 }.map { it.joinToString(" ") } else emptyList()
+        val terms = (listOf(title, CoverSearch.norm(title).split(' ').filter { it.isNotEmpty() && it !in edition }.joinToString(" ")) + shortened).distinct()
         for (term in terms) {
+            val partial = term in shortened
             val url = "https://store.steampowered.com/api/storesearch/".toHttpUrl().newBuilder()
                 .addQueryParameter("term", term).addQueryParameter("l", "english").addQueryParameter("cc", "US").build()
-            var (code, body) = get(url.toString())
-            if (code == 429 || code >= 500) { kotlinx.coroutines.delay(3000); get(url.toString()).let { code = it.first; body = it.second } }
+            val (code, body) = storeSearch(url.toString())
             // Steam no respondió: es un fallo (se reintenta), no «el juego no tiene logros».
             if (code == 429 || code >= 500) error("Steam $code")
             if (code != 200) continue
             val id = Http.json.parseToJsonElement(body)["items"].arr
                 .filter { !Regex("(?i)\\b(soundtrack|dlc|season pass|pack|bundle|demo)\\b").containsMatchIn(it["name"].str.orEmpty()) }
-                .map { it to CoverSearch.similarity(wanted, core(it["name"].str.orEmpty())) }
-                .filter { it.second >= 0.85 }.maxByOrNull { it.second }?.first?.get("id")?.long?.toInt()
-            if (id != null) { steamIdCache[wanted] = id; return id }
+                .map { item ->
+                    val got = core(item["name"].str.orEmpty())
+                    // Mismo nombre con o sin espacios («G-MODEArchives+ Persona3» = «G-MODE Archives+ Persona 3»);
+                    // buscando sin las primeras palabras, que el nombre de Steam termine igual.
+                    val name = compact(item["name"].str.orEmpty())
+                    val sim = if (loose && (name == compact(title) || (partial && compact(term).length >= 12 && name.endsWith(compact(term))))) 1.0
+                        else CoverSearch.similarity(wanted, got)
+                    // Flexible: todas las palabras buscadas están y sobran como mucho 3 (subtítulos, «Online»...).
+                    item to if (loose && sim < 0.85 && wanted.size >= 2 && got.containsAll(wanted) && got.size - wanted.size <= 3) 0.84 else sim
+                }
+                .filter { it.second >= if (loose) 0.84 else 0.85 }.maxByOrNull { it.second }?.first?.get("id")?.long?.toInt()
+            if (id != null) { cache[wanted] = id; return id }
         }
         return null
     }
 
     private val steamIdCache = java.util.concurrent.ConcurrentHashMap<Set<String>, Int>()
+    private val searchLock = kotlinx.coroutines.sync.Mutex()
+    private var lastSearch = 0L
+    @Volatile private var searchPausedUntil = 0L
+
+    /**
+     * Buscador de la tienda de Steam, que admite unas 200 búsquedas cada 5 minutos: se espacian 1,5 s y,
+     * si Steam pide esperar (429), se espera medio minuto y se reintenta (dos veces como mucho).
+     */
+    private suspend fun storeSearch(url: String): Pair<Int, String> = searchLock.withLock {
+        // Si Steam pidió esperar hace poco, no se insiste (se reintentará más tarde) en vez de quedarse parado.
+        if (System.currentTimeMillis() < searchPausedUntil) return@withLock 429 to ""
+        var res = 0 to ""
+        for (attempt in 0..1) {
+            val wait = 1500 - (System.currentTimeMillis() - lastSearch)
+            if (wait > 0) kotlinx.coroutines.delay(wait)
+            lastSearch = System.currentTimeMillis()
+            res = get(url)
+            if (res.first != 429 && res.first < 500) break
+            if (attempt == 0) kotlinx.coroutines.delay(5_000) else searchPausedUntil = System.currentTimeMillis() + 5 * 60_000L
+        }
+        res
+    }
+    private val looseIdCache = java.util.concurrent.ConcurrentHashMap<Set<String>, Int>()
+    private fun compact(t: String) = CoverSearch.norm(EmulatorSource.cleanTitle(t)).filter { it.isLetterOrDigit() }
 
     /** Lista de logros de un juego de Steam (API pública): nombre y descripción traducidos, icono y % de jugadores. */
     private class SteamSchema(val items: List<Achievement>, val byKey: Map<Long, String>)

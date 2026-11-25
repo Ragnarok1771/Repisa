@@ -222,6 +222,10 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
     val wrapped by vm.wrapped.collectAsState()
     val calendar by vm.calendar.collectAsState()
     val screensaver by vm.screensaver.collectAsState()
+    val consolesRoom by vm.consolesRoom.collectAsState()
+    // Al salir del filtro por consola: de vuelta a Estadísticas, con «Mis consolas» abierta encima.
+    val reopenStats by vm.reopenStats.collectAsState()
+    LaunchedEffect(reopenStats) { if (reopenStats) { inStats = true; vm.reopenStats.value = false } }
 
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); vm.message.value = null }
@@ -235,6 +239,7 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
         when {
             selected != null -> vm.selectedId.value = null
             vm.selecting.value -> vm.endSelection()
+            vm.options.value.console != null && !inStats -> vm.closeConsoleFilter()
             inRandom -> inRandom = false
             inStats -> inStats = false
             inAch -> inAch = false
@@ -256,8 +261,10 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
                 KeyEvent.KEYCODE_BUTTON_B -> when {
                     vm.wrapped.value != null -> { vm.wrapped.value = null; true }
                     vm.calendar.value != null -> { vm.calendar.value = null; true }
+                    vm.consolesRoom.value -> { vm.consolesRoom.value = false; true }
                     selected != null -> { vm.selectedId.value = null; true }
                     vm.selecting.value -> { vm.endSelection(); true }
+                    vm.options.value.console != null && !inStats -> { vm.closeConsoleFilter(); true }
                     inRandom -> { inRandom = false; true }
                     inStats -> { inStats = false; true }
                     inAch -> { inAch = false; true }
@@ -294,6 +301,10 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
             com.repisa.app.ui.LaunchAnimation(r.game, r.kind, onFinish = { vm.finishLaunchAnimation() })
         }
         calendar?.let { sample -> com.repisa.app.ui.PlayCalendar(vm, sample, onClose = { vm.calendar.value = null }) }
+        // «Mis consolas»: elegir una vuelve a la repisa con solo sus juegos.
+        if (consolesRoom) com.repisa.app.ui.ConsolesRoom(vm, onClose = { vm.consolesRoom.value = false }, onPick = { id ->
+            vm.consolesRoom.value = false; inStats = false; vm.setConsoleFilter(id)
+        })
         wrapped?.let { sample -> com.repisa.app.ui.WrappedScreen(vm, sample, onClose = { vm.wrapped.value = null }) }
         if (screensaver) com.repisa.app.ui.Screensaver(vm, onClose = { vm.screensaver.value = false; vm.poke() })
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp))

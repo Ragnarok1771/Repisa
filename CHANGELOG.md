@@ -2,6 +2,62 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.15.2]
+
+**🏆 Logros de Repisa y platinos**
+- Muchos más logros propios: **53 por juego**, de bronce, plata y oro, y más difíciles (horas, rachas, días distintos,
+  terminarlo, superar lo que dice HowLongToBeat…), y logros de Repisa para toda la colección.
+- **💎 Platino**: un juego lo consigue al marcarlo como 100 % con todos sus logros (Steam, RetroAchievements… o, si no
+  tiene, todos los de bronce y plata de Repisa). Con la **fecha real** (la de su último logro), un diamante en la caja y
+  la **colección de platinos** en la pantalla de logros.
+- «Últimos logros» y «Logros de Repisa» se pliegan y despliegan.
+
+**🎯 «Hoy juego…»** — en la pantalla de abajo, una sugerencia del día: el juego que llevas tiempo sin tocar o uno que
+espera en pendientes (con lo que dura según HowLongToBeat).
+
+**📅 Estrenos en el calendario** — los juegos de tu lista de deseos de Steam aparecen el día que salen; solo los que
+aún no han salido (el día después, desaparecen).
+
+**🌙 Tu semana en el salvapantallas** — en la pantalla de abajo, las horas de cada uno de los últimos 7 días, el total
+y los días jugados.
+
+**🎮 Las consolas, dibujadas**
+- Los dibujos de las animaciones (Nintendo redibujada a partir de fotos: botones, Home, captura, +/−…) sirven ahora de
+  **iconos**, todos con el mismo tamaño: junto a la placa de cada repisa al agrupar por consola y en la ficha de la
+  pantalla de abajo, con cuántos juegos y horas llevas en esa consola.
+- **Mis consolas** (Estadísticas): tus consolas en baldas, ordenadas por año, con sus juegos y horas. Al elegir una, la
+  repisa muestra solo sus juegos; con Atrás o la ✕ del filtro vuelves a «Mis consolas».
+- La Atari 2600 pasa al grupo Atari (como «2600») en Ajustes → Pantalla → Ver las animaciones.
+
+**🏷 Géneros mucho mejores**
+- **Steam y Epic**: los géneros salen de las **etiquetas de la comunidad de Steam** (JRPG, FPS, Souls-like,
+  Metroidvania…) en vez de los de la ficha (Acción, Rol). Los de Epic se emparejan con el mismo juego en Steam.
+- **Emuladores**: GameTDB y Wikidata; si no hay, el de su serie o el del mismo juego en Steam; y en remasterizaciones
+  («Regeneration», «25th Anniversary»…), el del juego original.
+- **Géneros nuevos**: FPS, Gacha, Soulslike, Hack and slash, Sigilo, Fantasía, Ciencia ficción, Battle royale y Party.
+  Los nombres sueltos sin traducir («Gacha game») pasan a su género.
+- Encuentra juegos con nombres difíciles: entre corchetes («[REDACTED]»), con ®/™, con coletillas («Legacy Mode»,
+  «Public Testing», «Game of the Year Edition») o con las palabras pegadas («G-MODEArchives+ Persona3…»).
+- Al actualizar, Repisa repasa los géneros de toda la biblioteca una vez (primero los juegos sin género), y
+  **Ajustes → Carátulas y datos → «Buscar géneros que faltan»** lo repite cuando quieras.
+- Al editar un juego, los géneros se eligen **tocándolos**; si escribes «fps» o «rpg», se reconocen. Lo puesto a mano
+  no se cambia nunca.
+
+**🌍 Títulos en varios idiomas** — cada juego de emulador conoce su nombre en inglés y en español (y en japonés, coreano
+o chino si su título lo está): «Pokémon Mundo Megamisterioso» = «Pokémon Super Mystery Dungeon».
+- El **buscador** lo encuentra por cualquiera de sus nombres.
+- Las **copias** en distinto idioma del mismo sistema se unen en una sola caja (con el idioma de la preferente).
+- La ficha muestra «También conocido como…».
+
+**Más cómodo**
+- **Barra para desplazarte rápido** por las repisas, a la derecha: se arrastra (o se toca para saltar) y muestra el
+  nombre de la repisa a la que llegas.
+- Con el mando, desde la placa de una repisa, **abajo va al primer juego** (antes podía ir al segundo).
+- Pantalla de abajo: los géneros ocupan hasta 3 líneas para que se vean todos, y la descripción queda solo en la ficha.
+
+**⚡ APK más ligero** — de 5,2 a 4,6 MB: solo los idiomas de Repisa, fuentes recortadas al alfabeto latino, sonidos en
+OGG y sin textos ni archivos que no se usaban.
+
 ## [0.15.1]
 
 **🎨 Temas** (Ajustes → Temas, menú nuevo) — la vitrina ya no es solo de nogal: **madera clara**, **madera oscura**,

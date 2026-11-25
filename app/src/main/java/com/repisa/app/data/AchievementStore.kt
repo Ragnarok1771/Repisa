@@ -52,6 +52,9 @@ class AchievementStore(context: Context, private val settings: Settings) {
         return mine
     }
 
+    /** Fechas ya guardadas de los logros de Repisa de [gameId] (sin añadir nada). */
+    fun repisaKnown(gameId: String): Map<String, Long> = readMap("ach_repisa")[gameId].orEmpty()
+
     /** Cuándo se vio cumplido por primera vez cada logro de Repisa de un juego. */
     fun repisaSeen(gameId: String, met: Set<String>): Map<String, Long> {
         val all = readMap("ach_repisa").toMutableMap()

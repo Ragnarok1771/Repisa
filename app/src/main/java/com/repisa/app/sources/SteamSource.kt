@@ -51,6 +51,125 @@ class SteamSource private constructor(
         /** [isGame]: true si la tienda lo marca como juego, false si es otra cosa, null si no está en la tienda. */
         data class StoreInfo(val cover: String?, val header: String?, val developer: String?, val isGame: Boolean?)
 
+        /** Nombre (en inglés) de cada etiqueta de Steam: se pide una vez por sesión. */
+        @Volatile private var tagNames: Map<Long, String>? = null
+
+        private suspend fun tagNames(): Map<Long, String> = tagNames ?: Http.getJson(
+            "https://api.steampowered.com/IStoreService/GetTagList/v1/?language=english"
+        )["response"]["tags"].arr.mapNotNull { t -> t["tagid"].long?.let { id -> t["name"].str?.let { id to it } } }
+            .toMap().also { if (it.isNotEmpty()) tagNames = it }
+
+        /** Géneros por appid, y si algún bloque no se pudo pedir (para reintentarlo más tarde). */
+        data class TagGenres(val genres: Map<Long, List<String>>, val failed: Boolean)
+
+        /**
+         * Géneros de muchos juegos a la vez a partir de las etiquetas que pone la comunidad de Steam
+         * («JRPG», «FPS», «Souls-like»...), mucho más precisas que los géneros de la ficha («Acción», «Rol»).
+         * Se piden de 50 en 50; si un bloque falla, los demás se aprovechan igual.
+         */
+        suspend fun tagGenres(appIds: List<Long>): TagGenres {
+            val names = runCatching { tagNames() }.getOrElse { return TagGenres(emptyMap(), true) }
+            val out = mutableMapOf<Long, List<String>>()
+            var failed = false
+            appIds.distinct().chunked(50).forEach { chunk ->
+                val ids = chunk.joinToString(",") { """{"appid":$it}""" }
+                val input = """{"ids":[$ids],"context":{"language":"english","country_code":"US","steam_realm":1},""" +
+                    """"data_request":{"include_tag_count":20}}"""
+                val url = "https://api.steampowered.com/IStoreBrowseService/GetItems/v1/".toHttpUrl().newBuilder()
+                    .addQueryParameter("input_json", input).build()
+                val items = runCatching { Http.getJson(url.toString())["response"]["store_items"].arr }
+                    .getOrElse { failed = true; return@forEach }
+                items.forEach { item ->
+                    val appId = item["appid"].long ?: return@forEach
+                    val tags = item["tags"].arr.mapNotNull { t ->
+                        val name = t["tagid"].long?.let(names::get) ?: return@mapNotNull null
+                        name to (t["weight"].long ?: 0L).toInt()
+                    }
+                    Genres.fromSteamTags(tags).takeIf { it.isNotEmpty() }?.let { out[appId] = it }
+                }
+            }
+            return TagGenres(out, failed)
+        }
+
+        /** Resultado de buscar un juego en Steam por su nombre: su appid y los géneros de sus etiquetas. */
+        data class NameMatch(val appId: Long, val genres: List<String>)
+
+        private val notGame = Regex("(?i)\\b(soundtrack|ost|dlc|season pass|demo|playtest|public test|public testing|shadows mode|artbook|wallpaper)\\b")
+        private fun compact(t: String) = CoverSearch.norm(EmulatorSource.cleanTitle(t)).filter { it.isLetterOrDigit() }
+        /** Sin limpiar paréntesis ni corchetes: «Rustler (Grand Theft Horse)» = «Rustler Grand Theft Horse». */
+        private fun raw(t: String) = java.text.Normalizer.normalize(t.replace(tm, ""), java.text.Normalizer.Form.NFD)
+            .replace(Regex("""\p{Mn}+"""), "").lowercase().filter { it.isLetterOrDigit() }
+        private val tm = Regex("[™®©℠]")
+
+        /**
+         * Busca un juego en Steam por su nombre con el buscador de sugerencias de la tienda (IStoreQueryService, sin clave,
+         * tolerante: encuentra «G-MODEArchives+ Persona3...» escribiendo «G-MODE Archives+ Persona 3...») y devuelve en la
+         * misma respuesta sus etiquetas. Si con el nombre completo no sale, prueba sin las últimas palabras
+         * («Nightingale Legacy Mode» → «Nightingale», «Chivalry 2 Public Testing» → «Chivalry 2») y sin las primeras.
+         * Devuelve null si no lo encuentra; lanza una excepción si Steam no responde.
+         */
+        suspend fun searchByName(title: String): NameMatch? {
+            val names = runCatching { tagNames() }.getOrElse { throw it }
+            val clean = EmulatorSource.cleanTitle(title).replace(Regex("[™®©℠]"), "").trim()
+            val words = clean.split(Regex("\\s+")).filter { it.isNotBlank() }
+            // Nombre completo; sin palabras de edición; sin coletillas al final («Legacy Mode», «Public Testing»,
+            // «25th Anniversary»: solo esas, para no convertir «Rocket League» en «Rocket»); sin las primeras palabras.
+            val core = CoverSearch.norm(clean).split(' ').filter { it.isNotEmpty() && it !in editionWords }.joinToString(" ")
+            val suffixless = buildList {
+                var w = words
+                while (w.size > 1 && isSuffix(w.last())) { w = w.dropLast(1); add(w.joinToString(" ").trimEnd(':', '-', '–', ',')) }
+            }
+            val prefixless = (1..2).map { words.drop(it) }.filter { it.size >= 4 }.map { it.joinToString(" ") }
+            val terms = (listOf(clean, core) + suffixless + prefixless).distinct()
+            val wanted = CoverSearch.tokens(clean) - editionWords
+            for ((i, term) in terms.withIndex()) {
+                if (i > 0) kotlinx.coroutines.delay(250)
+                val input = """{"search_term":${kotlinx.serialization.json.JsonPrimitive(term)},"max_results":8,""" +
+                    """"context":{"language":"english","country_code":"US","steam_realm":1},"data_request":{"include_tag_count":20}}"""
+                val url = "https://api.steampowered.com/IStoreQueryService/SearchSuggestions/v1/".toHttpUrl().newBuilder()
+                    .addQueryParameter("input_json", input).build()
+                val items = Http.getJson(url.toString())["response"]["store_items"].arr
+                val prefixCut = term in prefixless && term != clean && term != core
+                val shortened = term != clean && term != core
+                val best = items.filter { it["type"].long == 0L && !notGame.containsMatchIn(it["name"].str.orEmpty()) }.mapNotNull { item ->
+                    val name = item["name"].str ?: return@mapNotNull null
+                    val got = CoverSearch.tokens(name) - editionWords
+                    val score = when {
+                        // Idéntico (con corchetes y todo) gana a igual sin espacios: «[REDACTED]» antes que «REDACTED».
+                        name.replace(tm, "").trim().equals(title.replace(tm, "").trim(), ignoreCase = true) -> 1.1
+                        compact(name) == compact(clean) || compact(name) == compact(term) || raw(name) == raw(title) -> 1.0
+                        // Sin las primeras palabras: que el nombre de Steam termine igual («G-MODEArchives+ Persona3 Aigis...»).
+                        prefixCut && compact(term).length >= 12 && compact(name).endsWith(compact(term)) -> 0.95
+                        // Con el nombre recortado solo vale si coincide entero (es el juego base).
+                        shortened -> 0.0
+                        wanted.size >= 2 && got.containsAll(wanted) && got.size - wanted.size <= 3 -> 0.9
+                        else -> CoverSearch.similarity(wanted, got)
+                    }
+                    (item to score).takeIf { score >= 0.85 }
+                }.maxByOrNull { it.second }?.first ?: continue
+                val appId = best["appid"].long ?: best["id"].long ?: continue
+                val tags = best["tags"].arr.mapNotNull { t ->
+                    val name = t["tagid"].long?.let(names::get) ?: return@mapNotNull null
+                    name to (t["weight"].long ?: 0L).toInt()
+                }
+                return NameMatch(appId, Genres.fromSteamTags(tags))
+            }
+            return null
+        }
+
+        /** Coletillas que se pueden quitar del final para dar con el juego base. */
+        private fun isSuffix(w: String): Boolean {
+            val x = CoverSearch.norm(w).replace(" ", "")
+            return x.isEmpty() || x in suffixWords || Regex("""\d+(st|nd|rd|th)""").matches(x)
+        }
+        private val suffixWords = setOf("legacy", "mode", "public", "testing", "test", "beta", "playtest", "edition", "goty", "game",
+            "of", "the", "year", "remastered", "remaster", "anniversary", "deluxe", "definitive", "complete", "enhanced", "directors",
+            "director", "cut", "collection", "bundle", "ultimate", "gold", "premium", "special", "standard", "regeneration", "hd",
+            "version", "trial", "online", "multiplayer", "singleplayer", "classic", "reloaded", "redux")
+
+        private val editionWords = setOf("goty", "game", "of", "the", "year", "edition", "definitive", "complete", "deluxe", "ultimate",
+            "remastered", "standard", "enhanced", "directors", "cut", "collection", "anniversary", "gold", "premium", "special")
+
         /** Datos de la tienda (IStoreBrowseService, sin clave) para muchos juegos a la vez, de 50 en 50. */
         suspend fun storeInfo(appIds: List<Long>): Map<Long, StoreInfo> {
             val out = mutableMapOf<Long, StoreInfo>()

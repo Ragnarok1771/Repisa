@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -121,6 +124,8 @@ fun Screensaver(vm: LibraryViewModel, onClose: () -> Unit, main: Boolean = true)
                 )
             }
         }
+        // Abajo: tu semana (horas por día de los últimos 7 días) sobre las carátulas.
+        if (!main) WeekChart(vm, Modifier.align(Alignment.Center))
         if (main) Column(Modifier.align(Alignment.BottomEnd).padding(28.dp), horizontalAlignment = Alignment.End) {
             Text("%02d:%02d".format(clock.get(Calendar.HOUR_OF_DAY), clock.get(Calendar.MINUTE)), color = Color(0xEEF3E6D3),
                 fontSize = 64.sp, fontWeight = FontWeight.Bold, fontFamily = DisplayFont)
@@ -128,5 +133,46 @@ fun Screensaver(vm: LibraryViewModel, onClose: () -> Unit, main: Boolean = true)
             BatteryIndicator(Modifier.padding(bottom = 6.dp).graphicsLayer { scaleX = 1.35f; scaleY = 1.35f; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(1f, 0.5f) })
             Text(stringResource(R.string.screensaver_hint), color = Color(0x99F3E6D3), fontSize = 13.sp)
         }
+    }
+}
+
+/** Gráfico pequeño de la semana: horas de cada uno de los últimos 7 días, el total y los días jugados. */
+@Composable
+private fun WeekChart(vm: LibraryViewModel, modifier: Modifier = Modifier) {
+    val sessions by vm.sessions.collectAsState()
+    val week = androidx.compose.runtime.remember(sessions) {
+        val zone = java.time.ZoneId.systemDefault()
+        val today = java.time.LocalDate.now(zone)
+        val days = (6 downTo 0).map { today.minusDays(it.toLong()) }
+        val perDay = sessions.filter { !it.lastOnly }
+            .groupBy { java.time.Instant.ofEpochMilli(it.start).atZone(zone).toLocalDate() }
+            .mapValues { e -> e.value.sumOf { it.minutes } }
+        days.map { it to (perDay[it] ?: 0) }
+    }
+    val max = (week.maxOfOrNull { it.second } ?: 0).coerceAtLeast(60)
+    val total = week.sumOf { it.second }
+    Column(
+        modifier.background(Color(0xCC120C09), androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).padding(18.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(stringResource(R.string.week_title), color = Color(0xFFFFD27A), fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = DisplayFont)
+        androidx.compose.foundation.layout.Spacer(Modifier.height(10.dp))
+        androidx.compose.foundation.layout.Row(Modifier.height(120.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Bottom) {
+            week.forEach { (day, mins) ->
+                Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.Bottom) {
+                    if (mins > 0) Text(if (mins >= 60) "${mins / 60}h" else "${mins}′", color = Color(0xFFBFA98A), fontSize = 10.sp)
+                    Box(Modifier.width(22.dp).fillMaxHeight((mins.toFloat() / max * 0.8f).coerceAtLeast(0.02f))
+                        .background(if (mins > 0) Color(0xFFE0A84A) else Color(0x33FFFFFF),
+                            androidx.compose.foundation.shape.RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)))
+                    Text(day.dayOfWeek.getDisplayName(java.time.format.TextStyle.NARROW, java.util.Locale.getDefault()).uppercase(),
+                        color = Color(0xFFF3E6D3), fontSize = 11.sp)
+                }
+            }
+        }
+        androidx.compose.foundation.layout.Spacer(Modifier.height(8.dp))
+        Text(stringResource(R.string.week_summary, com.repisa.app.model.formatPlaytime(total), week.count { it.second > 0 }),
+            color = Color(0xFFF3E6D3), fontSize = 13.sp)
     }
 }

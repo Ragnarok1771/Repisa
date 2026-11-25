@@ -48,7 +48,10 @@ para las consolas portátiles Android con doble pantalla.
 - **Lo tuyo no se pierde**: si desvinculas una cuenta o un juego desaparece de su tienda, su estado, tu nota, tus
   notas, colecciones y favoritos quedan guardados y vuelven solos cuando el juego regresa.
 - **Copias unidas**: el mismo juego en varias ediciones o tiendas (GTA V normal, Enhanced y Legacy, en Steam y en
-  Epic) aparece como **una sola caja** con el tiempo sumado. Tú eliges la copia preferente (por defecto, la de Steam).
+  Epic), **o con el título en otro idioma** («Pokémon Mundo Megamisterioso» y «Pokémon Super Mystery Dungeon»), aparece
+  como **una sola caja** con el tiempo sumado. Tú eliges la copia preferente (por defecto, la de Steam).
+- **Géneros precisos**: de las etiquetas de la comunidad de Steam (JRPG, FPS, Souls-like, Metroidvania…) para Steam y
+  Epic, y de GameTDB y Wikidata para los emulados.
 - **Sin herramientas**: editores, kits de mods, servidores dedicados o paquetes de contenido no aparecen.
 
 ### Cajas de verdad
@@ -91,7 +94,9 @@ para las consolas portátiles Android con doble pantalla.
   solo pendientes, plataforma y duración), con botón para jugar directamente.
 - **Estadísticas 📊**: horas por sistema y género, juegos por década, terminados, pendientes y los más jugados.
 - **Logros 🏆**: los tuyos de Steam con su fecha, la lista de Steam para juegos de Epic (marcándolos a mano),
-  RetroAchievements para juegos emulados y logros de Repisa para cualquier juego.
+  RetroAchievements para juegos emulados y 53 logros de Repisa por juego (bronce, plata y oro).
+- **💎 Platinos**: 100 % y todos sus logros; con su fecha y tu colección de platinos.
+- **🎮 Mis consolas**: tus consolas dibujadas en baldas, con sus juegos y horas; toca una para ver solo sus juegos.
 - **Panel en la pantalla de abajo mientras juegas** (AYN Thor y similares): tiempo de la sesión, hora, nota, estado,
   logros y notas.
 - **Carátula desde la galería**, encuadrada a la forma de la caja de cada sistema.
@@ -125,9 +130,11 @@ para las consolas portátiles Android con doble pantalla.
   nombre o descuento, y **avisa cuando un juego baja de precio** (también con Repisa cerrada, cada 6 horas).
 
 ### Hecha para consolas portátiles
-- **Doble pantalla**: en la AYN Thor, la pantalla de abajo muestra la ficha del juego seleccionado, con el reloj, la
-  cobertura y la batería arriba.
-- **Salvapantallas**: tras el tiempo que elijas, las carátulas flotan por la vitrina en las dos pantallas.
+- **Doble pantalla**: en la AYN Thor, la pantalla de abajo muestra la ficha del juego seleccionado (con su consola
+  dibujada), el reloj, la cobertura, la batería y la sugerencia «Hoy juego…».
+- **Salvapantallas**: tras el tiempo que elijas, las carátulas flotan por la vitrina en las dos pantallas, y abajo,
+  tu semana de juego.
+- **Barra de desplazamiento rápido** en las repisas, con el nombre de la repisa a la que llegas.
 - **Mando**: cruceta para moverte, A ficha, X jugar, Y favorito, B atrás, L1/R1 filtrar por plataforma,
   Select cambiar el tipo de repisa, Start ajustes.
 - **9 idiomas**: español (España y Latinoamérica), English (US y UK), français, Deutsch, italiano y português
@@ -155,7 +162,7 @@ Las versiones nuevas se instalan encima de la anterior sin perder tu biblioteca 
 
 | Fuente | Para qué | Necesita |
 |---|---|---|
-| Steam | Juegos, grupo familiar, horas, carátulas, géneros, estudio | Iniciar sesión (o clave de API) |
+| Steam | Juegos, grupo familiar, horas, carátulas, géneros (etiquetas de la comunidad), estudio | Iniciar sesión (o clave de API) |
 | Epic Games | Juegos, horas, carátulas, estudio | Iniciar sesión |
 | Carpetas de ROMs | Un juego por ROM, agrupando discos | Elegir la carpeta |
 | ES-DE / Cocoon / Batocera | Carátulas, géneros, estudio, año, descripción, tiempo de juego | Elegir la carpeta |
@@ -164,6 +171,7 @@ Las versiones nuevas se instalan encima de la anterior sin perder tu biblioteca 
 | libretro-thumbnails | Carátulas de consolas clásicas | Nada |
 | SteamGridDB | Carátulas de cualquier juego | Clave gratuita |
 | Wikipedia | Carátulas de juegos muy recientes | Nada |
+| Wikidata | Géneros, estudio, año y títulos en otros idiomas | Nada |
 | Metacritic | Nota de prensa y de usuarios | Nada |
 | HowLongToBeat | Duración del juego | Nada |
 
@@ -241,7 +249,7 @@ cover art, real box sizes per console, up-to-date playtime, Metacritic and HowLo
 ratings with stars. Track each game's status (backlog, playing, finished, 100 %, abandoned, not applicable), make your
 own collections, let the 🎲 roulette pick your next game, watch each console load its cartridge or disc when you press
 Play (70+ systems, from the Atari 2600 to Switch 2 and PS5), see stats and achievements (Steam, RetroAchievements and
-Repisa's own), a play calendar and your animated *year in Repisa*, your Steam wishlist with prices in your currency and
+Repisa's own, with platinums), a play calendar and your animated *year in Repisa*, your Steam wishlist with prices in your currency and
 price-drop alerts, display-cabinet themes (or your own) and a screensaver. Built for Android handhelds such as the dual-screen **AYN Thor** (bottom screen shows the selected
 game) and fully playable with a controller. Available in 9 languages.
 

@@ -73,6 +73,8 @@ data class Game(
     @kotlinx.serialization.Transient val groupSources: List<Source> = emptyList(),
     /** Solo en memoria: nombre real de la copia cuando la caja muestra el nombre común del grupo. */
     @kotlinx.serialization.Transient val originalTitle: String? = null,
+    /** Solo en memoria: títulos de las copias unidas a esta caja (en cualquier idioma). */
+    @kotlinx.serialization.Transient val copyTitles: List<String> = emptyList(),
     /** Calificación personal del usuario. */
     val rating: Rating? = null,
     /** Metacritic: nota de la prensa (0-100) y de los usuarios (0-10). */
@@ -92,6 +94,18 @@ data class Game(
     val factsFetched: Boolean = false,
     /** El usuario editó los datos a mano: no sobrescribir con metadatos automáticos. */
     val userEdited: Boolean = false,
+    /**
+     * Identidad del juego en Wikidata («Q...») y su nombre en inglés y en español: así «Pokémon Mundo
+     * Megamisterioso» y «Pokémon Super Mystery Dungeon» se reconocen como el mismo juego.
+     */
+    val wikidataId: String? = null,
+    val altTitles: List<String> = emptyList(),
+    /** Ya se buscó su identidad en Wikidata (haya salido o no). */
+    val idChecked: Boolean = false,
+    /** El mismo juego en la tienda de Steam (para Epic y emuladores), guardado para no buscarlo cada vez. */
+    val steamMatch: Long? = null,
+    /** Ya se buscó en Steam (haya salido o no). */
+    val steamChecked: Boolean = false,
 ) {
     /** [manualMinutes] puede ser negativo (tiempo corregido o reiniciado a mano), pero el total nunca. */
     val totalMinutes: Int get() = maxOf(0, groupMinutes ?: (playtimeMinutes + trackedMinutes + manualMinutes))
@@ -100,8 +114,10 @@ data class Game(
     /** Quita lo que solo existe en memoria antes de guardar. */
     fun stored(): Game = copy(
         title = originalTitle ?: title, originalTitle = null,
-        copyIds = emptyList(), groupMinutes = null, groupLastPlayed = null, groupSources = emptyList(),
+        copyIds = emptyList(), groupMinutes = null, groupLastPlayed = null, groupSources = emptyList(), copyTitles = emptyList(),
     )
+    /** Todos los nombres conocidos del juego (el suyo, en otros idiomas y los de sus copias), sin repetir. */
+    val otherTitles: List<String> get() = (altTitles + copyTitles).distinct().filter { !it.equals(title, ignoreCase = true) }
     val console: Console get() = Consoles.byId(consoleId)
     val sortKey: String
         get() = title.lowercase()

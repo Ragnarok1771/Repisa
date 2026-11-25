@@ -65,6 +65,8 @@ fun AchievementsDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) 
     val set = all[game.id]
     val known = game.id in all
     val repisa = remember(game) { vm.repisaAchievements(game) }
+    val platinums by vm.platinums.collectAsState()
+    val platCtx = remember(game) { vm.achContext(game) }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
@@ -116,12 +118,37 @@ fun AchievementsDialog(game: Game, vm: LibraryViewModel, onDismiss: () -> Unit) 
                     if (left.isNotEmpty()) item { Header(stringResource(R.string.ach_locked, left.size)) }
                     items(left, key = { "l" + it.id }) { a -> AchRow(a, manualMode) { vm.toggleManualAchievement(game, a.id) } }
                 }
-                item { Header(stringResource(R.string.ach_repisa)) }
-                items(repisa, key = { "r" + it.first.name }) { (a, at) ->
+                // Platino: todos los logros (los del juego o, si no tiene, los de Repisa de bronce y plata) y estado 100 %.
+                item {
+                    val got = platinums[game.id]
+                    val (left, needStatus) = com.repisa.app.model.Platinum.missing(platCtx)
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
+                        .background(if (got != null) Color(0x4480D8FF) else Color(0x22FFFFFF), RoundedCornerShape(10.dp)).padding(10.dp)) {
+                        Text("💎", fontSize = 30.sp, modifier = Modifier.padding(end = 10.dp).alpha(if (got != null) 1f else 0.45f))
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.plat_title), color = Color(0xFFBFEAFF), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                if (got != null) stringResource(R.string.plat_got)
+                                else listOfNotNull(
+                                    if (left > 0) stringResource(if (platCtx.hasPlatformAch) R.string.plat_left_platform else R.string.plat_left_repisa, left) else null,
+                                    if (needStatus) stringResource(R.string.plat_left_status) else null,
+                                ).joinToString(" · "),
+                                color = Muted, fontSize = 12.sp,
+                            )
+                        }
+                        got?.let { Text(whenText(it), color = Color(0xFF7BD389), fontSize = 12.sp) }
+                    }
+                }
+                val repisaDone = repisa.count { it.second != null }
+                item { Header(stringResource(R.string.ach_repisa) + " · $repisaDone / ${repisa.size}") }
+                // Conseguidos primero (los más recientes arriba); luego los que faltan, de bronce a oro.
+                val ordered = repisa.filter { it.second != null }.sortedByDescending { it.second } +
+                    repisa.filter { it.second == null }.sortedBy { it.first.tier.ordinal }
+                items(ordered, key = { "r" + it.first.name }) { (a, at) ->
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().alpha(if (at != null) 1f else 0.5f).padding(vertical = 3.dp)) {
                         Text(a.icon, fontSize = 22.sp, modifier = Modifier.padding(end = 10.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(a.title, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                            Text(a.tier.medal + " " + a.title, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                             Text(a.description, color = Muted, fontSize = 12.sp)
                         }
                         Text(at?.let(::whenText) ?: "—", color = if (at != null) Color(0xFF7BD389) else Muted, fontSize = 12.sp)

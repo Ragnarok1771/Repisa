@@ -19,16 +19,22 @@ class Metadata(private val settings: Settings, private val covers: CoverSearch, 
     fun needsWork(g: Game): Boolean = (!g.metaFetched && !g.userEdited && !g.customCover &&
         (g.coverUrl == null || g.genres.isEmpty() || g.developer == null)) || needsFacts(g)
 
-    /** Juego (de cualquier tienda o emulador) sin género, estudio o año al que aún no se le han buscado. */
-    private fun needsFacts(g: Game) = !g.factsFetched && !g.userEdited &&
-        (g.genres.isEmpty() || g.developer == null || g.releaseYear == null)
+    /**
+     * Juego (de cualquier tienda o emulador) sin género, estudio o año al que aún no se le han buscado; o de emulador
+     * sin identidad en Wikidata (para reconocerlo con su título en otro idioma). Los editados a mano solo si no
+     * tienen género.
+     */
+    fun needsFacts(g: Game) = !g.factsFetched && (if (g.userEdited) g.genres.isEmpty()
+        else g.genres.isEmpty() || g.developer == null || g.releaseYear == null || needsIdentity(g))
+
+    private fun needsIdentity(g: Game) = g.source == Source.EMULATOR && g.wikidataId == null && !g.idChecked
 
     /**
      * Género, estudio, año y descripción, rellenando solo lo que falta:
-     *  - Steam: la ficha de la tienda de Steam.
-     *  - Epic: la ficha del mismo juego en la tienda de Steam (Epic no da géneros).
-     *  - Emuladores: GameTDB (Nintendo, con sinopsis).
-     *  - Para lo que aún falte, en cualquier caso: Wikidata (en inglés y en español).
+     *  - Steam y Epic: etiquetas de la comunidad de Steam (géneros precisos: «JRPG», «FPS», «Souls-like»...)
+     *    y la ficha de la tienda (estudio, año, descripción). Epic, con el mismo juego en Steam.
+     *  - Emuladores: GameTDB (Nintendo, con sinopsis) y Wikidata, que además da su nombre en inglés y en español.
+     *  - Si aún no hay género: el mismo juego en Steam, buscado por cualquiera de sus nombres.
      * Si una consulta falla por la red o por límite de peticiones, no se marca como hecho: se reintenta más tarde.
      */
     private suspend fun facts(g: Game): Game {
@@ -44,29 +50,75 @@ class Metadata(private val settings: Settings, private val covers: CoverSearch, 
                 description = out.description ?: desc,
             )
         }
-        if (g.source == Source.STEAM || g.source == Source.EPIC) {
-            val r = runCatching {
-                val appId = if (g.source == Source.STEAM) g.id.removePrefix("steam:") else Achievements.steamAppId(g)?.toString()
-                appId?.let { SteamSource.appFacts(it) }
-            }
-            delay(1600) // límite de la tienda de Steam
-            if (r.isFailure) complete = false
-            r.getOrNull()?.let { f -> fill(f.genres, f.developer, f.publisher, f.year, f.description) }
+        /** Géneros por las etiquetas de Steam del juego con ese appid (si aún no tiene). */
+        suspend fun tagsOf(appId: Long) {
+            if (out.genres.isNotEmpty()) return
+            val r = SteamSource.tagGenres(listOf(appId))
+            if (r.failed) complete = false
+            r.genres[appId]?.let { out = out.copy(genres = it) }
         }
-        if (g.source == Source.EMULATOR && tdb.supports(g.consoleId)) {
-            val r = runCatching { tdb.facts(g.consoleId, g.originalTitle ?: g.title) }
+        /** El mismo juego en Steam por su nombre (Epic, emuladores, o un juego de Steam sin ficha: betas, archivos). */
+        suspend fun steamByName(names: List<String>): Long? {
+            if (out.steamChecked) { out.steamMatch?.let { tagsOf(it) }; return out.steamMatch }
+            for (name in names.distinct()) {
+                val r = runCatching { SteamSource.searchByName(name) }
+                if (r.isFailure) { complete = false; return null }
+                r.getOrNull()?.let { m ->
+                    out = out.copy(steamMatch = m.appId, steamChecked = true)
+                    if (out.genres.isEmpty() && m.genres.isNotEmpty()) out = out.copy(genres = m.genres)
+                    return m.appId
+                }
+            }
+            out = out.copy(steamChecked = true)
+            return null
+        }
+        val title = g.originalTitle ?: g.title
+        val store = g.source == Source.STEAM || g.source == Source.EPIC
+        if (store) {
+            val appId = if (g.source == Source.STEAM) g.id.removePrefix("steam:").toLongOrNull() else steamByName(listOf(title))
+            appId?.let { id ->
+                tagsOf(id)
+                if (missing() || out.description == null) {
+                    val f = runCatching { SteamSource.appFacts(id.toString()) }
+                    delay(1600) // límite de la tienda de Steam
+                    if (f.isFailure) complete = false
+                    f.getOrNull()?.let { fill(it.genres, it.developer, it.publisher, it.year, it.description) }
+                }
+            }
+            // Un juego de Steam sin etiquetas (beta, «archivos», retirado...): el juego principal del mismo nombre.
+            if (g.source == Source.STEAM && out.genres.isEmpty()) steamByName(listOf(title))?.takeIf { it != appId }?.let { tagsOf(it) }
+        }
+        if (g.source == Source.EMULATOR && tdb.supports(g.consoleId) && missing()) {
+            val r = runCatching { tdb.facts(g.consoleId, title) }
             if (r.isFailure) complete = false
             r.getOrNull()?.let { e -> fill(listOfNotNull(e.genre), e.developer, null, e.year, e.synopsis) }
         }
-        if (missing()) {
-            val r = runCatching { Wikidata.facts(g.originalTitle ?: g.title) }
+        if (missing() || needsIdentity(out)) {
+            val r = runCatching { Wikidata.facts(title) }
             if (r.isFailure) complete = false
-            r.getOrNull()?.let { f -> fill(f.genres, f.developer, f.publisher, f.year, null) }
+            else out = out.copy(idChecked = true)
+            r.getOrNull()?.let { f ->
+                // Wikidata sabe su número de Steam aunque la tienda ya no lo venda (Rocket League en Epic):
+                // sus etiquetas, más precisas, van primero; el género de Wikidata queda de respaldo.
+                f.steamAppId?.let { id -> tagsOf(id); if (out.steamMatch == null && g.source != Source.STEAM) out = out.copy(steamMatch = id, steamChecked = true) }
+                fill(f.genres, f.developer, f.publisher, f.year, null)
+                out = out.copy(wikidataId = out.wikidataId ?: f.id, altTitles = out.altTitles.ifEmpty { f.titles })
+            }
+        }
+        // Sin género todavía: el mismo juego en Steam, por su nombre o por su nombre en inglés («Dragon Quest Builders 2»).
+        if (out.genres.isEmpty() && g.source == Source.EMULATOR) steamByName(listOf(title) + out.altTitles)?.let { tagsOf(it) }
+        // Último recurso: el juego original de una remasterización o edición («Tomak ... Regeneration»).
+        if (out.genres.isEmpty()) {
+            val r = runCatching { Wikidata.originalGenres(title) }
+            if (r.isFailure) complete = false
+            r.getOrNull()?.let { if (it.isNotEmpty()) out = out.copy(genres = Genres.normalize(it)) }
         }
         return out.copy(factsFetched = complete)
     }
 
     suspend fun enrich(g: Game): Game {
+        // Editado a mano: solo se le busca el género (si no tiene); nada más se toca.
+        if (g.userEdited) return (if (needsFacts(g)) facts(g) else g).copy(metaFetched = true)
         if (g.metaFetched && needsFacts(g)) return facts(g) // solo faltan los datos del juego
         var out = g
         if (needsFacts(g)) out = facts(out)

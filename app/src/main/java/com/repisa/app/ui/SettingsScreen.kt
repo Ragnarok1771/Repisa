@@ -502,6 +502,8 @@ private fun CoversPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit, onB
     Section(stringResource(R.string.menu_covers)) {
         Hint(stringResource(R.string.covers_hint))
         Button(onClick = { vm.findMissingCovers(); onBack() }) { Text(stringResource(R.string.find_missing)) }
+        Hint(stringResource(R.string.genres_hint))
+        Button(onClick = { vm.findMissingGenres(); onBack() }) { Text(stringResource(R.string.find_missing_genres)) }
         HorizontalDivider(color = Color(0x33FFFFFF))
         Hint(stringResource(R.string.sgdb_hint))
         TextButton(onClick = { vm.launcher.openUrl("https://www.steamgriddb.com/profile/preferences/api") }) {
@@ -632,8 +634,8 @@ private fun DisplayPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit) {
                 "Microsoft" to listOf("xbox" to "Xbox", "xbox360" to "Xbox 360"),
                 "Sega" to listOf("mastersystem" to "Master System", "megadrive" to "Mega Drive", "gamegear" to "Game Gear", "saturn" to "Saturn",
                     "dreamcast" to "Dreamcast"),
-                "Atari" to listOf("atari5200" to "5200", "atari7800" to "7800", "atarijaguar" to "Jaguar", "atarilynx" to "Lynx"),
-                stringResource(R.string.launch_anim_others) to listOf("atari2600" to "Atari 2600", "neogeo" to "Neo Geo", "pcengine" to "PC Engine",
+                "Atari" to listOf("atari2600" to "2600", "atari5200" to "5200", "atari7800" to "7800", "atarijaguar" to "Jaguar", "atarilynx" to "Lynx"),
+                stringResource(R.string.launch_anim_others) to listOf("neogeo" to "Neo Geo", "pcengine" to "PC Engine",
                     "3do" to "3DO", "colecovision" to "ColecoVision", "intellivision" to "Intellivision", "vectrex" to "Vectrex",
                     "cdi" to "CD-i", "pcfx" to "PC-FX", "odyssey2" to "Odyssey 2", "channelf" to "Channel F", "sg1000" to "SG-1000",
                     "ngp" to "Neo Geo Pocket", "wonderswan" to "WonderSwan", "pokemini" to "Pokémon Mini", "virtualboy" to "Virtual Boy",

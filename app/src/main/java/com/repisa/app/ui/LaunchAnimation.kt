@@ -330,17 +330,18 @@ private fun Monitor(u: Dp, on: Float, game: Game) {
     val s = LaunchKind.PC.screen
     Canvas(Modifier.offset(u * 760, u * 140).size(u * 720, u * 560)) {
         val k = size.width / 720f
-        withTransform({ scale(k, k, Offset.Zero) }) {
-            // Pie y cuello
-            drawRoundRect(Color(0xFF2A2D33), Offset(250f, 520f), Size(220f, 30f), CornerRadius(14f))
-            drawRect(Color(0xFF34383F), Offset(330f, 420f), Size(60f, 105f))
-            // Marco
-            drawRoundRect(Color(0xFF1B1D22), Offset(0f, 0f), Size(720f, 422f), CornerRadius(18f))
-            drawRoundRect(Color(0xFF3A3F48), Offset(0f, 0f), Size(720f, 422f), CornerRadius(18f), style = Stroke(3f))
-            drawCircle(if (on > 0f) Color(0xFF7BD389) else Color(0xFF555555), 4f, Offset(360f, 412f))
-        }
+        withTransform({ scale(k, k, Offset.Zero) }) { drawMonitorBody(on) }
     }
     Box(Modifier.offset(u * s.x, u * s.y).size(u * s.w, u * s.h).clip(RoundedCornerShape(4.dp))) { ScreenContent(game, on) }
+}
+
+/** Monitor de PC (720 × 560: marco, cuello y pie; la pantalla va aparte). */
+internal fun DrawScope.drawMonitorBody(on: Float) {
+    drawRoundRect(Color(0xFF2A2D33), Offset(250f, 520f), Size(220f, 30f), CornerRadius(14f))
+    drawRect(Color(0xFF34383F), Offset(330f, 420f), Size(60f, 105f))
+    drawRoundRect(Color(0xFF1B1D22), Offset(0f, 0f), Size(720f, 422f), CornerRadius(18f))
+    drawRoundRect(Color(0xFF3A3F48), Offset(0f, 0f), Size(720f, 422f), CornerRadius(18f), style = Stroke(3f))
+    drawCircle(if (on > 0f) Color(0xFF7BD389) else Color(0xFF555555), 4f, Offset(360f, 412f))
 }
 
 @Composable
@@ -349,33 +350,59 @@ private fun SwitchConsole(u: Dp, on: Float, game: Game, v2: Boolean = false) {
     // 640 × 264 unidades, apoyada en la mesa.
     Canvas(Modifier.offset(u * 870, u * 436).size(u * 640, u * 264)) {
         val k = size.width / 640f
-        withTransform({ scale(k, k, Offset.Zero) }) {
-            // Switch: mandos rojo y azul. Switch 2: mandos oscuros con un toque de color bajo las palancas.
-            val red = if (v2) Color(0xFF2A2C31) else Color(0xFFFF4B3E)
-            val blue = if (v2) Color(0xFF2A2C31) else Color(0xFF14B4E0)
-            // Mandos a los lados (rojo y azul), redondeados por fuera.
-            drawRoundRect(red, Offset(0f, 0f), Size(120f, 264f), CornerRadius(56f))
-            drawRect(red, Offset(60f, 0f), Size(60f, 264f))
-            drawRoundRect(blue, Offset(520f, 0f), Size(120f, 264f), CornerRadius(56f))
-            drawRect(blue, Offset(520f, 0f), Size(60f, 264f))
-            // Cuerpo central
-            drawRoundRect(Color(0xFF2E3034), Offset(100f, 0f), Size(440f, 264f), CornerRadius(10f))
-            // Ranura del cartucho, arriba a la izquierda
-            drawRoundRect(Color(0xFF15161A), Offset(140f, -2f), Size(60f, 8f), CornerRadius(3f))
-            // Botones y palancas
-            fun stick(c: Offset) { drawCircle(Color(0xFF222326), 26f, c); drawCircle(Color(0xFF3A3C41), 18f, c) }
-            if (v2) {
-                drawCircle(Color(0xFF2FB8E8), 31f, Offset(56f, 66f))   // aro azul bajo la palanca izquierda
-                drawCircle(Color(0xFFFF4B3E), 31f, Offset(584f, 176f)) // aro rojo bajo la derecha
-                drawRoundRect(Color(0xFF1C1D21), Offset(100f, 0f), Size(4f, 264f))
-                drawRoundRect(Color(0xFF1C1D21), Offset(536f, 0f), Size(4f, 264f))
-            }
-            stick(Offset(56f, 66f)); stick(Offset(584f, 176f))
-            listOf(Offset(56f, 150f), Offset(56f, 202f), Offset(30f, 176f), Offset(82f, 176f)).forEach { drawCircle(Color(0xFF26272B), 13f, it) }
-            listOf(Offset(584f, 40f), Offset(584f, 92f), Offset(558f, 66f), Offset(610f, 66f)).forEach { drawCircle(Color(0xFF26272B), 13f, it) }
-        }
+        withTransform({ scale(k, k, Offset.Zero) }) { drawSwitchBody(v2) }
     }
     Box(Modifier.offset(u * s.x, u * s.y).size(u * s.w, u * s.h).clip(RoundedCornerShape(3.dp))) { ScreenContent(game, on) }
+}
+
+/**
+ * Switch / Switch 2 de frente (640 × 264, la pantalla va aparte), a partir de fotos: Joy-Con azul a la izquierda y
+ * rojo a la derecha; el izquierdo con «−», palanca arriba, cuatro botones de dirección y captura; el derecho con «+»,
+ * X/Y/A/B arriba, palanca debajo y el botón Home. Switch 2: mandos oscuros con aros de color bajo las palancas y botón C.
+ */
+internal fun DrawScope.drawSwitchBody(v2: Boolean) {
+    val left = if (v2) Color(0xFF2A2C31) else Color(0xFF0AB9E6)
+    val right = if (v2) Color(0xFF2A2C31) else Color(0xFFFF3C28)
+    val btn = Color(0xFF1E1F23)
+    val btnTop = Color(0xFF34363C)
+    // Mandos, redondeados por fuera.
+    drawRoundRect(left, Offset(0f, 0f), Size(124f, 264f), CornerRadius(58f))
+    drawRect(left, Offset(62f, 0f), Size(62f, 264f))
+    drawRoundRect(right, Offset(516f, 0f), Size(124f, 264f), CornerRadius(58f))
+    drawRect(right, Offset(516f, 0f), Size(62f, 264f))
+    // Brillo suave del plástico de los mandos.
+    drawRoundRect(Brush.verticalGradient(listOf(Color(0x30FFFFFF), Color.Transparent), 0f, 120f), Offset(6f, 4f), Size(112f, 110f), CornerRadius(52f))
+    drawRoundRect(Brush.verticalGradient(listOf(Color(0x30FFFFFF), Color.Transparent), 0f, 120f), Offset(522f, 4f), Size(112f, 110f), CornerRadius(52f))
+    // Cuerpo central: cristal negro con el marco de la pantalla.
+    drawRoundRect(Color(0xFF1B1C20), Offset(104f, 0f), Size(432f, 264f), CornerRadius(8f))
+    drawRoundRect(Color(0xFF2C2E33), Offset(104f, 0f), Size(432f, 264f), CornerRadius(8f), style = Stroke(2f))
+    // Raíles donde encajan los mandos.
+    drawRect(Color(0xFF111215), Offset(102f, 0f), Size(4f, 264f))
+    drawRect(Color(0xFF111215), Offset(534f, 0f), Size(4f, 264f))
+    // Ranura del cartucho, arriba a la izquierda.
+    drawRoundRect(Color(0xFF0E0F12), Offset(140f, -2f), Size(60f, 8f), CornerRadius(3f))
+    fun stick(c: Offset) {
+        drawCircle(Color(0xFF15161A), 27f, c)
+        drawCircle(Color(0xFF34363C), 20f, c)
+        drawCircle(Color(0xFF2A2C31), 13f, c)
+    }
+    fun round(c: Offset, r: Float = 12f) { drawCircle(btn, r, c); drawCircle(btnTop, r - 3f, c.copy(y = c.y - 1f)) }
+    // ── Mando izquierdo
+    drawRoundRect(btn, Offset(74f, 16f), Size(22f, 6f), CornerRadius(3f))                  // −
+    if (v2) drawCircle(Color(0xFF2FB8E8), 33f, Offset(58f, 70f))                            // aro azul (Switch 2)
+    stick(Offset(58f, 70f))
+    listOf(Offset(58f, 126f), Offset(58f, 178f), Offset(32f, 152f), Offset(84f, 152f)).forEach { round(it) }
+    drawRoundRect(btn, Offset(49f, 214f), Size(18f, 18f), CornerRadius(4f))                // captura
+    drawCircle(btnTop, 5f, Offset(58f, 223f))
+    // ── Mando derecho
+    drawRect(btn, Offset(544f, 16f), Size(22f, 6f)); drawRect(btn, Offset(552f, 8f), Size(6f, 22f)) // +
+    listOf(Offset(582f, 44f), Offset(582f, 96f), Offset(556f, 70f), Offset(608f, 70f)).forEach { round(it) } // X B Y A
+    if (v2) drawCircle(Color(0xFFFF4B3E), 33f, Offset(582f, 150f))                          // aro rojo (Switch 2)
+    stick(Offset(582f, 150f))
+    drawCircle(Color(0xFF4A4C52), 13f, Offset(570f, 214f))                                  // Home (con su aro)
+    drawCircle(btn, 10f, Offset(570f, 214f))
+    drawCircle(Color(0xFF55575D), 4f, Offset(570f, 214f))
+    if (v2) { drawCircle(btn, 9f, Offset(604f, 236f)); drawCircle(btnTop, 4f, Offset(604f, 236f)) } // botón C
 }
 
 @Composable

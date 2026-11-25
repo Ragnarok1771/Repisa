@@ -13,8 +13,8 @@ android {
         applicationId = "com.repisa.app"
         minSdk = 30
         targetSdk = 35
-        versionCode = 41
-        versionName = "0.15.1"
+        versionCode = 52
+        versionName = "0.15.2"
     }
 
     // Clave de firma privada de Repisa (desde la 0.13.0). No está en el repositorio: se pasa con variables de
@@ -38,9 +38,36 @@ android {
             signingConfig = if (releaseKeystore != null) signingConfigs.getByName("repisa") else signingConfigs.getByName("debug")
         }
     }
+    // Solo los idiomas de Repisa: las librerías traen textos en ~80 idiomas que la app nunca muestra.
+    androidResources {
+        localeFilters += listOf("en", "en-rGB", "es", "b+es+419", "fr", "de", "it", "pt", "pt-rBR", "pt-rPT")
+    }
+    // Fuera del APK lo que el móvil no usa: licencias de las librerías, metadatos de Kotlin y de depuración.
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/**/LICENSE*", "META-INF/*.version", "META-INF/*.kotlin_module", "META-INF/androidx/**",
+                "kotlin/**.kotlin_builtins", "DebugProbesKt.bin", "kotlin-tooling-metadata.json",
+            )
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+    // Pruebas que dibujan pantallas en el ordenador (Robolectric), para revisar los dibujos sin emulador.
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all { t ->
+                // Opciones de las pruebas de dibujo (-Drender.out=..., -Drender.ids=..., -Drender.big=1...).
+                System.getProperties().stringPropertyNames().filter { it.startsWith("render.") || it.startsWith("genres.") }
+                    .forEach { k -> t.systemProperty(k, System.getProperty(k)) }
+                // Robolectric descarga su Android de prueba: de la copia de Google de Maven Central.
+                t.systemProperty("robolectric.dependency.repo.url", "https://maven-central.storage-download.googleapis.com/maven2/")
+                t.systemProperty("robolectric.dependency.repo.id", "google-central")
+            }
+        }
     }
     buildFeatures {
         compose = true
@@ -80,4 +107,8 @@ dependencies {
     implementation("com.google.zxing:core:3.5.3")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation(composeBom)
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

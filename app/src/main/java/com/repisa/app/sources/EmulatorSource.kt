@@ -369,7 +369,10 @@ class EmulatorSource(private val context: Context, private val settings: Setting
          *  "Bravely_Default_II_[0100B6801137E000][v0].nsp"        → "Bravely Default II"
          */
         fun cleanTitle(romName: String): String {
-            var t = romName.replace(Regex("""\s*[(\[{][^)\]}]*[)\]}]"""), " ")
+            // Sin marcas registradas («Rocket League®», «Batman™»): estorban al buscar.
+            var t = romName.replace(Regex("[™®©℠]"), "").replace(Regex("""\s*[(\[{][^)\]}]*[)\]}]"""), " ")
+            // Todo el nombre entre corchetes («[REDACTED]»): es el título, no una etiqueta de ROM.
+            if (t.isBlank()) t = romName.replace(Regex("[™®©℠]"), "").replace(Regex("""[(\[{)\]}]"""), " ")
             // Nombres con "_" o "." en lugar de espacios.
             if (!t.contains(' ') || t.count { it == '_' } >= 2) t = t.replace('_', ' ')
             if (!t.contains(' ') && t.count { it == '.' } >= 2) t = t.replace('.', ' ')

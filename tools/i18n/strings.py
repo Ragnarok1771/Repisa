@@ -45,7 +45,6 @@ s("sync_all", "Sync all", "Sincronizar todo", "Tout synchroniser", "Alles synchr
   "Sincronizar tudo")
 s("remove", "Remove", "Quitar", "Retirer", "Entfernen", "Rimuovi", "Remover")
 s("done", "Done", "Listo", "Terminé", "Fertig", "Fatto", "Pronto", ptPT="Concluído")
-s("ask", "Ask", "Preguntar", "Demander", "Fragen", "Chiedi", "Perguntar")
 
 # ------------------------------------------------------------------ Repisa / barra superior
 s("games_count_one", "%1$d game", "%1$d juego", "%1$d jeu", "%1$d Spiel", "%1$d gioco", "%1$d jogo")
@@ -158,8 +157,6 @@ s("field_title", "Title", "Título", "Titre", "Titel", "Titolo", "Título")
 s("field_genres", "Genres (comma separated)", "Géneros (separados por comas)", "Genres (séparés par des virgules)",
   "Genres (durch Kommas getrennt)", "Generi (separati da virgole)", "Gêneros (separados por vírgulas)",
   ptPT="Géneros (separados por vírgulas)")
-s("field_extra_hours", "Extra hours played (manual)", "Horas extra jugadas (a mano)", "Heures en plus (manuel)",
-  "Zusätzliche Spielstunden (manuell)", "Ore extra giocate (manuale)", "Horas extras jogadas (manual)")
 s("field_cover_url", "Cover URL", "URL de la carátula", "URL de la jaquette", "Cover-URL", "URL della copertina",
   "URL da capa", es419="URL de la portada")
 s("my_score", "My rating", "Mi nota", "Ma note", "Meine Wertung", "Il mio voto", "Minha nota", ptPT="A minha nota")
@@ -563,8 +560,6 @@ s("backup_failed", "Couldn't complete the backup: %1$s", "No se pudo completar l
   "Sicherung fehlgeschlagen: %1$s", "Backup non riuscito: %1$s", "Não foi possível concluir o backup: %1$s",
   ptPT="Não foi possível concluir a cópia: %1$s")
 s("updates_title", "Version", "Versión", "Version", "Version", "Versione", "Versão")
-s("updates_auto", "Check for new versions when opening", "Buscar versiones nuevas al abrir", "Chercher les nouvelles versions à l’ouverture",
-  "Beim Öffnen nach neuen Versionen suchen", "Cerca nuove versioni all’apertura", "Procurar novas versões ao abrir")
 s("updates_hint", "Repisa looks at the project's releases on GitHub and, if there is a newer one, shows its patch notes and installs it over this one.",
   "Repisa mira las releases del proyecto en GitHub y, si hay una más nueva, te muestra sus notas del parche y la instala encima de esta.",
   "Repisa consulte les versions du projet sur GitHub et, s’il y en a une plus récente, affiche ses notes et l’installe par-dessus.",
@@ -597,9 +592,6 @@ s("update_required", "Install it to keep using Repisa (your library and settings
   "Instale para continuar usando o Repisa (sua biblioteca e ajustes continuam iguais).")
 s("update_no_notes", "No patch notes.", "Sin notas del parche.", "Pas de notes.", "Keine Patchnotes.", "Nessuna nota.", "Sem notas.")
 s("update_now", "Update", "Actualizar", "Mettre à jour", "Aktualisieren", "Aggiorna", "Atualizar")
-s("update_later", "Later", "Más tarde", "Plus tard", "Später", "Più tardi", "Mais tarde")
-s("update_skip", "Skip this version", "Omitir esta versión", "Ignorer cette version", "Diese Version überspringen", "Salta questa versione",
-  "Pular esta versão", ptPT="Ignorar esta versão")
 s("update_downloading", "Downloading… %1$d%%", "Descargando… %1$d%%", "Téléchargement… %1$d%%", "Wird heruntergeladen… %1$d%%",
   "Download… %1$d%%", "Baixando… %1$d%%", ptPT="A transferir… %1$d%%")
 s("update_allow_install", "Allow Repisa to install apps (Android opens the setting) and come back: the update continues by itself.",
@@ -783,16 +775,6 @@ s("sort_achievements", "Achievements %", "% de logros", "% de succès", "Erfolge
 s("rach_first", "First session", "Primera partida", "Première partie", "Erste Partie", "Prima partita", "Primeira partida")
 s("rach_first_d", "Play it for the first time.", "Juégalo por primera vez.", "Jouez-y pour la première fois.", "Spiele es zum ersten Mal.",
   "Giocalo per la prima volta.", "Jogue pela primeira vez.")
-s("rach_10h", "Hooked", "Enganchado", "Accro", "Gefesselt", "Preso bene", "Viciado")
-s("rach_10h_d", "Reach 10 hours.", "Llega a 10 horas.", "Atteignez 10 heures.", "Erreiche 10 Stunden.", "Raggiungi 10 ore.", "Chegue a 10 horas.")
-s("rach_50h", "Devoted", "Entregado", "Dévoué", "Hingegeben", "Devoto", "Dedicado")
-s("rach_50h_d", "Reach 50 hours.", "Llega a 50 horas.", "Atteignez 50 heures.", "Erreiche 50 Stunden.", "Raggiungi 50 ore.", "Chegue a 50 horas.")
-s("rach_100h", "A hundred hours", "Cien horas", "Cent heures", "Hundert Stunden", "Cento ore", "Cem horas")
-s("rach_100h_d", "Reach 100 hours.", "Llega a 100 horas.", "Atteignez 100 heures.", "Erreiche 100 Stunden.", "Raggiungi 100 ore.", "Chegue a 100 horas.")
-s("rach_hltb", "No rush", "Sin prisa", "Sans se presser", "Keine Eile", "Senza fretta", "Sem pressa")
-s("rach_hltb_d", "Play longer than HowLongToBeat's story time.", "Juega más que el tiempo de historia de HowLongToBeat.",
-  "Jouez plus longtemps que le temps « histoire » de HowLongToBeat.", "Spiele länger als die Story-Zeit von HowLongToBeat.",
-  "Gioca più del tempo «storia» di HowLongToBeat.", "Jogue mais que o tempo de história do HowLongToBeat.")
 s("rach_finished", "To the end", "Hasta el final", "Jusqu’au bout", "Bis zum Ende", "Fino alla fine", "Até o fim", ptPT="Até ao fim")
 s("rach_finished_d", "Mark it as finished.", "Márcalo como terminado.", "Marquez-le comme terminé.", "Markiere es als beendet.",
   "Segnalo come finito.", "Marque como zerado.", ptPT="Marque-o como terminado.")
@@ -919,7 +901,6 @@ s("collections_hint", "Your own shelves (like Steam collections). Add games from
   "I tuoi scaffali (come le collezioni di Steam). Aggiungi giochi dalla scheda (📂) o selezionandone diversi. Eliminare una collezione non elimina i giochi.",
   "Suas próprias estantes (como as coleções do Steam). Adicione jogos pela ficha (📂) ou selecionando vários. Apagar uma coleção não apaga os jogos.")
 s("delete", "Delete", "Borrar", "Supprimer", "Löschen", "Elimina", "Apagar")
-s("select_many", "Select", "Seleccionar", "Sélectionner", "Auswählen", "Seleziona", "Selecionar")
 s("select_all", "Select all", "Seleccionar todo", "Tout sélectionner", "Alle auswählen", "Seleziona tutto", "Selecionar tudo")
 s("selected_count", "%1$d selected · tap covers to add or remove", "%1$d seleccionados · toca carátulas para añadir o quitar",
   "%1$d sélectionnés · touchez les jaquettes", "%1$d ausgewählt · Cover antippen zum Hinzufügen/Entfernen",
@@ -953,7 +934,6 @@ s("launch_anim_daily", "First time each day", "La primera vez del día", "La pre
 s("launch_anim_never", "Never", "Nunca", "Jamais", "Nie", "Mai", "Nunca")
 s("launch_anim_preview_all", "See the animations", "Ver las animaciones", "Voir les animations", "Animationen ansehen", "Vedi le animazioni", "Ver as animações")
 s("launch_anim_others", "Others", "Otras", "Autres", "Andere", "Altre", "Outras")
-s("launch_anim_preview", "See it:", "Verla:", "La voir :", "Ansehen:", "Guardala:", "Ver:")
 s("status_order", "Order of the shelves by status", "Orden de las repisas por estado", "Ordre des étagères par statut",
   "Reihenfolge der Regale nach Status", "Ordine degli scaffali per stato", "Ordem das prateleiras por status", ptPT="Ordem das prateleiras por estado")
 s("status_order_hint", "Used when grouping by status. Move each one with ▲ ▼.", "Se usa al agrupar por estado. Mueve cada uno con ▲ ▼.",
@@ -1000,8 +980,6 @@ s("emu_auto_option", "Automatic (use the detected emulator)", "Automático (usar
 s("msg_emus_detected", "Emulators: %1$s", "Emuladores: %1$s", "Émulateurs : %1$s", "Emulatoren: %1$s", "Emulatori: %1$s", "Emuladores: %1$s")
 s("emulator_for", "Emulator for %1$s", "Emulador para %1$s", "Émulateur pour %1$s", "Emulator für %1$s",
   "Emulatore per %1$s", "Emulador para %1$s")
-s("ask_every_time", "Ask every time", "Preguntar cada vez", "Toujours demander", "Jedes Mal fragen",
-  "Chiedi ogni volta", "Perguntar sempre")
 s("covers_hint", "Each game has a \"Find cover\" button in its details. This button looks for covers for every game that doesn't have one.",
   "Cada juego tiene un botón \"Buscar carátula\" en su ficha. Este botón busca carátula para todos los juegos que no tienen.",
   "Chaque jeu a un bouton « Chercher une jaquette » dans sa fiche. Ce bouton en cherche pour tous les jeux qui n’en ont pas.",
@@ -1073,10 +1051,6 @@ s("box_size_hint", "Height of a DVD case; the other boxes are scaled to their re
   "Höhe einer DVD-Hülle; die anderen Boxen haben ihre echte Größe.",
   "Altezza di una custodia DVD; le altre scatole sono in scala reale.",
   "Altura de uma caixa de DVD; as outras caixas ficam no tamanho real.")
-s("welcome", "Welcome to Repisa", "Te damos la bienvenida a Repisa", "Bienvenue dans Repisa", "Willkommen bei Repisa",
-  "Benvenuto in Repisa", "Boas-vindas ao Repisa")
-s("choose_language", "Choose your language", "Elige tu idioma", "Choisissez votre langue", "Wähle deine Sprache",
-  "Scegli la tua lingua", "Escolha seu idioma", ptPT="Escolha o seu idioma")
 
 # ------------------------------------------------------------------ Mensajes
 s("msg_sync_count", "%1$s: %2$d games", "%1$s: %2$d juegos", "%1$s : %2$d jeux", "%1$s: %2$d Spiele",
@@ -1431,6 +1405,290 @@ s("wish_background_hint", "Every 6 hours, when there's internet. You'll get a no
   "A cada 6 horas, quando houver internet. Você recebe uma notificação por jogo que baixar de preço.",
   ptPT="A cada 6 horas, quando houver internet. Recebe uma notificação por cada jogo que baixe de preço.")
 
+# ------------------------------------------------------------------ Logros: categorías, platino y recordatorio
+s("tier_bronze", "Bronze", "Bronce", "Bronze", "Bronze", "Bronzo", "Bronze")
+s("tier_silver", "Silver", "Plata", "Argent", "Silber", "Argento", "Prata")
+s("tier_gold", "Gold", "Oro", "Or", "Gold", "Oro", "Ouro")
+s("tier_platinum", "Platinum", "Platino", "Platine", "Platin", "Platino", "Platina")
+s("plat_title", "Platinum", "Platino", "Platine", "Platin", "Platino", "Platina")
+s("plat_got", "Platinum unlocked!", "¡Platino conseguido!", "Platine obtenu !", "Platin freigeschaltet!", "Platino ottenuto!", "Platina conquistada!")
+s("plat_left_platform", "%1$d achievements left", "Faltan %1$d logros", "Il reste %1$d succès", "Noch %1$d Erfolge", "Mancano %1$d obiettivi",
+  "Faltam %1$d conquistas")
+s("plat_left_repisa", "%1$d bronze/silver Repisa achievements left", "Faltan %1$d logros de Repisa de bronce o plata",
+  "Il reste %1$d succès Repisa bronze/argent", "Noch %1$d Repisa-Erfolge (Bronze/Silber)", "Mancano %1$d obiettivi Repisa di bronzo/argento",
+  "Faltam %1$d conquistas Repisa de bronze/prata")
+s("plat_left_status", "mark it as 100 %", "márcalo como 100 %", "marquez-le à 100 %", "auf 100 % setzen", "segnalo al 100 %", "marque como 100 %")
+s("plat_new", "Platinum! %1$s", "¡Platino! %1$s", "Platine ! %1$s", "Platin! %1$s", "Platino! %1$s", "Platina! %1$s")
+s("plat_count", "platinums", "platinos", "platines", "Platin", "platini", "platinas")
+s("plat_collection", "Platinum collection", "Colección de platinos", "Collection de platines", "Platin-Sammlung", "Collezione di platini",
+  "Coleção de platinas")
+s("plat_none", "No platinums yet. A game gets one when it's marked 100 % and has all its achievements (Steam, RetroAchievements… or, if it has none, all of Repisa's bronze and silver ones).",
+  "Aún no hay platinos. Un juego lo consigue cuando está marcado como 100 % y tiene todos sus logros (Steam, RetroAchievements… o, si no tiene, todos los de Repisa de bronce y plata).",
+  "Pas encore de platine. Un jeu l'obtient quand il est à 100 % et a tous ses succès (Steam, RetroAchievements… ou, s'il n'en a pas, tous ceux de Repisa en bronze et argent).",
+  "Noch kein Platin. Ein Spiel bekommt es, wenn es auf 100 % steht und alle Erfolge hat (Steam, RetroAchievements … oder, wenn es keine hat, alle Repisa-Erfolge in Bronze und Silber).",
+  "Ancora nessun platino. Un gioco lo ottiene quando è al 100 % e ha tutti gli obiettivi (Steam, RetroAchievements… o, se non ne ha, tutti quelli di Repisa di bronzo e argento).",
+  "Ainda não há platinas. Um jogo ganha quando está em 100 % e tem todas as conquistas (Steam, RetroAchievements… ou, se não tiver, todas as da Repisa de bronze e prata).")
+s("aach_title", "Repisa achievements", "Logros de Repisa", "Succès Repisa", "Repisa-Erfolge", "Obiettivi di Repisa", "Conquistas da Repisa")
+s("aach_count", "Repisa achievements", "logros de la app", "succès de l'app", "App-Erfolge", "obiettivi dell'app", "conquistas do app")
+s("aach_new", "Achievement: %1$s", "Logro: %1$s", "Succès : %1$s", "Erfolg: %1$s", "Obiettivo: %1$s", "Conquista: %1$s")
+s("reminder_title", "Play today…", "Hoy juego…", "Aujourd'hui je joue…", "Heute spiele ich …", "Oggi gioco…", "Hoje eu jogo…")
+s("reminder_stale", "You haven't touched it in %1$d days", "Llevas %1$d días sin tocarlo", "Pas touché depuis %1$d jours", "Seit %1$d Tagen nicht gespielt",
+  "Non lo tocchi da %1$d giorni", "Faz %1$d dias que você não joga", ptPT="Há %1$d dias que não joga")
+s("reminder_backlog_hltb", "Waiting in your backlog · about %1$s h", "Esperando en pendientes · unas %1$s h", "En attente · environ %1$s h",
+  "Wartet auf dich · ca. %1$s Std.", "In attesa · circa %1$s h", "Esperando nos pendentes · cerca de %1$s h")
+s("reminder_backlog", "Waiting in your backlog", "Esperando en pendientes", "En attente dans vos jeux à faire", "Wartet in deinem Backlog",
+  "In attesa tra i giochi da fare", "Esperando nos pendentes")
+s("cal_release_day", "Wishlist releases (%1$d)", "Estrenos de tu lista de deseos (%1$d)", "Sorties de votre liste de souhaits (%1$d)",
+  "Veröffentlichungen deiner Wunschliste (%1$d)", "Uscite della tua lista dei desideri (%1$d)", "Lançamentos da sua lista de desejos (%1$d)")
+s("cal_release_soon", "Releases this day", "Sale este día", "Sort ce jour-là", "Erscheint an diesem Tag", "Esce questo giorno", "Lança neste dia")
+s("cal_release_out", "Released this day", "Salió este día", "Sorti ce jour-là", "An diesem Tag erschienen", "Uscito questo giorno", "Lançado neste dia")
+s("week_title", "Your week", "Tu semana", "Votre semaine", "Deine Woche", "La tua settimana", "Sua semana", ptPT="A sua semana")
+s("week_summary", "%1$s · %2$d days playing", "%1$s · %2$d días jugando", "%1$s · %2$d jours de jeu", "%1$s · %2$d Spieltage",
+  "%1$s · %2$d giorni di gioco", "%1$s · %2$d dias jogando", ptPT="%1$s · %2$d dias a jogar")
+
+# Descripciones con número
+s("rd_hours1", "Play it for 1 hour.", "Juégalo 1 hora.", "Jouez-y 1 heure.", "Spiele es 1 Stunde.", "Giocaci 1 ora.", "Jogue por 1 hora.")
+s("rd_hours", "Play it for %1$d hours.", "Juégalo %1$d horas.", "Jouez-y %1$d heures.", "Spiele es %1$d Stunden.", "Giocaci %1$d ore.", "Jogue por %1$d horas.")
+s("rd_sessions", "%1$d recorded sessions.", "%1$d partidas anotadas.", "%1$d parties enregistrées.", "%1$d erfasste Sitzungen.",
+  "%1$d partite registrate.", "%1$d partidas registradas.")
+s("rd_days", "Play it on %1$d different days.", "Juégalo en %1$d días distintos.", "Jouez-y %1$d jours différents.",
+  "Spiele es an %1$d verschiedenen Tagen.", "Giocaci in %1$d giorni diversi.", "Jogue em %1$d dias diferentes.")
+s("rd_streak", "Play it %1$d days in a row.", "Juégalo %1$d días seguidos.", "Jouez-y %1$d jours d'affilée.", "Spiele es %1$d Tage am Stück.",
+  "Giocaci %1$d giorni di fila.", "Jogue %1$d dias seguidos.")
+s("rd_months", "Play it in %1$d different months.", "Juégalo en %1$d meses distintos.", "Jouez-y pendant %1$d mois différents.",
+  "Spiele es in %1$d verschiedenen Monaten.", "Giocaci in %1$d mesi diversi.", "Jogue em %1$d meses diferentes.")
+s("rd_session_hours", "One session of %1$d hours in a row (launched from Repisa).", "Una partida de %1$d horas seguidas (abierta desde Repisa).",
+  "Une partie de %1$d heures d'affilée (lancée depuis Repisa).", "Eine Sitzung von %1$d Stunden am Stück (über Repisa gestartet).",
+  "Una partita di %1$d ore di fila (avviata da Repisa).", "Uma partida de %1$d horas seguidas (aberta pelo Repisa).")
+s("rd_day_hours", "%1$d hours in a single day.", "%1$d horas en un mismo día.", "%1$d heures dans la même journée.", "%1$d Stunden an einem Tag.",
+  "%1$d ore in un solo giorno.", "%1$d horas no mesmo dia.")
+
+# Logros de cada juego: nombres y descripciones propias
+s("rach_hour1", "Warming up", "Calentando", "Échauffement", "Aufwärmen", "Riscaldamento", "Aquecendo", ptPT="A aquecer")
+s("rach_from_repisa", "From the shelf", "Desde la repisa", "Depuis l'étagère", "Aus dem Regal", "Dallo scaffale", "Da estante")
+s("rach_from_repisa_d", "Launch it from Repisa and play.", "Ábrelo desde Repisa y juega.", "Lancez-le depuis Repisa et jouez.",
+  "Starte es über Repisa und spiele.", "Avvialo da Repisa e gioca.", "Abra pelo Repisa e jogue.")
+s("rach_sessions_3", "Be right back", "Vuelvo enseguida", "Je reviens vite", "Bin gleich zurück", "Torno subito", "Já volto")
+s("rach_days_2", "Day two", "Segundo día", "Deuxième jour", "Tag zwei", "Secondo giorno", "Segundo dia")
+s("rach_session_30m", "Coffee break", "Pausa para el café", "Pause café", "Kaffeepause", "Pausa caffè", "Pausa para o café")
+s("rach_session_30m_d", "A 30-minute session (launched from Repisa).", "Una partida de 30 minutos seguidos (abierta desde Repisa).",
+  "Une partie de 30 minutes d'affilée (lancée depuis Repisa).", "Eine 30-minütige Sitzung (über Repisa gestartet).",
+  "Una partita di 30 minuti di fila (avviata da Repisa).", "Uma partida de 30 minutos seguidos (aberta pelo Repisa).")
+s("rach_weekend", "Weekend", "Fin de semana", "Week-end", "Wochenende", "Fine settimana", "Fim de semana")
+s("rach_weekend_d", "Play it on a Saturday or Sunday.", "Juégalo un sábado o un domingo.", "Jouez-y un samedi ou un dimanche.",
+  "Spiele es an einem Samstag oder Sonntag.", "Giocaci di sabato o domenica.", "Jogue num sábado ou domingo.")
+s("rach_evening", "After hours", "Después del trabajo", "Après le travail", "Feierabend", "Dopo il lavoro", "Depois do trabalho")
+s("rach_evening_d", "Play it in the evening (7–11 pm).", "Juégalo por la tarde-noche (19–23 h).", "Jouez-y en soirée (19 h–23 h).",
+  "Spiele es abends (19–23 Uhr).", "Giocaci di sera (19–23).", "Jogue à noite (19–23 h).")
+s("rach_collection", "Well kept", "Bien guardado", "Bien rangé", "Gut verstaut", "Ben conservato", "Bem guardado")
+s("rach_collection_d", "Add it to one of your collections.", "Añádelo a una de tus colecciones.", "Ajoutez-le à une de vos collections.",
+  "Füge es einer deiner Sammlungen hinzu.", "Aggiungilo a una delle tue collezioni.", "Adicione a uma das suas coleções.")
+s("rach_status", "Labelled", "Con estado", "Étiqueté", "Beschriftet", "Etichettato", "Com estado")
+s("rach_status_d", "Set its status yourself.", "Ponle un estado a mano.", "Définissez son statut vous-même.", "Setze seinen Status selbst.",
+  "Imposta tu il suo stato.", "Defina o estado manualmente.")
+s("rach_session_2h", "Long session", "Sesión larga", "Longue session", "Lange Sitzung", "Sessione lunga", "Sessão longa")
+s("rach_day_3h", "Gaming afternoon", "Tarde de juego", "Après-midi de jeu", "Spielnachmittag", "Pomeriggio di gioco", "Tarde de jogo")
+s("rach_sessions_10", "Regular", "Habitual", "Habitué", "Stammgast", "Abituale", "Habitual")
+s("rach_days_7", "A week of play", "Una semana de juego", "Une semaine de jeu", "Eine Woche Spielzeit", "Una settimana di gioco", "Uma semana de jogo")
+s("rach_streak_3", "Three in a row", "Tres seguidos", "Trois d'affilée", "Drei am Stück", "Tre di fila", "Três seguidos")
+s("rach_three_a_day", "Can't stop", "No puedo parar", "Impossible d'arrêter", "Kann nicht aufhören", "Non riesco a smettere", "Não consigo parar")
+s("rach_three_a_day_d", "Three sessions on the same day.", "Tres partidas el mismo día.", "Trois parties le même jour.", "Drei Sitzungen am selben Tag.",
+  "Tre partite nello stesso giorno.", "Três partidas no mesmo dia.")
+s("rach_night", "Night owl", "Búho", "Oiseau de nuit", "Nachteule", "Nottambulo", "Coruja")
+s("rach_night_d", "Start a session between midnight and 5 am (from Repisa).", "Empieza una partida entre medianoche y las 5 (desde Repisa).",
+  "Lancez une partie entre minuit et 5 h (depuis Repisa).", "Starte eine Sitzung zwischen Mitternacht und 5 Uhr (über Repisa).",
+  "Inizia una partita tra mezzanotte e le 5 (da Repisa).", "Comece uma partida entre meia-noite e as 5 (pelo Repisa).")
+s("rach_morning", "Early bird", "Madrugador", "Lève-tôt", "Frühaufsteher", "Mattiniero", "Madrugador")
+s("rach_morning_d", "Start a session between 5 and 9 am (from Repisa).", "Empieza una partida entre las 5 y las 9 de la mañana (desde Repisa).",
+  "Lancez une partie entre 5 h et 9 h (depuis Repisa).", "Starte eine Sitzung zwischen 5 und 9 Uhr (über Repisa).",
+  "Inizia una partita tra le 5 e le 9 (da Repisa).", "Comece uma partida entre as 5 e as 9 da manhã (pelo Repisa).")
+s("rach_months_3", "Old friend", "Viejo conocido", "Vieil ami", "Alter Bekannter", "Vecchio amico", "Velho conhecido")
+s("rach_weekdays", "All week long", "Toda la semana", "Toute la semaine", "Die ganze Woche", "Tutta la settimana", "A semana toda")
+s("rach_weekdays_d", "Play it on every day of the week (Monday to Sunday, any week).", "Juégalo en cada día de la semana (de lunes a domingo, en cualquier semana).",
+  "Jouez-y chaque jour de la semaine (du lundi au dimanche, n'importe quelle semaine).", "Spiele es an jedem Wochentag (Montag bis Sonntag, beliebige Woche).",
+  "Giocaci ogni giorno della settimana (da lunedì a domenica, qualsiasi settimana).", "Jogue em todos os dias da semana (de segunda a domingo, em qualquer semana).")
+s("rach_comeback", "The comeback", "El regreso", "Le retour", "Die Rückkehr", "Il ritorno", "O regresso")
+s("rach_comeback_d", "Come back to it after 30 days or more.", "Vuelve a jugarlo tras 30 días o más sin tocarlo.", "Reprenez-le après 30 jours ou plus.",
+  "Spiele es nach 30 Tagen oder mehr wieder.", "Riprendilo dopo 30 giorni o più.", "Volte a jogar após 30 dias ou mais.")
+s("rach_hltb_main", "The story", "La historia", "L'histoire", "Die Story", "La storia", "A história")
+s("rach_hltb_main_d", "Play it as long as its main story lasts (HowLongToBeat; 10 h if unknown).", "Juégalo lo que dura su historia (HowLongToBeat; 10 h si no se sabe).",
+  "Jouez-y la durée de l'histoire (HowLongToBeat ; 10 h si inconnu).", "Spiele es so lange wie die Story (HowLongToBeat; 10 Std., wenn unbekannt).",
+  "Giocaci quanto dura la storia (HowLongToBeat; 10 h se non si sa).", "Jogue o quanto dura a história (HowLongToBeat; 10 h se não se souber).")
+s("rach_hltb_extra", "Explorer", "Explorador", "Explorateur", "Entdecker", "Esploratore", "Explorador")
+s("rach_hltb_extra_d", "Play it as long as story + extras last (HowLongToBeat; 20 h if unknown).", "Juégalo lo que duran historia y extras (HowLongToBeat; 20 h si no se sabe).",
+  "Jouez-y la durée histoire + extras (HowLongToBeat ; 20 h si inconnu).", "Spiele es so lange wie Story + Extras (HowLongToBeat; 20 Std., wenn unbekannt).",
+  "Giocaci quanto durano storia ed extra (HowLongToBeat; 20 h se non si sa).", "Jogue o quanto duram história e extras (HowLongToBeat; 20 h se não se souber).")
+s("rach_critic", "Critic", "Crítico", "Critique", "Kritiker", "Critico", "Crítico")
+s("rach_critic_d", "Rate it with 4 or more criteria.", "Califícalo con 4 criterios o más.", "Notez-le avec 4 critères ou plus.", "Bewerte es mit 4 oder mehr Kriterien.",
+  "Valutalo con 4 o più criteri.", "Avalie com 4 critérios ou mais.")
+s("rach_diary", "Game diary", "Diario de juego", "Journal de jeu", "Spieltagebuch", "Diario di gioco", "Diário de jogo")
+s("rach_diary_d", "Write notes of 300 characters or more.", "Escribe notas de 300 caracteres o más.", "Écrivez des notes de 300 caractères ou plus.",
+  "Schreibe Notizen mit 300 oder mehr Zeichen.", "Scrivi note di 300 caratteri o più.", "Escreva notas de 300 caracteres ou mais.")
+s("rach_session_4h", "Marathon", "Maratón", "Marathon", "Marathon", "Maratona", "Maratona")
+s("rach_session_8h", "No sleep", "Sin dormir", "Nuit blanche", "Ohne Schlaf", "Senza dormire", "Sem dormir")
+s("rach_day_6h", "All-day gaming", "Día entero", "Journée entière", "Ganzer Tag", "Giornata intera", "Dia inteiro")
+s("rach_sessions_50", "Routine", "Rutina", "Routine", "Routine", "Routine", "Rotina")
+s("rach_sessions_100", "One hundred sessions", "Cien partidas", "Cent parties", "Hundert Sitzungen", "Cento partite", "Cem partidas")
+s("rach_days_30", "A month of play", "Un mes de juego", "Un mois de jeu", "Ein Monat Spielzeit", "Un mese di gioco", "Um mês de jogo")
+s("rach_streak_7", "Seven in a row", "Siete seguidos", "Sept d'affilée", "Sieben am Stück", "Sette di fila", "Sete seguidos")
+s("rach_streak_30", "Never miss a day", "Un mes sin fallar", "Sans faute pendant un mois", "Einen Monat ohne Pause", "Un mese senza saltare", "Um mês sem falhar")
+s("rach_months_6", "Half a year", "Medio año", "Six mois", "Ein halbes Jahr", "Mezzo anno", "Meio ano")
+s("rach_months_12", "All year round", "Todo el año", "Toute l'année", "Das ganze Jahr", "Tutto l'anno", "O ano todo")
+s("rach_seasons", "Four seasons", "Cuatro estaciones", "Quatre saisons", "Vier Jahreszeiten", "Quattro stagioni", "Quatro estações")
+s("rach_seasons_d", "Play it in spring, summer, autumn and winter.", "Juégalo en primavera, verano, otoño e invierno.", "Jouez-y au printemps, en été, en automne et en hiver.",
+  "Spiele es im Frühling, Sommer, Herbst und Winter.", "Giocaci in primavera, estate, autunno e inverno.", "Jogue na primavera, verão, outono e inverno.")
+s("rach_midnight", "Midnight chimes", "Doce campanadas", "Les douze coups", "Mitternacht", "Mezzanotte", "Doze badaladas")
+s("rach_midnight_d", "A session that goes past midnight (from Repisa).", "Una partida que pase la medianoche (desde Repisa).",
+  "Une partie qui dépasse minuit (depuis Repisa).", "Eine Sitzung über Mitternacht hinaus (über Repisa).", "Una partita oltre la mezzanotte (da Repisa).",
+  "Uma partida que passe da meia-noite (pelo Repisa).")
+s("rach_new_year", "New Year", "Año nuevo", "Nouvel an", "Neujahr", "Capodanno", "Ano novo")
+s("rach_new_year_d", "Play it on January 1st.", "Juégalo un 1 de enero.", "Jouez-y un 1er janvier.", "Spiele es an einem 1. Januar.", "Giocaci il 1° gennaio.",
+  "Jogue num 1º de janeiro.", ptPT="Jogue num 1 de janeiro.")
+s("rach_anniversary", "Anniversary", "Aniversario", "Anniversaire", "Jahrestag", "Anniversario", "Aniversário")
+s("rach_anniversary_d", "Play it a year (or more) after your first recorded session.", "Juégalo un año (o más) después de tu primera partida anotada.",
+  "Jouez-y un an (ou plus) après votre première partie enregistrée.", "Spiele es ein Jahr (oder mehr) nach deiner ersten erfassten Sitzung.",
+  "Giocaci un anno (o più) dopo la prima partita registrata.", "Jogue um ano (ou mais) depois da sua primeira partida registrada.")
+s("rach_hltb_complete", "Completionist", "Completista", "Complétionniste", "Komplettist", "Completista", "Completista")
+s("rach_hltb_complete_d", "Play it as long as a 100 % run takes (HowLongToBeat; 40 h if unknown).", "Juégalo lo que dura completarlo al 100 % (HowLongToBeat; 40 h si no se sabe).",
+  "Jouez-y la durée d'un 100 % (HowLongToBeat ; 40 h si inconnu).", "Spiele es so lange wie ein 100-%-Durchgang (HowLongToBeat; 40 Std., wenn unbekannt).",
+  "Giocaci quanto serve per il 100 % (HowLongToBeat; 40 h se non si sa).", "Jogue o quanto leva para fazer 100 % (HowLongToBeat; 40 h se não se souber).")
+s("rach_hltb_double", "No rush", "Sin prisa", "Sans se presser", "Keine Eile", "Senza fretta", "Sem pressa")
+s("rach_hltb_double_d", "Play it twice as long as a 100 % run (HowLongToBeat; 80 h if unknown).", "Juégalo el doble de lo que dura completarlo al 100 % (HowLongToBeat; 80 h si no se sabe).",
+  "Jouez-y deux fois la durée d'un 100 % (HowLongToBeat ; 80 h si inconnu).", "Spiele es doppelt so lange wie ein 100-%-Durchgang (HowLongToBeat; 80 Std., wenn unbekannt).",
+  "Giocaci il doppio del 100 % (HowLongToBeat; 80 h se non si sa).", "Jogue o dobro do tempo de 100 % (HowLongToBeat; 80 h se não se souber).")
+s("rach_speedrun", "Speedrunner", "Rápido", "Rapide", "Speedrunner", "Velocista", "Rápido")
+s("rach_speedrun_d", "Finish it in less time than its main story (HowLongToBeat).", "Termínalo jugando menos de lo que dura su historia (HowLongToBeat).",
+  "Terminez-le en moins de temps que son histoire (HowLongToBeat).", "Beende es in weniger Zeit als die Story (HowLongToBeat).",
+  "Finiscilo in meno tempo della storia (HowLongToBeat).", "Termine jogando menos do que dura a história (HowLongToBeat).")
+s("rach_hours_50", "50 hours", "50 horas", "50 heures", "50 Stunden", "50 ore", "50 horas")
+s("rach_hours_100", "100 hours", "100 horas", "100 heures", "100 Stunden", "100 ore", "100 horas")
+s("rach_hours_250", "250 hours", "250 horas", "250 heures", "250 Stunden", "250 ore", "250 horas")
+s("rach_hours_500", "500 hours", "500 horas", "500 heures", "500 Stunden", "500 ore", "500 horas")
+s("rach_masterpiece", "Masterpiece", "Obra maestra", "Chef-d'œuvre", "Meisterwerk", "Capolavoro", "Obra-prima")
+s("rach_masterpiece_d", "Give it a rating of 95 % or more.", "Dale una calificación de 95 % o más.", "Donnez-lui une note de 95 % ou plus.",
+  "Bewerte es mit 95 % oder mehr.", "Dagli un voto del 95 % o più.", "Dê uma nota de 95 % ou mais.")
+s("rach_hunter", "Trophy hunter", "Cazatrofeos", "Chasseur de trophées", "Trophäenjäger", "Cacciatore di trofei", "Caçador de troféus")
+s("rach_hunter_d", "Unlock all of its own achievements (Steam, RetroAchievements…).", "Consigue todos sus logros propios (Steam, RetroAchievements…).",
+  "Débloquez tous ses succès (Steam, RetroAchievements…).", "Schalte alle eigenen Erfolge frei (Steam, RetroAchievements …).",
+  "Sblocca tutti i suoi obiettivi (Steam, RetroAchievements…).", "Desbloqueie todas as conquistas dele (Steam, RetroAchievements…).")
+
+# Logros de la app
+s("ad_games", "Have %1$d games in Repisa.", "Ten %1$d juegos en Repisa.", "Ayez %1$d jeux dans Repisa.", "Habe %1$d Spiele in Repisa.", "Avere %1$d giochi in Repisa.",
+  "Tenha %1$d jogos no Repisa.")
+s("ad_hours", "Add up %1$d hours across all your games.", "Suma %1$d horas entre todos tus juegos.", "Cumulez %1$d heures sur tous vos jeux.",
+  "Sammle %1$d Stunden über alle Spiele.", "Somma %1$d ore tra tutti i tuoi giochi.", "Some %1$d horas entre todos os seus jogos.")
+s("ad_finished", "Finished games: %1$d.", "Juegos terminados: %1$d.", "Jeux terminés : %1$d.", "Beendete Spiele: %1$d.", "Giochi finiti: %1$d.", "Jogos terminados: %1$d.")
+s("ad_completed", "Games at 100 %%: %1$d.", "Juegos al 100 %%: %1$d.", "Jeux à 100 %% : %1$d.", "Spiele auf 100 %%: %1$d.", "Giochi al 100 %%: %1$d.",
+  "Jogos em 100 %%: %1$d.")
+s("ad_platinum", "Platinums: %1$d.", "Platinos: %1$d.", "Platines : %1$d.", "Platin: %1$d.", "Platini: %1$d.", "Platinas: %1$d.")
+s("ad_rated", "Rated games: %1$d.", "Juegos calificados: %1$d.", "Jeux notés : %1$d.", "Bewertete Spiele: %1$d.", "Giochi valutati: %1$d.", "Jogos avaliados: %1$d.")
+s("ad_systems", "Play on %1$d different systems.", "Juega en %1$d sistemas distintos.", "Jouez sur %1$d systèmes différents.", "Spiele auf %1$d verschiedenen Systemen.",
+  "Gioca su %1$d sistemi diversi.", "Jogue em %1$d sistemas diferentes.")
+s("ad_streak", "Play something %1$d days in a row.", "Juega a lo que sea %1$d días seguidos.", "Jouez à n'importe quoi %1$d jours d'affilée.",
+  "Spiele %1$d Tage am Stück, egal was.", "Gioca a qualcosa %1$d giorni di fila.", "Jogue qualquer coisa %1$d dias seguidos.")
+s("ad_sessions", "Recorded sessions: %1$d.", "Partidas anotadas: %1$d.", "Parties enregistrées : %1$d.", "Erfasste Sitzungen: %1$d.", "Partite registrate: %1$d.",
+  "Partidas registradas: %1$d.")
+s("ad_collections", "Collections created: %1$d.", "Colecciones creadas: %1$d.", "Collections créées : %1$d.", "Erstellte Sammlungen: %1$d.",
+  "Collezioni create: %1$d.", "Coleções criadas: %1$d.")
+s("ad_ach", "Steam / RetroAchievements achievements unlocked: %1$d.", "Logros de Steam o RetroAchievements conseguidos: %1$d.",
+  "Succès Steam / RetroAchievements débloqués : %1$d.", "Freigeschaltete Steam-/RetroAchievements-Erfolge: %1$d.",
+  "Obiettivi Steam / RetroAchievements sbloccati: %1$d.", "Conquistas Steam / RetroAchievements desbloqueadas: %1$d.")
+s("ad_perfect", "Games with all their achievements: %1$d.", "Juegos con todos sus logros: %1$d.", "Jeux avec tous leurs succès : %1$d.",
+  "Spiele mit allen Erfolgen: %1$d.", "Giochi con tutti gli obiettivi: %1$d.", "Jogos com todas as conquistas: %1$d.")
+s("aach_lib_10", "Getting started", "Primeras cajas", "Premières boîtes", "Erste Hüllen", "Prime scatole", "Primeiras caixas")
+s("aach_lib_50", "A proper shelf", "Una buena repisa", "Une belle étagère", "Ein ordentliches Regal", "Uno scaffale vero", "Uma boa estante")
+s("aach_lib_100", "Collector", "Coleccionista", "Collectionneur", "Sammler", "Collezionista", "Colecionador")
+s("aach_lib_250", "Museum", "Museo", "Musée", "Museum", "Museo", "Museu")
+s("aach_lib_500", "Living library", "Biblioteca viviente", "Bibliothèque vivante", "Lebende Bibliothek", "Biblioteca vivente", "Biblioteca viva")
+s("aach_tot_100", "100 hours on the clock", "100 horas en el contador", "100 heures au compteur", "100 Stunden auf der Uhr", "100 ore sul contatore",
+  "100 horas no contador")
+s("aach_tot_500", "Veteran", "Veterano", "Vétéran", "Veteran", "Veterano", "Veterano")
+s("aach_tot_1000", "A thousand hours", "Mil horas", "Mille heures", "Tausend Stunden", "Mille ore", "Mil horas")
+s("aach_tot_2500", "Legend", "Leyenda", "Légende", "Legende", "Leggenda", "Lenda")
+s("aach_fin_1", "Roll the credits", "Créditos", "Générique", "Abspann", "Titoli di coda", "Créditos")
+s("aach_fin_10", "Ten endings", "Diez finales", "Dix fins", "Zehn Enden", "Dieci finali", "Dez finais")
+s("aach_fin_25", "Closer", "Rematador", "Finisseur", "Abschließer", "Finalizzatore", "Finalizador")
+s("aach_fin_50", "Fifty adventures", "Cincuenta aventuras", "Cinquante aventures", "Fünfzig Abenteuer", "Cinquanta avventure", "Cinquenta aventuras")
+s("aach_fin_100", "Living history", "Historia viva", "Histoire vivante", "Lebende Geschichte", "Storia vivente", "História viva")
+s("aach_cmp_1", "One hundred percent", "Cien por cien", "Cent pour cent", "Hundert Prozent", "Cento per cento", "Cem por cento")
+s("aach_cmp_10", "Perfectionist", "Perfeccionista", "Perfectionniste", "Perfektionist", "Perfezionista", "Perfeccionista")
+s("aach_cmp_25", "Nothing left", "Nada pendiente", "Plus rien à faire", "Nichts mehr offen", "Niente in sospeso", "Nada pendente")
+s("aach_plat_1", "First platinum", "Primer platino", "Premier platine", "Erstes Platin", "Primo platino", "Primeira platina")
+s("aach_plat_5", "Platinum collector", "Coleccionista de platinos", "Collectionneur de platines", "Platin-Sammler", "Collezionista di platini",
+  "Colecionador de platinas")
+s("aach_plat_10", "Platinum crown", "Corona de platino", "Couronne de platine", "Platinkrone", "Corona di platino", "Coroa de platina")
+s("aach_plat_25", "Platinum legend", "Leyenda de platino", "Légende de platine", "Platin-Legende", "Leggenda di platino", "Lenda de platina")
+s("aach_rate_1", "First opinion", "Primera opinión", "Premier avis", "Erste Meinung", "Prima opinione", "Primeira opinião")
+s("aach_rate_10", "Reviewer", "Reseñador", "Critique", "Rezensent", "Recensore", "Resenhista", ptPT="Crítico")
+s("aach_rate_50", "Professor", "Catedrático", "Professeur", "Professor", "Professore", "Catedrático")
+s("aach_sys_3", "Multiplatform", "Multiplataforma", "Multiplateforme", "Multiplattform", "Multipiattaforma", "Multiplataforma")
+s("aach_sys_10", "Console hopper", "Saltaconsolas", "Zappeur de consoles", "Konsolenhüpfer", "Saltaconsole", "Saltador de consolas")
+s("aach_sys_20", "Time traveller", "Viajero del tiempo", "Voyageur du temps", "Zeitreisender", "Viaggiatore nel tempo", "Viajante do tempo")
+s("aach_streak_7", "Gaming week", "Semana jugona", "Semaine de jeu", "Spielwoche", "Settimana di gioco", "Semana de jogo")
+s("aach_streak_30", "Unstoppable", "Imparable", "Inarrêtable", "Unaufhaltsam", "Inarrestabile", "Imparável")
+s("aach_streak_100", "One hundred days", "Cien días", "Cent jours", "Hundert Tage", "Cento giorni", "Cem dias")
+s("aach_ses_10", "Taking notes", "Tomando nota", "Prise de notes", "Mitgeschrieben", "Prendo nota", "Anotando", ptPT="A tomar nota")
+s("aach_ses_100", "Logbook", "Bitácora", "Journal de bord", "Logbuch", "Diario di bordo", "Diário de bordo")
+s("aach_ses_500", "Chronicler", "Cronista", "Chroniqueur", "Chronist", "Cronista", "Cronista")
+s("aach_coll_1", "Organised", "Ordenado", "Organisé", "Ordentlich", "Ordinato", "Organizado")
+s("aach_coll_5", "Archivist", "Archivero", "Archiviste", "Archivar", "Archivista", "Arquivista")
+s("aach_ach_100", "Hunter", "Cazador", "Chasseur", "Jäger", "Cacciatore", "Caçador")
+s("aach_ach_1000", "Great hunter", "Gran cazador", "Grand chasseur", "Großer Jäger", "Grande cacciatore", "Grande caçador")
+s("aach_ach_5000", "Hall of fame", "Salón de la fama", "Panthéon", "Ruhmeshalle", "Hall of fame", "Hall da fama")
+s("aach_perf_1", "Perfect game", "Juego perfecto", "Jeu parfait", "Perfektes Spiel", "Gioco perfetto", "Jogo perfeito")
+s("aach_perf_10", "Ten perfect games", "Diez perfectos", "Dix parfaits", "Zehn perfekte", "Dieci perfetti", "Dez perfeitos")
+s("aach_abandon", "Life's too short", "La vida es corta", "La vie est courte", "Das Leben ist kurz", "La vita è breve", "A vida é curta")
+s("aach_abandon_d", "Mark a game as abandoned.", "Marca un juego como abandonado.", "Marquez un jeu comme abandonné.", "Markiere ein Spiel als abgebrochen.",
+  "Segna un gioco come abbandonato.", "Marque um jogo como abandonado.")
+s("aach_theme", "Redecorating", "Redecorando", "Nouvelle déco", "Neu eingerichtet", "Nuovo arredamento", "Redecorando", ptPT="A redecorar")
+s("aach_theme_d", "Use a cabinet theme other than walnut.", "Usa un tema de vitrina distinto del nogal.", "Utilisez un thème de vitrine autre que le noyer.",
+  "Nutze ein anderes Vitrinen-Thema als Nussbaum.", "Usa un tema della vetrina diverso dal noce.", "Use um tema de estante diferente da nogueira.")
+s("aach_custom_theme", "Interior designer", "Interiorista", "Décorateur", "Innenarchitekt", "Arredatore", "Decorador")
+s("aach_custom_theme_d", "Use your own custom theme.", "Usa tu propio tema personalizado.", "Utilisez votre propre thème personnalisé.",
+  "Nutze dein eigenes Thema.", "Usa il tuo tema personalizzato.", "Use o seu próprio tema personalizado.")
+s("aach_wish_10", "Dreamer", "Soñador", "Rêveur", "Träumer", "Sognatore", "Sonhador")
+s("aach_wish_10_d", "Have 10 games on your Steam wishlist.", "Ten 10 juegos en tu lista de deseos de Steam.", "Ayez 10 jeux dans votre liste de souhaits Steam.",
+  "Habe 10 Spiele auf deiner Steam-Wunschliste.", "Avere 10 giochi nella lista dei desideri di Steam.", "Tenha 10 jogos na sua lista de desejos da Steam.")
+
+s("consoles_title", "My consoles", "Mis consolas", "Mes consoles", "Meine Konsolen", "Le mie console", "Meus consoles", ptPT="As minhas consolas")
+s("consoles_sub", "%1$d systems · %2$s · tap one to see its games", "%1$d sistemas · %2$s · toca una para ver sus juegos",
+  "%1$d systèmes · %2$s · touchez-en une pour voir ses jeux", "%1$d Systeme · %2$s · tippe eine an, um ihre Spiele zu sehen",
+  "%1$d sistemi · %2$s · tocca una per vedere i suoi giochi", "%1$d sistemas · %2$s · toque em um para ver os jogos",
+  ptPT="%1$d sistemas · %2$s · toque numa para ver os jogos")
+s("console_card", "%1$s · %2$s on this console", "%1$s · %2$s en esta consola", "%1$s · %2$s sur cette console", "%1$s · %2$s auf dieser Konsole",
+  "%1$s · %2$s su questa console", "%1$s · %2$s neste console", ptPT="%1$s · %2$s nesta consola")
+
+s("status_genres", "Checking genres (%1$d/%2$d)…", "Revisando géneros (%1$d/%2$d)…", "Vérification des genres (%1$d/%2$d)…",
+  "Genres werden geprüft (%1$d/%2$d)…", "Controllo dei generi (%1$d/%2$d)…", "Revisando gêneros (%1$d/%2$d)…", ptPT="A rever géneros (%1$d/%2$d)…")
+s("also_known_as", "Also known as: %1$s", "También conocido como: %1$s", "Aussi connu sous : %1$s", "Auch bekannt als: %1$s",
+  "Noto anche come: %1$s", "Também conhecido como: %1$s")
+s("genres_pick", "Tap to add or remove:", "Toca para añadir o quitar:", "Touchez pour ajouter ou retirer :",
+  "Zum Hinzufügen oder Entfernen tippen:", "Tocca per aggiungere o togliere:", "Toque para adicionar ou remover:")
+
+s("status_genres_steam", "Checking Steam genres…", "Revisando géneros de Steam…", "Vérification des genres Steam…",
+  "Steam-Genres werden geprüft…", "Controllo dei generi di Steam…", "Revisando gêneros da Steam…", ptPT="A rever géneros da Steam…")
+s("find_missing_genres", "Find missing genres", "Buscar géneros que faltan", "Chercher les genres manquants",
+  "Fehlende Genres suchen", "Cerca generi mancanti", "Buscar gêneros que faltam", ptPT="Procurar géneros em falta")
+s("genres_hint", "Genres come from Steam community tags (Steam and Epic) and from Wikidata (emulators). Games without one are searched again.",
+  "Los géneros salen de las etiquetas de la comunidad de Steam (Steam y Epic) y de Wikidata (emuladores). Los juegos sin género se vuelven a buscar.",
+  "Les genres viennent des tags de la communauté Steam (Steam et Epic) et de Wikidata (émulateurs). Les jeux sans genre sont recherchés à nouveau.",
+  "Genres stammen aus den Steam-Community-Tags (Steam und Epic) und aus Wikidata (Emulatoren). Spiele ohne Genre werden erneut gesucht.",
+  "I generi vengono dai tag della community di Steam (Steam ed Epic) e da Wikidata (emulatori). I giochi senza genere vengono cercati di nuovo.",
+  "Os gêneros vêm das tags da comunidade Steam (Steam e Epic) e do Wikidata (emuladores). Jogos sem gênero são buscados de novo.",
+  ptPT="Os géneros vêm das etiquetas da comunidade Steam (Steam e Epic) e do Wikidata (emuladores). Os jogos sem género são procurados de novo.")
+s("msg_genres_found", "Genres found for %1$d of %2$d games without one.", "Géneros encontrados para %1$d de %2$d juegos sin género.",
+  "Genres trouvés pour %1$d jeux sur %2$d sans genre.", "Genres für %1$d von %2$d Spielen ohne Genre gefunden.",
+  "Generi trovati per %1$d di %2$d giochi senza genere.", "Gêneros encontrados para %1$d de %2$d jogos sem gênero.",
+  ptPT="Géneros encontrados para %1$d de %2$d jogos sem género.")
+
+s("msg_genres_retry", "%1$d couldn't be checked now (the service asked to wait): they'll be retried automatically.",
+  "%1$d no se pudieron consultar ahora (el servicio pidió esperar): se reintentarán solos.",
+  "%1$d n'ont pas pu être vérifiés (le service a demandé d'attendre) : nouvel essai automatique plus tard.",
+  "%1$d konnten gerade nicht geprüft werden (der Dienst bat zu warten): sie werden automatisch erneut versucht.",
+  "%1$d non sono stati controllati ora (il servizio ha chiesto di attendere): verranno ritentati da soli.",
+  "%1$d não puderam ser consultados agora (o serviço pediu para esperar): serão tentados de novo sozinhos.",
+  ptPT="%1$d não puderam ser consultados agora (o serviço pediu para esperar): serão tentados de novo automaticamente.")
+
 # ------------------------------------------------------------------ Géneros (clave interna en español → texto)
 GENRES = [
     ("Acción", "Action", "Acción", "Action", "Action", "Azione", "Ação"),
@@ -1461,6 +1719,16 @@ GENRES = [
     ("MOBA", "MOBA", "MOBA", "MOBA", "MOBA", "MOBA", "MOBA"),
     ("Acceso anticipado", "Early access", "Acceso anticipado", "Accès anticipé", "Early Access", "Accesso anticipato", "Acesso antecipado"),
     ("Educativo", "Educational", "Educativo", "Éducatif", "Lernspiel", "Educativo", "Educativo"),
+    # 0.15.2: géneros a partir de las etiquetas de Steam y Wikidata (se añaden al final: el índice es el id del texto).
+    ("FPS", "FPS", "FPS", "FPS", "Ego-Shooter", "FPS", "FPS"),
+    ("Gacha", "Gacha", "Gacha", "Gacha", "Gacha", "Gacha", "Gacha"),
+    ("Soulslike", "Soulslike", "Soulslike", "Soulslike", "Soulslike", "Soulslike", "Soulslike"),
+    ("Hack and slash", "Hack and slash", "Hack and slash", "Hack'n'slash", "Hack and Slay", "Hack and slash", "Hack and slash"),
+    ("Sigilo", "Stealth", "Sigilo", "Infiltration", "Stealth", "Stealth", "Furtividade"),
+    ("Fantasía", "Fantasy", "Fantasía", "Fantasy", "Fantasy", "Fantasy", "Fantasia"),
+    ("Ciencia ficción", "Sci-fi", "Ciencia ficción", "Science-fiction", "Science-Fiction", "Fantascienza", "Ficção científica"),
+    ("Battle royale", "Battle royale", "Battle royale", "Battle royale", "Battle Royale", "Battle royale", "Battle royale"),
+    ("Party", "Party", "Party", "Party game", "Partyspiel", "Party game", "Party"),
 ]
 for i, (_, en, es, fr, de, it, pt) in enumerate(GENRES):
     s(f"genre_{i}", en, es, fr, de, it, pt)

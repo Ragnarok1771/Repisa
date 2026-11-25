@@ -81,6 +81,16 @@ fun PlayCalendar(vm: LibraryViewModel, sample: Boolean, onClose: () -> Unit) {
     val sessions = remember(sample, real, rawGames) { if (sample) vm.sampleSessions() else vm.withLastPlayed(real, rawGames) }
     val byId = remember(games) { buildMap { games.forEach { g -> put(g.id, g); g.copyIds.forEach { put(it, g) } } } }
     val byDay = remember(sessions) { sessions.groupBy { dayKey(it.start) } }
+    // Lista de deseos: solo los estrenos de hoy en adelante (con fecha exacta); los que ya salieron no se marcan.
+    val wish by vm.wishlist.collectAsState()
+    val releases = remember(wish, sample) {
+        if (sample) emptyMap() else {
+            val todayStart = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            wish.filter { (it.releaseAt ?: 0) >= todayStart }.groupBy { dayKey(it.releaseAt!!) }
+        }
+    }
 
     val today = remember { Calendar.getInstance() }
     var monthOffset by remember { mutableIntStateOf(0) }
@@ -89,6 +99,12 @@ fun PlayCalendar(vm: LibraryViewModel, sample: Boolean, onClose: () -> Unit) {
         val first = sessions.minOfOrNull { it.start } ?: return@remember 0
         val c = Calendar.getInstance().apply { timeInMillis = first }
         -((today.get(Calendar.YEAR) - c.get(Calendar.YEAR)) * 12 + today.get(Calendar.MONTH) - c.get(Calendar.MONTH))
+    }
+    // Y hacia delante, hasta el mes de la última fecha de salida de la lista de deseos.
+    val maxOffset = remember(releases) {
+        val last = releases.values.flatten().maxOfOrNull { it.releaseAt ?: 0 } ?: return@remember 0
+        val c = Calendar.getInstance().apply { timeInMillis = last }
+        ((c.get(Calendar.YEAR) - today.get(Calendar.YEAR)) * 12 + c.get(Calendar.MONTH) - today.get(Calendar.MONTH)).coerceAtLeast(0)
     }
     val month = (today.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1); add(Calendar.MONTH, monthOffset) }
     // Hoy; o, si hoy no se jugó, el último día con partidas.
@@ -105,7 +121,7 @@ fun PlayCalendar(vm: LibraryViewModel, sample: Boolean, onClose: () -> Unit) {
         vm.calendarKeys.collect { code ->
             when (code) {
                 android.view.KeyEvent.KEYCODE_BUTTON_L1 -> if (monthOffset > minOffset) monthOffset--
-                android.view.KeyEvent.KEYCODE_BUTTON_R1 -> if (monthOffset < 0) monthOffset++
+                android.view.KeyEvent.KEYCODE_BUTTON_R1 -> if (monthOffset < maxOffset) monthOffset++
                 else -> if (runCatching { dayFocus.requestFocus() }.isFailure) runCatching { start.requestFocus() }
             }
         }
@@ -139,15 +155,18 @@ fun PlayCalendar(vm: LibraryViewModel, sample: Boolean, onClose: () -> Unit) {
                         Text(SimpleDateFormat("LLLL yyyy", Locale.getDefault()).format(month.time).replaceFirstChar { it.uppercase() },
                             color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                        TextButton(onClick = { monthOffset++ }, enabled = monthOffset < 0) { Text("▶", color = if (monthOffset < 0) Ink else Muted, fontSize = 18.sp) }
+                        TextButton(onClick = { monthOffset++ }, enabled = monthOffset < maxOffset) {
+                            Text("▶", color = if (monthOffset < maxOffset) Ink else Muted, fontSize = 18.sp)
+                        }
                     }
-                    MonthGrid(month, byDay, selected, today, dayFocus) { selected = it }
+                    MonthGrid(month, byDay, releases, selected, today, dayFocus) { selected = it }
                     Spacer(Modifier.height(8.dp))
                     MonthSummary(month, byDay, byId)
                 }
                 // ── Día elegido
                 Column(Modifier.weight(1f).fillMaxHeight().background(Panel, RoundedCornerShape(12.dp)).padding(12.dp)) {
                     val list = byDay[selected].orEmpty().sortedBy { it.start }
+                    val out = releases[selected].orEmpty()
                     val date = list.firstOrNull()?.start ?: dayStart(selected)
                     Text(DateFormat.getDateInstance(DateFormat.FULL).format(Date(date)).replaceFirstChar { it.uppercase() },
                         color = Gold, fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -158,6 +177,10 @@ fun PlayCalendar(vm: LibraryViewModel, sample: Boolean, onClose: () -> Unit) {
                     },
                         color = Muted, fontSize = 13.sp, modifier = Modifier.padding(bottom = 8.dp))
                     LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (out.isNotEmpty()) item {
+                            Text("⭐ " + stringResource(R.string.cal_release_day, out.size), color = Gold, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                        items(out, key = { "w" + it.appId }) { w -> ReleaseRow(w) { vm.launcher.openSteamStore("https://store.steampowered.com/app/${w.appId}") } }
                         items(list) { s -> SessionRow(s, byId[s.gameId]) }
                     }
                 }
@@ -171,7 +194,8 @@ private fun dayStart(key: Int): Long = Calendar.getInstance().run {
 }
 
 @Composable
-private fun MonthGrid(month: Calendar, byDay: Map<Int, List<PlaySession>>, selected: Int, today: Calendar,
+private fun MonthGrid(month: Calendar, byDay: Map<Int, List<PlaySession>>, releases: Map<Int, List<com.repisa.app.sources.WishItem>>,
+                      selected: Int, today: Calendar,
                       selectedFocus: androidx.compose.ui.focus.FocusRequester, onPick: (Int) -> Unit) {
     val days = month.getActualMaximum(Calendar.DAY_OF_MONTH)
     // Lunes primero.
@@ -198,6 +222,7 @@ private fun MonthGrid(month: Calendar, byDay: Map<Int, List<PlaySession>>, selec
                 val lastOnly = byDay[key].orEmpty().count { it.lastOnly }
                 val isToday = key == dayKey(today.timeInMillis)
                 val isFuture = c.after(today) && !isToday
+                val launches = releases[key].orEmpty().size
                 var focused by remember { mutableStateOf(false) }
                 val heat = if (mins == 0) 0f else 0.25f + 0.75f * (mins.toFloat() / maxMinutes).coerceAtMost(1f)
                 Box(
@@ -207,6 +232,7 @@ private fun MonthGrid(month: Calendar, byDay: Map<Int, List<PlaySession>>, selec
                         .background(when {
                             mins > 0 -> Color(0xFFE0A84A).copy(alpha = heat)
                             lastOnly > 0 -> Color(0x33E0A84A) // solo «último día jugado»: tono suave
+                            launches > 0 -> Color(0x335FD0FF) // estreno de la lista de deseos: tono azul
                             else -> Color(0x14FFFFFF)
                         })
                         .border(
@@ -215,11 +241,14 @@ private fun MonthGrid(month: Calendar, byDay: Map<Int, List<PlaySession>>, selec
                             RoundedCornerShape(6.dp),
                         )
                         .onFocusChanged { focused = it.isFocused; if (it.isFocused) onPick(key) }
-                        .clickable(enabled = !isFuture) { onPick(key) },
+                        .clickable(enabled = !isFuture || launches > 0) { onPick(key) },
                 ) {
-                    Text(d.toString(), color = if (isFuture) Color(0x55F3E6D3) else if (heat > 0.6f) Color(0xFF2A1C14) else Ink,
+                    Text(d.toString(), color = if (isFuture && launches == 0) Color(0x55F3E6D3) else if (heat > 0.6f) Color(0xFF2A1C14) else Ink,
                         fontSize = 13.sp, fontWeight = if (isToday) FontWeight.Black else FontWeight.Normal,
                         modifier = Modifier.align(Alignment.TopStart).padding(start = 5.dp, top = 2.dp))
+                    // Estreno de un juego de la lista de deseos.
+                    if (launches > 0) Text(if (launches > 1) "⭐$launches" else "⭐", fontSize = 11.sp,
+                        modifier = Modifier.align(Alignment.TopEnd).padding(end = 3.dp, top = 1.dp))
                     // Un puntito por juego (hasta 3) y, si hay más, cuántos más: «••• +1».
                     if (mins == 0 && lastOnly > 0) Text("•".repeat(lastOnly.coerceAtMost(3)) + if (lastOnly > 3) " +${lastOnly - 3}" else "", color = Gold, fontSize = 12.sp,
                         modifier = Modifier.align(Alignment.BottomEnd).padding(end = 4.dp))
@@ -298,4 +327,19 @@ fun GameSessionsDialog(vm: LibraryViewModel, game: Game, onDismiss: () -> Unit) 
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
     )
+}
+
+/** Juego de la lista de deseos que sale ese día (tocarlo abre la tienda). */
+@Composable
+private fun ReleaseRow(w: com.repisa.app.sources.WishItem, onOpen: () -> Unit) {
+    Row(Modifier.fillMaxWidth().background(Color(0x33FFD27A), RoundedCornerShape(8.dp)).clickable(onClick = onOpen).padding(6.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        GameBox(w.toGame(), 56.dp, showStatus = false)
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(w.name, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(stringResource(if (w.comingSoon) R.string.cal_release_soon else R.string.cal_release_out) +
+                (w.price?.let { " · $it" } ?: ""), color = Muted, fontSize = 12.sp)
+        }
+    }
 }

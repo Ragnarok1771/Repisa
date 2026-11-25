@@ -21,6 +21,9 @@ data class WishItem(
     val price: String? = null,
     val originalPrice: String? = null,
     val discountPct: Int = 0,
+    /** Día de salida (epoch ms) si Steam lo da con fecha exacta; [comingSoon] = aún no ha salido. */
+    val releaseAt: Long? = null,
+    val comingSoon: Boolean = false,
 )
 
 /**
@@ -51,11 +54,13 @@ object SteamWishlist {
         // varias versiones (Yakuza Kiwami: la actualización para quien tiene la Legacy a 1.990 y el juego a 18.990)
         // la otra consulta devolvía la primera que encontraba, que no siempre es la buena.
         val best = mutableMapOf<Long, Price>()
+        // Fecha de salida: solo si es exacta (los «Próximamente» o «primer trimestre» no se ponen en el calendario).
+        val release = mutableMapOf<Long, Pair<Long?, Boolean>>()
         ids.chunked(50).forEach { chunk ->
             runCatching {
                 val list = chunk.joinToString(",") { """{"appid":$it}""" }
                 val input = """{"ids":[$list],"context":{"language":"$language","country_code":"$country","steam_realm":1},""" +
-                    """"data_request":{"include_assets":true}}"""
+                    """"data_request":{"include_assets":true,"include_release":true}}"""
                 val u = "https://api.steampowered.com/IStoreBrowseService/GetItems/v1/".toHttpUrl().newBuilder()
                     .addQueryParameter("input_json", input).build()
                 Http.getJson(u.toString())["response"]["store_items"].arr.forEach { item ->
@@ -65,6 +70,10 @@ object SteamWishlist {
                     // Los DLC no suelen tener carátula vertical: se usa la cápsula o la cabecera de la tienda.
                     val cap = item["assets"]["library_capsule"].str ?: item["assets"]["main_capsule"].str ?: item["assets"]["header"].str
                     names[id] = name to (if (format != null && cap != null) ASSETS + format.replace("\${FILENAME}", cap) else null)
+                    val rel = item["release"]
+                    val soon = rel["is_coming_soon"].str == "true"
+                    val exact = !soon || rel["coming_soon_display"].str == "date_full"
+                    release[id] = (rel["steam_release_date"].long?.takeIf { exact && it > 0 }?.times(1000)) to soon
                     val bp = item["best_purchase_option"]
                     val cents = bp["final_price_in_cents"].long
                     if (cents != null) best[id] = Price(cents, bp["formatted_final_price"].str.orEmpty(),
@@ -78,7 +87,8 @@ object SteamWishlist {
             val (name, cover) = names[id] ?: return@mapNotNull null
             val p = prices[id]
             WishItem(id, name, cover ?: "https://cdn.cloudflare.steamstatic.com/steam/apps/$id/library_600x900.jpg", added,
-                p?.final, p?.finalText, p?.initialText?.takeIf { p.discount > 0 }, p?.discount ?: 0)
+                p?.final, p?.finalText, p?.initialText?.takeIf { p.discount > 0 }, p?.discount ?: 0,
+                release[id]?.first, release[id]?.second ?: false)
         }
     }
 

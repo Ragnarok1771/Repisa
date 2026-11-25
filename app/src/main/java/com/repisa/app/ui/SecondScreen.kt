@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -144,8 +145,12 @@ private fun FocusPanelContent(vm: LibraryViewModel) {
                     }
                 }
                 Spacer(Modifier.height(12.dp))
-                val top = androidx.compose.runtime.remember(all) {
-                    all.filter { it.playStatus != com.repisa.app.model.PlayStatus.NOT_APPLICABLE }.sortedByDescending { it.totalMinutes }.take(3)
+                // «Hoy juego…»: el empezado que llevas días sin tocar, o un pendiente corto. Tocarlo abre su ficha arriba.
+                val reminder by vm.reminder.collectAsState()
+                reminder?.let { r -> ReminderCard(r) { vm.selectedId.value = r.game.id }; Spacer(Modifier.height(10.dp)) }
+                val top = androidx.compose.runtime.remember(all, reminder) {
+                    all.filter { it.playStatus != com.repisa.app.model.PlayStatus.NOT_APPLICABLE }.sortedByDescending { it.totalMinutes }
+                        .take(if (reminder != null) 2 else 3)
                 }
                 if (top.isNotEmpty()) {
                     Text(stringResource(R.string.most_played), color = Color.White, fontWeight = FontWeight.Bold)
@@ -176,14 +181,25 @@ private fun FocusPanelContent(vm: LibraryViewModel) {
                         Spacer(Modifier.height(6.dp))
                         Line(stringResource(R.string.stat_playtime), formatPlaytime(shown.totalMinutes))
                         Line(stringResource(R.string.stat_last_played), shown.lastPlayedAny?.let { DateFormat.getDateInstance().format(Date(it)) } ?: "—")
-                        Line(stringResource(R.string.stat_genre), g.genres.joinToString(", ") { L10n.genre(it) }.ifEmpty { "—" })
+                        // Los géneros pueden ser varios y largos: hasta 3 líneas para que se vean todos.
+                        Line(stringResource(R.string.stat_genre), g.genres.joinToString(", ") { L10n.genre(it) }.ifEmpty { "—" }, lines = 3)
                         Line(stringResource(R.string.stat_studio), g.developer ?: "—")
                         Line(stringResource(R.string.stat_year), g.releaseYear?.toString() ?: "—")
-                        g.description?.let {
-                            Text(it.replace(Regex("<[^>]+>"), ""), color = Color(0xFFD9C8AE), fontSize = 12.sp,
-                                maxLines = 5, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp)
-                                    .background(Color(0x33000000)).padding(6.dp))
+                        // Su consola, dibujada, con cuántos juegos y horas llevas en ella.
+                        if (hasConsoleArt(g.consoleId)) {
+                            val same = all.filter { it.consoleId == g.consoleId }
+                            Row(Modifier.padding(top = 6.dp).background(Color(0x33000000), androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                                ConsoleIconBox(g.consoleId, 72.dp, 40.dp)
+                                Spacer(Modifier.width(10.dp))
+                                Column {
+                                    Text(g.console.name, color = Color(0xFFFFD27A), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.console_card, L10n.games(same.size), formatPlaytime(same.sumOf { it.totalMinutes })),
+                                        color = Color(0xFFBFA98A), fontSize = 11.sp)
+                                }
+                            }
                         }
+                        // La descripción solo en la ficha (arriba): aquí quitaba sitio a lo demás.
                     }
                 }
             }
@@ -193,10 +209,10 @@ private fun FocusPanelContent(vm: LibraryViewModel) {
 }
 
 @Composable
-private fun Line(label: String, value: String) {
+private fun Line(label: String, value: String, lines: Int = 1) {
     Row {
         Text("$label: ", color = Color(0xFF9C8A70), fontSize = 14.sp)
-        Text(value, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(value, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = lines, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -217,5 +233,31 @@ private fun StatsBubble(g: com.repisa.app.model.Game, scale: com.repisa.app.mode
             Text("·", color = Color(0xFF9C8A70), fontSize = 13.sp)
         }
         Text("⏱ " + formatPlaytime(g.totalMinutes), color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** Tarjeta «Hoy juego…» del resumen de la pantalla de abajo. */
+@Composable
+private fun ReminderCard(r: LibraryViewModel.Reminder, onOpen: () -> Unit) {
+    Row(
+        Modifier.background(Color(0x55000000), androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+            .border(1.dp, Color(0x55FFD27A), androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+            .clickable(onClick = onOpen).padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        GameBox(r.game, 64.dp, showStatus = false)
+        Spacer(Modifier.width(10.dp))
+        Column {
+            Text("🕹 " + stringResource(R.string.reminder_title), color = Color(0xFFFFD27A), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text(r.game.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(
+                when {
+                    r.staleDays != null -> stringResource(R.string.reminder_stale, r.staleDays)
+                    r.hltbHours != null -> stringResource(R.string.reminder_backlog_hltb, L10n.decimal(r.hltbHours.toDouble(), 0))
+                    else -> stringResource(R.string.reminder_backlog)
+                },
+                color = Color(0xFFD9C8AE), fontSize = 12.sp,
+            )
+        }
     }
 }
