@@ -29,6 +29,10 @@
   },
   {
     "version": "0.15.2",
+    "commit": "acf5b8c9ab2e8fa301798cef4a77801d32692eb9"
+  },
+  {
+    "version": "0.15.3",
     "commit": "HEAD"
   }
 ]

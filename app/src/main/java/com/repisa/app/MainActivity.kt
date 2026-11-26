@@ -294,7 +294,17 @@ private fun App(vm: LibraryViewModel, onSettingsClosed: () -> Unit, onLanguageCh
         }
         val onboarding by vm.onboarding.collectAsState()
         if (onboarding && !inSettings) com.repisa.app.ui.OnboardingScreen(vm, openSettings = { vm.inSettings.value = true },
-            onDone = { vm.finishOnboarding() })
+            onDone = { vm.finishOnboarding(withTour = it) })
+        // Tutorial: cada paso abre la pantalla donde está lo que explica (la repisa o Ajustes).
+        val tour by vm.tour.collectAsState()
+        tour?.let { step ->
+            val screen = com.repisa.app.ui.Tour.steps[step].screen
+            LaunchedEffect(step) {
+                inStats = false; inAch = false; inRated = false; inRandom = false; vm.selectedId.value = null
+                vm.inSettings.value = screen == com.repisa.app.ui.TourScreen.SETTINGS
+            }
+            com.repisa.app.ui.TourOverlay(step, onStep = { vm.tour.value = it }, onClose = { vm.endTour() })
+        }
         val launching by vm.launching.collectAsState()
         launching?.let { r ->
             androidx.activity.compose.BackHandler { vm.finishLaunchAnimation() }

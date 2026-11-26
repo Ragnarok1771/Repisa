@@ -13,8 +13,8 @@ android {
         applicationId = "com.repisa.app"
         minSdk = 30
         targetSdk = 35
-        versionCode = 52
-        versionName = "0.15.2"
+        versionCode = 56
+        versionName = "0.15.3"
     }
 
     // Clave de firma privada de Repisa (desde la 0.13.0). No está en el repositorio: se pasa con variables de

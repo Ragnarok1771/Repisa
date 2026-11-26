@@ -44,11 +44,11 @@ import com.repisa.app.model.Source
  * tiempo de juego y cómo se usa con el mando). [openSettings] lleva a Ajustes; al volver se sigue donde se dejó.
  */
 @Composable
-fun OnboardingScreen(vm: LibraryViewModel, openSettings: () -> Unit, onDone: () -> Unit) {
+fun OnboardingScreen(vm: LibraryViewModel, openSettings: () -> Unit, onDone: (withTour: Boolean) -> Unit) {
     val context = LocalContext.current
     var step by rememberSaveable { mutableIntStateOf(vm.settings.onboardingStep) }
     fun go(n: Int) { step = n; vm.settings.onboardingStep = n }
-    val steps = 5
+    val steps = 7
 
     val pickRoms = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
@@ -100,6 +100,33 @@ fun OnboardingScreen(vm: LibraryViewModel, openSettings: () -> Unit, onDone: () 
                     if (vm.settings.romFolders.isNotEmpty()) Body("✓ " + stringResource(R.string.onb_emu_added, vm.settings.romFolders.size))
                 }
                 3 -> {
+                    // RetroAchievements (recomendado): los logros de los juegos emulados.
+                    Title("🏆 " + stringResource(R.string.onb_ra_title))
+                    Body(stringResource(R.string.onb_ra_body))
+                    val linked = vm.settings.raUser != null && vm.settings.raApiKey != null
+                    if (linked) Body("✓ " + stringResource(R.string.ra_linked, vm.settings.raUser.orEmpty()))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (!linked) Button(onClick = { go(4); openSettings() }) { Text(stringResource(R.string.ra_link)) }
+                        OutlinedButton(onClick = { go(4) }) { Text(stringResource(if (linked) R.string.onb_next else R.string.onb_skip_step), color = Color.White) }
+                    }
+                }
+                4 -> {
+                    // SteamGridDB (recomendado): más carátulas, para que cada caja tenga la suya.
+                    Title("🖼 " + stringResource(R.string.onb_sgdb_title))
+                    Body(stringResource(R.string.onb_sgdb_body))
+                    val has = !vm.settings.steamGridDbKey.isNullOrBlank()
+                    if (has) Body("✓ " + stringResource(R.string.onb_sgdb_done))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (!has) Button(onClick = { vm.launcher.openUrl("https://www.steamgriddb.com/profile/preferences/api") }) {
+                            Text(stringResource(R.string.sgdb_get))
+                        }
+                        if (!has) OutlinedButton(onClick = { go(5); vm.debugPage = "COVERS"; openSettings() }) {
+                            Text(stringResource(R.string.onb_sgdb_paste), color = Color.White)
+                        }
+                        OutlinedButton(onClick = { go(5) }) { Text(stringResource(if (has) R.string.onb_next else R.string.onb_skip_step), color = Color.White) }
+                    }
+                }
+                5 -> {
                     Title("⏱ " + stringResource(R.string.onb_time_title))
                     Body(stringResource(R.string.onb_time_body))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -107,20 +134,20 @@ fun OnboardingScreen(vm: LibraryViewModel, openSettings: () -> Unit, onDone: () 
                             runCatching { context.startActivity(vm.launcher.usage.permissionIntent()) }
                             granted = vm.launcher.usage.hasPermission()
                         }) { Text(stringResource(R.string.grant)) } else Body("✓ " + stringResource(R.string.usage_granted))
-                        OutlinedButton(onClick = { go(4) }) { Text(stringResource(R.string.onb_next), color = Color.White) }
+                        OutlinedButton(onClick = { go(6) }) { Text(stringResource(R.string.onb_next), color = Color.White) }
                     }
                 }
                 else -> {
                     Title("🎉 " + stringResource(R.string.onb_done_title))
                     Body(stringResource(R.string.onb_done_body))
-                    Button(onClick = onDone) { Text(stringResource(R.string.onb_finish)) }
+                    Button(onClick = { onDone(true) }) { Text(stringResource(R.string.onb_finish)) }
                 }
             }
             Spacer(Modifier.size(4.dp))
             Row {
                 if (step > 0) TextButton(onClick = { go(step - 1) }) { Text(stringResource(R.string.back)) }
                 Spacer(Modifier.weight(1f))
-                if (step < steps - 1) TextButton(onClick = onDone) { Text(stringResource(R.string.onb_skip_all)) }
+                if (step < steps - 1) TextButton(onClick = { onDone(false) }) { Text(stringResource(R.string.onb_skip_all)) }
             }
         }
     }

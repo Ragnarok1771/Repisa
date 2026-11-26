@@ -117,8 +117,9 @@ para las consolas portátiles Android con doble pantalla.
   y se pueden ver todas en Ajustes → Pantalla (siempre, la primera vez del día o nunca).
 
 ### 🎨 Temas
-- Nogal, madera clara, madera oscura, metal cepillado, cristal, tienda retro… o **tu propio tema**: eliges la textura
-  y los colores de la pared, las baldas y la luz (Ajustes → Temas).
+- Nogal, madera clara, madera oscura, metal cepillado, cristal, tienda retro… o **tu propio tema**: la textura o
+  **una foto de tu galería** de fondo (oscurecida y teñida a tu gusto) y cualquier color, con rueda de colores, para la
+  pared, las baldas, la luz y las placas (Ajustes → Temas).
 
 ### 📅 Calendario y tu año en Repisa
 - **Calendario de partidas**: cada día, qué jugaste y cuánto (y, de antes, el último día que jugaste cada juego).
@@ -137,6 +138,7 @@ para las consolas portátiles Android con doble pantalla.
 - **Barra de desplazamiento rápido** en las repisas, con el nombre de la repisa a la que llegas.
 - **Mando**: cruceta para moverte, A ficha, X jugar, Y favorito, B atrás, L1/R1 filtrar por plataforma,
   Select cambiar el tipo de repisa, Start ajustes.
+- **Tutorial**: al empezar (y con el «?» de Ajustes), Repisa señala cada botón y explica para qué sirve.
 - **9 idiomas**: español (España y Latinoamérica), English (US y UK), français, Deutsch, italiano y português
   (Brasil y Portugal). Se elige tocando la bandera la primera vez.
 

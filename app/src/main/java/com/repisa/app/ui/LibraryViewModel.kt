@@ -116,7 +116,16 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     /** Guía de primera vez visible. */
     val onboarding = MutableStateFlow(!settings.onboardingDone)
 
-    fun finishOnboarding() { settings.onboardingDone = true; onboarding.value = false }
+    /** Al terminar la guía de inicio empieza el tutorial (salvo si se saltó la guía entera). */
+    fun finishOnboarding(withTour: Boolean = true) {
+        settings.onboardingDone = true; onboarding.value = false
+        if (withTour) startTour()
+    }
+
+    /** Paso del tutorial dentro de la app que se está mostrando (null: ninguno). */
+    val tour = MutableStateFlow<Int?>(null)
+    fun startTour() { tour.value = 0 }
+    fun endTour() { tour.value = null; inSettings.value = false; com.repisa.app.ui.Tour.current = null }
 
     fun restartOnboarding() { settings.onboardingDone = false; settings.onboardingStep = 0; onboarding.value = true; inSettings.value = false }
 
@@ -460,6 +469,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         com.repisa.app.model.StatusRules.auto = settings.autoStatus
+        com.repisa.app.ui.ThemeImage.load(app)
         ShelfTheme.custom = CustomTheme.decode(settings.customTheme).build()
         ShelfTheme.current = ShelfTheme.of(settings.shelfTheme)
         com.repisa.app.model.StatusRules.order = com.repisa.app.model.StatusRules.parseOrder(settings.statusOrder)
@@ -1378,6 +1388,16 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setTheme(t: ShelfTheme) { ShelfTheme.current = t; settings.shelfTheme = t.name }
 
+    /** Foto de fondo para el tema personalizado (o null para quitarla). */
+    fun setThemeImage(uri: android.net.Uri?, c: CustomTheme): CustomTheme? {
+        val app = getApplication<Application>()
+        val next = if (uri == null) { com.repisa.app.ui.ThemeImage.remove(app); c.copy(image = false) }
+            else if (com.repisa.app.ui.ThemeImage.save(app, uri)) c.copy(image = true)
+            else { message.value = L10n.s(R.string.theme_image_failed); return null }
+        setCustomTheme(next)
+        return next
+    }
+
     fun setCustomTheme(c: CustomTheme) {
         settings.customTheme = c.encode()
         ShelfTheme.custom = c.build()
@@ -1406,6 +1426,18 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Partidas de ejemplo con tus juegos (para ver el calendario y el resumen del año sin haber jugado aún). */
     fun sampleSessions() = com.repisa.app.data.SampleSessions.make(displayGames.value)
+
+    /**
+     * Desde cuándo se usa Repisa: lo más antiguo entre la instalación, la primera partida registrada y lo guardado
+     * (se guarda para que no cambie al reinstalar con una copia de seguridad).
+     */
+    val firstUse: Long by lazy {
+        val app = getApplication<Application>()
+        val installed = runCatching { app.packageManager.getPackageInfo(app.packageName, 0).firstInstallTime }.getOrDefault(System.currentTimeMillis())
+        val firstSession = sessions.value.filter { !it.lastOnly }.minOfOrNull { it.start } ?: Long.MAX_VALUE
+        val saved = settings.firstUse.takeIf { it > 0 } ?: Long.MAX_VALUE
+        minOf(installed, firstSession, saved).also { settings.firstUse = it }
+    }
 
     /** Resumen del año abierto: null = cerrado; true = con datos de ejemplo. */
     val wrapped = MutableStateFlow<Boolean?>(null)

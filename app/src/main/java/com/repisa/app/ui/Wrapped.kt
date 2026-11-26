@@ -81,6 +81,43 @@ import kotlinx.coroutines.launch
 import java.text.DateFormatSymbols
 import java.util.Calendar
 
+/**
+ * El «año» de Repisa va del 8 de octubre al 8 de octubre. El resumen de cada año sale el 8 de octubre y se puede ver
+ * hasta el siguiente 8 de octubre, cuando lo sustituye el nuevo. El primero solo sale si Repisa ya se usaba al menos
+ * medio año antes de que terminara (si no, apenas tendría datos).
+ */
+object WrappedPeriod {
+    /** Día y mes en que termina cada año de Repisa. */
+    private const val END_MONTH = Calendar.OCTOBER
+    private const val END_DAY = 8
+    private const val MIN_USE_MS = 182L * 24 * 3600 * 1000
+
+    /** Inicio, fin (sin incluir) y año del periodo. */
+    data class Period(val start: Long, val end: Long, val year: Int)
+
+    private fun endOf(year: Int): Long = Calendar.getInstance().apply {
+        clear(); set(year, END_MONTH, END_DAY, 0, 0, 0)
+    }.timeInMillis
+
+    /** El último año de Repisa ya terminado (aunque aún no esté disponible). */
+    fun latest(now: Long = System.currentTimeMillis()): Period {
+        val y = Calendar.getInstance().apply { timeInMillis = now }.get(Calendar.YEAR)
+        val endYear = if (now >= endOf(y)) y else y - 1
+        return Period(endOf(endYear - 1), endOf(endYear), endYear)
+    }
+
+    /** El resumen que se puede ver ahora, o null si todavía no hay ninguno. */
+    fun current(firstUse: Long, now: Long = System.currentTimeMillis()): Period? =
+        latest(now).takeIf { firstUse <= it.end - MIN_USE_MS }
+
+    /** Cuándo saldrá el próximo resumen (para avisar mientras no hay ninguno). */
+    fun nextDate(firstUse: Long, now: Long = System.currentTimeMillis()): Long {
+        var y = latest(now).year + 1
+        while (firstUse > endOf(y) - MIN_USE_MS) y++
+        return endOf(y)
+    }
+}
+
 /** Los datos del resumen del año. */
 data class WrappedData(
     val year: Int,
@@ -88,7 +125,9 @@ data class WrappedData(
     val sessions: Int,
     val days: Int,
     val top: List<Pair<Game, Int>>,
+    /** Minutos de cada mes, empezando por el mes en que empieza el periodo ([firstMonth]). */
     val months: IntArray,
+    val firstMonth: Int,
     val topGenre: String?,
     val topConsole: String?,
     val finished: Int,
@@ -96,14 +135,17 @@ data class WrappedData(
     val games: Int,
 ) {
     companion object {
-        fun of(year: Int, sessions: List<PlaySession>, games: List<Game>, sample: Boolean): WrappedData {
+        fun of(period: WrappedPeriod.Period, sessions: List<PlaySession>, games: List<Game>, sample: Boolean): WrappedData {
             val byId = buildMap { games.forEach { g -> put(g.id, g); g.copyIds.forEach { put(it, g) } } }
             val cal = Calendar.getInstance()
-            val mine = sessions.filter { cal.timeInMillis = it.start; cal.get(Calendar.YEAR) == year }
+            fun inPeriod(t: Long) = t >= period.start && t < period.end
+            val mine = sessions.filter { inPeriod(it.start) }
+            cal.timeInMillis = period.start
+            val firstMonth = cal.get(Calendar.MONTH)
             val perGame = mine.groupBy { byId[it.gameId] }.filterKeys { it != null }
                 .map { (g, l) -> g!! to l.sumOf { it.minutes } }.sortedByDescending { it.second }
             val months = IntArray(12)
-            mine.forEach { cal.timeInMillis = it.start; months[cal.get(Calendar.MONTH)] += it.minutes }
+            mine.forEach { cal.timeInMillis = it.start; months[(cal.get(Calendar.MONTH) - firstMonth + 12) % 12] += it.minutes }
             val genre = perGame.flatMap { (g, m) -> g.genres.map { it to m } }.groupBy({ it.first }, { it.second })
                 .maxByOrNull { it.value.sum() }?.key?.let { L10n.genre(it) }
             val console = perGame.groupBy({ it.first.console.label }, { it.second }).maxByOrNull { it.value.sum() }?.key
@@ -114,9 +156,9 @@ data class WrappedData(
             val finished = if (sample) games.count { it.playStatus == PlayStatus.FINISHED || it.playStatus == PlayStatus.COMPLETED }.coerceAtLeast(7)
             else games.count { g ->
                 (g.playStatus == PlayStatus.FINISHED || g.playStatus == PlayStatus.COMPLETED) &&
-                    g.lastPlayedAny?.let { cal.timeInMillis = it; cal.get(Calendar.YEAR) == year } == true
+                    g.lastPlayedAny?.let { inPeriod(it) } == true
             }
-            return WrappedData(year, mine.sumOf { it.minutes }, mine.size, days.size, perGame.take(5), months, genre, console,
+            return WrappedData(period.year, mine.sumOf { it.minutes }, mine.size, days.size, perGame.take(5), months, firstMonth, genre, console,
                 finished, best, perGame.size)
         }
     }
@@ -142,8 +184,9 @@ fun WrappedScreen(vm: LibraryViewModel, sample: Boolean, onClose: () -> Unit) {
     BackHandler(onBack = onClose)
     val real by vm.sessions.collectAsState()
     val games by vm.displayGames.collectAsState()
-    val year = remember { Calendar.getInstance().get(Calendar.YEAR) }
-    val data = remember(sample, real, games) { WrappedData.of(year, if (sample) vm.sampleSessions() else real, games, sample) }
+    // El año de Repisa que toca (o, de ejemplo, el último terminado).
+    val period = remember { WrappedPeriod.current(vm.firstUse) ?: WrappedPeriod.latest() }
+    val data = remember(sample, real, games) { WrappedData.of(period, if (sample) vm.sampleSessions() else real, games, sample) }
     var slide by remember { mutableIntStateOf(WrappedDebug.slide.coerceAtLeast(0)) }
     // Música de fondo en bucle: entra subiendo el volumen y se apaga al salir. Y (o 🔊) la silencia.
     val context = LocalContext.current
@@ -318,13 +361,15 @@ private fun TopSlide(d: WrappedData) {
 // ── 4. Mes a mes: barras que crecen
 @Composable
 private fun MonthsSlide(d: WrappedData) {
-    val names = remember { DateFormatSymbols.getInstance().shortMonths.take(12).map { it.trimEnd('.').replaceFirstChar { c -> c.uppercase() } } }
+    val short = remember { DateFormatSymbols.getInstance().shortMonths.take(12).map { it.trimEnd('.').replaceFirstChar { c -> c.uppercase() } } }
+    // En el orden del año de Repisa: de octubre a septiembre.
+    val names = remember(d.firstMonth) { List(12) { short[(d.firstMonth + it) % 12] } }
     val best = d.months.indices.maxByOrNull { d.months[it] } ?: 0
     val max = (d.months.maxOrNull() ?: 0).coerceAtLeast(1)
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Title(stringResource(R.string.wrapped_months_title))
         if (d.months[best] > 0) Sub(stringResource(R.string.wrapped_months_best,
-            DateFormatSymbols.getInstance().months[best], formatPlaytime(d.months[best])), 300)
+            DateFormatSymbols.getInstance().months[(d.firstMonth + best) % 12], formatPlaytime(d.months[best])), 300)
         Spacer(Modifier.height(18.dp))
         Row(Modifier.fillMaxWidth().widthIn(max = 900.dp).height(260.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
             d.months.forEachIndexed { i, m ->

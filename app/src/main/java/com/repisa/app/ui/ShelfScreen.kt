@@ -122,7 +122,7 @@ fun ShelfScreen(vm: LibraryViewModel, onOpenSettings: () -> Unit, onOpenGame: (G
                 LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 2.dp), color = Color(0xFFFFB74D))
             }
         }
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+        Box(Modifier.weight(1f).fillMaxWidth().tourTarget("shelves")) {
             if (shelves.isEmpty()) {
                 EmptyRoom(hasGames = all.isNotEmpty(), onOpenSettings = onOpenSettings)
             } else {
@@ -164,12 +164,12 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
             }
             // 🏆 abre los logros; tocar los totales abre las estadísticas.
             if (!searching) Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
-                Text("🏆", fontSize = 16.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onOpenAchievements)
+                Text("🏆", fontSize = 16.sp, modifier = Modifier.tourTarget("achievements").clip(RoundedCornerShape(8.dp)).clickable(onClick = onOpenAchievements)
                     .padding(horizontal = 10.dp, vertical = 6.dp))
                 Text(
                     L10n.games(all.size) + " · " + stringResource(R.string.hours_played, all.sumOf { it.totalMinutes } / 60) + "  📊",
                     color = Color(0xFFBFA98A), fontSize = 13.sp,
-                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onOpenStats).padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.tourTarget("stats").clip(RoundedCornerShape(8.dp)).clickable(onClick = onOpenStats).padding(horizontal = 10.dp, vertical = 6.dp),
                 )
             }
             Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
@@ -187,17 +187,17 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
                     )
                     TopIcon(Icons.Default.Clear, stringResource(R.string.close_search)) { vm.setQuery(""); searching = false }
                 } else {
-                    TopIcon(Icons.Default.Search, stringResource(R.string.search)) { searching = true }
-                    TopTextIcon("🎲", stringResource(R.string.random_title), onClick = onOpenRandom)
+                    TopIcon(Icons.Default.Search, stringResource(R.string.search), modifier = Modifier.tourTarget("search")) { searching = true }
+                    TopTextIcon("🎲", stringResource(R.string.random_title), Modifier.tourTarget("random"), onClick = onOpenRandom)
                 }
-                TopIcon(Icons.Default.Star, stringResource(R.string.my_ratings), Color(0xFFFFC94D), onClick = onOpenRated)
-                TopIcon(Icons.Default.Refresh, stringResource(R.string.sync)) { vm.syncAll() }
-                TopIcon(Icons.Default.Settings, stringResource(R.string.settings), onClick = onOpenSettings)
+                TopIcon(Icons.Default.Star, stringResource(R.string.my_ratings), Color(0xFFFFC94D), Modifier.tourTarget("ratings"), onClick = onOpenRated)
+                TopIcon(Icons.Default.Refresh, stringResource(R.string.sync), modifier = Modifier.tourTarget("sync")) { vm.syncAll() }
+                TopIcon(Icons.Default.Settings, stringResource(R.string.settings), modifier = Modifier.tourTarget("settings"), onClick = onOpenSettings)
             }
         }
         // Fila 2: filtros a la izquierda; ordenar y repisas al fondo a la derecha.
         Row(verticalAlignment = Alignment.CenterVertically) {
-            LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            LazyRow(Modifier.weight(1f).tourTarget("filters"), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 // Filtro por consola (desde «Mis consolas»): se quita tocándolo.
                 options.console?.let { id ->
                     item { SourceChip("🎮 " + com.repisa.app.model.Consoles.byId(id).name + "  ✕", true) { vm.closeConsoleFilter() } }
@@ -208,8 +208,10 @@ private fun TopBar(vm: LibraryViewModel, options: ViewOptions, all: List<Game>, 
                     if (count > 0) SourceChip("${s.label} ($count)", options.source == s) { vm.setSource(s) }
                 }
             }
-            Picker(stringResource(R.string.sort_label), options.sort.label, SortMode.entries.map { it.label }) { vm.setSort(SortMode.entries[it]) }
-            Picker(stringResource(R.string.group_label), options.group.label, GroupMode.entries.map { it.label }) { vm.setGroup(GroupMode.entries[it]) }
+            Row(Modifier.tourTarget("sort"), verticalAlignment = Alignment.CenterVertically) {
+                Picker(stringResource(R.string.sort_label), options.sort.label, SortMode.entries.map { it.label }) { vm.setSort(SortMode.entries[it]) }
+                Picker(stringResource(R.string.group_label), options.group.label, GroupMode.entries.map { it.label }) { vm.setGroup(GroupMode.entries[it]) }
+            }
         }
     }
 }
@@ -223,12 +225,13 @@ private fun TopIcon(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     tint: Color = Color.White,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     var focused by remember { mutableStateOf(false) }
     IconButton(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .onFocusChanged { focused = it.isFocused }
             .then(if (focused) Modifier.background(Color(0xFFFFD27A), androidx.compose.foundation.shape.CircleShape)
                 .border(2.dp, Color.White, androidx.compose.foundation.shape.CircleShape) else Modifier),
@@ -239,11 +242,11 @@ private fun TopIcon(
 
 /** Como [TopIcon] pero con un emoji (el dado). */
 @Composable
-private fun TopTextIcon(text: String, label: String, onClick: () -> Unit) {
+private fun TopTextIcon(text: String, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     IconButton(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = label }
             .then(if (focused) Modifier.background(Color(0xFFFFD27A), androidx.compose.foundation.shape.CircleShape)
@@ -376,7 +379,7 @@ private fun FastScrollbar(state: androidx.compose.foundation.lazy.LazyListState,
         val target = (dragFraction * scrollable).toInt().coerceIn(0, total - 1)
         scope.launch { state.scrollToItem(target) }
     }
-    BoxWithConstraints(modifier.fillMaxHeight().width(34.dp).padding(vertical = 6.dp)) {
+    BoxWithConstraints(modifier.fillMaxHeight().width(34.dp).padding(vertical = 6.dp).tourTarget("scrollbar")) {
         val height = constraints.maxHeight.toFloat()
         val density = androidx.compose.ui.platform.LocalDensity.current
         // Tirador proporcional a lo que se ve, pero nunca más pequeño que un dedo.
@@ -626,6 +629,20 @@ fun Modifier.roomBackground(theme: ShelfTheme = ShelfTheme.current): Modifier = 
 fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRoom(theme: ShelfTheme) {
     val h = size.height
     val unit = 1.dp.toPx()
+    // Tema con foto: la imagen cubre la pared (recortada al centro), oscurecida, con la luz de arriba.
+    theme.background?.let { img ->
+        val scale = maxOf(size.width / img.width, size.height / img.height)
+        val sw = size.width / scale
+        val sh = size.height / scale
+        drawImage(img, srcOffset = androidx.compose.ui.unit.IntOffset(((img.width - sw) / 2).toInt(), ((img.height - sh) / 2).toInt()),
+            srcSize = androidx.compose.ui.unit.IntSize(sw.toInt().coerceAtLeast(1), sh.toInt().coerceAtLeast(1)),
+            dstSize = androidx.compose.ui.unit.IntSize(size.width.toInt(), size.height.toInt()))
+        // Filtro del color de la luz: le da su tono a la foto sin perder sus luces y sombras.
+        if (theme.tint > 0f) drawRect(theme.led.copy(alpha = theme.tint), blendMode = androidx.compose.ui.graphics.BlendMode.Color)
+        drawRect(Color.Black.copy(alpha = theme.dim))
+        drawRect(Brush.verticalGradient(listOf(theme.topLight, Color.Transparent), endY = h * 0.35f))
+        return
+    }
     when (theme.panel) {
         PanelStyle.PLANKS -> {
             val plank = 132 * unit

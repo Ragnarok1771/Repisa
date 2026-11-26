@@ -132,7 +132,13 @@ fun SettingsScreen(vm: LibraryViewModel, onBack: () -> Unit, onLanguageChanged: 
                 color = Color(0xFFFFD27A), fontSize = 22.sp, fontWeight = FontWeight.SemiBold, fontFamily = DisplayFont,
             )
             Spacer(Modifier.weight(1f))
-            if (page == null) Button(onClick = { vm.syncAll(); onBack() }) { Text(stringResource(R.string.sync_all)) }
+            if (page == null) {
+                // «?»: vuelve a reproducir el tutorial que explica cada botón de Repisa.
+                OutlinedButton(onClick = { vm.startTour() }, modifier = Modifier.tourTarget("set_help").padding(end = 8.dp)) {
+                    Text("?", color = Color(0xFFFFD27A), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(onClick = { vm.syncAll(); onBack() }) { Text(stringResource(R.string.sync_all)) }
+            }
         }
         Column(
             Modifier.fillMaxSize().verticalScroll(if (page == null) mainScroll else pageScrollState(page)).padding(16.dp),
@@ -170,7 +176,7 @@ private fun MainPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit, retur
     var epicWeb by remember { mutableStateOf(false) }
     var steamWeb by remember { mutableStateOf(false) }
 
-    Section(stringResource(R.string.source_steam)) {
+    Section(stringResource(R.string.source_steam), Modifier.tourTarget("set_accounts")) {
         if (s.steamLinkedId != null || s.steamApiKey != null) {
             Hint(s.steamLinkedName?.let { stringResource(R.string.steam_linked, it) }
                 ?: s.steamLinkedId?.let { stringResource(R.string.steam_linked, "SteamID $it") }
@@ -276,7 +282,7 @@ private fun MainPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit, retur
             val back = remember { androidx.compose.ui.focus.FocusRequester() }
             if (p == returnTo) LaunchedEffect(Unit) { runCatching { back.requestFocus() } }
             Row(
-                Modifier.fillMaxWidth().focusRequester(back).clickable { open(p) }.padding(horizontal = 16.dp, vertical = 14.dp),
+                Modifier.fillMaxWidth().tourTarget("set_${p.name}").focusRequester(back).clickable { open(p) }.padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(p.emoji, fontSize = 22.sp, modifier = Modifier.width(40.dp))
@@ -292,7 +298,7 @@ private fun MainPage(vm: LibraryViewModel, tick: Int, changed: () -> Unit, retur
     }
 
     // Abajo del todo: buscar actualización a mano (por si el aviso no salió solo).
-    Row(Modifier.fillMaxWidth().background(Color(0xB3120C09), RoundedCornerShape(12.dp)).padding(16.dp),
+    Row(Modifier.fillMaxWidth().tourTarget("set_updates").background(Color(0xB3120C09), RoundedCornerShape(12.dp)).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text("⬆ " + stringResource(R.string.updates_title), color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
@@ -756,8 +762,8 @@ fun LanguageList(selected: AppLanguage?, onPick: (AppLanguage) -> Unit) {
                     .padding(horizontal = 18.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(lang.flag, fontSize = 30.sp)
-                Spacer(Modifier.width(16.dp))
+                LanguageFlag(lang)
+                Spacer(Modifier.width(8.dp))
                 Text(lang.nativeName, color = Color.White, fontSize = 18.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
                     modifier = Modifier.weight(1f))
                 if (active) Text("✓", color = Color(0xFFFFD27A), fontSize = 20.sp)
@@ -769,9 +775,9 @@ fun LanguageList(selected: AppLanguage?, onPick: (AppLanguage) -> Unit) {
 // ---------------------------------------------------------------------------- Piezas comunes
 
 @Composable
-private fun Section(title: String, content: @Composable () -> Unit) {
+private fun Section(title: String, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Column(
-        Modifier.fillMaxWidth().background(Color(0xB3120C09), RoundedCornerShape(12.dp)).padding(16.dp),
+        modifier.fillMaxWidth().background(Color(0xB3120C09), RoundedCornerShape(12.dp)).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(title, color = Color(0xFFFFD27A), fontSize = 18.sp, fontWeight = FontWeight.SemiBold, fontFamily = DisplayFont)
@@ -1069,6 +1075,32 @@ private fun ThemesPage(vm: LibraryViewModel) {
         ColorRow(stringResource(R.string.theme_color_wall), c.wall, WALL_COLORS) { apply(c.copy(wall = it)) }
         ColorRow(stringResource(R.string.theme_color_shelf), c.shelf, SHELF_COLORS) { apply(c.copy(shelf = it)) }
         ColorRow(stringResource(R.string.theme_color_light), c.light, LIGHT_COLORS) { apply(c.copy(light = it)) }
+        ColorRow(stringResource(R.string.theme_color_plaque), if (c.plaque == 0L) c.light else c.plaque, PLAQUE_COLORS) { apply(c.copy(plaque = it)) }
+        // Foto de fondo: cualquier imagen de la galería cubre la pared de la vitrina (y se oscurece lo que quieras).
+        HorizontalDivider(color = Color(0x22FFFFFF), modifier = Modifier.padding(vertical = 4.dp))
+        Text("🖼 " + stringResource(R.string.theme_image), color = Color.White)
+        Hint(stringResource(R.string.theme_image_hint))
+        val pick = androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) vm.setThemeImage(uri, c)?.let { c = it }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { pick.launch(arrayOf("image/*")) }) {
+                Text(stringResource(if (c.image) R.string.theme_image_change else R.string.theme_image_pick))
+            }
+            if (c.image) OutlinedButton(onClick = { vm.setThemeImage(null, c)?.let { c = it } }) {
+                Text(stringResource(R.string.theme_image_remove), color = Color.White)
+            }
+        }
+        if (c.image) {
+            Text(stringResource(R.string.theme_image_dim, c.dim), color = Color(0xFFBFA98A), fontSize = 13.sp)
+            androidx.compose.material3.Slider(value = c.dim.toFloat(), onValueChange = { apply(c.copy(dim = it.toInt())) },
+                valueRange = 0f..85f, modifier = Modifier.widthIn(max = 420.dp))
+            // Filtro: el color de la luz elegido arriba, por encima de la foto.
+            Text(stringResource(R.string.theme_image_tint, c.tint), color = Color(0xFFBFA98A), fontSize = 13.sp)
+            androidx.compose.material3.Slider(value = c.tint.toFloat(), onValueChange = { apply(c.copy(tint = it.toInt())) },
+                valueRange = 0f..90f, modifier = Modifier.widthIn(max = 420.dp))
+        }
     }
 }
 
@@ -1076,15 +1108,21 @@ private val WALL_COLORS = listOf(0xFF2A1A0F, 0xFF5E4024, 0xFF1C1C1E, 0xFF3A3F45,
     0xFF26103D, 0xFF4A1530, 0xFF5A1E1E, 0xFF6B5A3A, 0xFFB0A58E, 0xFF2B2B5E)
 private val SHELF_COLORS = listOf(0xFF8C5A30, 0xFFD9B07A, 0xFF3E2C22, 0xFFB9C0C7, 0xFF8EC4E0, 0xFFD8363F, 0xFF2F7D4F, 0xFF3F55E0,
     0xFF8E44AD, 0xFFE67E22, 0xFFF1C40F, 0xFFEDEDED, 0xFF222222, 0xFFE91E63)
+private val PLAQUE_COLORS = listOf(0xFFFFD27A, 0xFFE0A84A, 0xFFC0C6CC, 0xFFFFFFFF, 0xFF8EC4E0, 0xFFFF66E0, 0xFFA4E86A, 0xFFFF6B6B,
+    0xFFFFE45A, 0xFFB388FF, 0xFF5A3720, 0xFF222222)
 private val LIGHT_COLORS = listOf(0xFFFFD9A0, 0xFFFFF1D0, 0xFFE4F2FF, 0xFF9EEBFF, 0xFFFF66E0, 0xFFA4E86A, 0xFFFF6B6B, 0xFFFFE45A,
     0xFFB388FF, 0xFFFFFFFF)
 
-/** Fila de muestras de color; la elegida lleva borde blanco. */
+/**
+ * Fila de muestras de color; la elegida lleva borde blanco. Al final, 🎨 abre la rueda para elegir cualquier color
+ * (y, si el elegido no es de la lista, aparece también como muestra).
+ */
 @Composable
 private fun ColorRow(title: String, selected: Long, colors: List<Long>, onPick: (Long) -> Unit) {
+    var wheel by remember { mutableStateOf(false) }
     Text(title, color = Color.White, modifier = Modifier.padding(top = 4.dp))
     androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        colors.forEach { col ->
+        (colors + listOf(selected).filter { it !in colors }).forEach { col ->
             var focused by remember { mutableStateOf(false) }
             Box(
                 Modifier.size(38.dp).clip(androidx.compose.foundation.shape.CircleShape)
@@ -1097,7 +1135,19 @@ private fun ColorRow(title: String, selected: Long, colors: List<Long>, onPick: 
             ) { if (col == selected) Text("✓", color = if (Color(col).red + Color(col).green > 1.3f) Color.Black else Color.White,
                 fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.Center)) }
         }
+        // Rueda de colores: cualquier color.
+        var focused by remember { mutableStateOf(false) }
+        Box(
+            Modifier.size(38.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                .background(androidx.compose.ui.graphics.Brush.sweepGradient(
+                    (0..6).map { Color.hsv((it * 60f) % 360f, 0.85f, 1f) }))
+                .border(if (focused) 3.dp else 1.dp, if (focused) Color(0xFFFFD27A) else Color(0x55FFFFFF), androidx.compose.foundation.shape.CircleShape)
+                .onFocusChanged { focused = it.isFocused }
+                .clickable { wheel = true },
+            contentAlignment = Alignment.Center,
+        ) { Text("🎨", fontSize = 16.sp) }
     }
+    if (wheel) ColorWheelDialog(title, selected, onDismiss = { wheel = false }) { onPick(it); wheel = false }
 }
 
 @Composable
@@ -1128,5 +1178,14 @@ private fun ThemeCard(t: ShelfTheme, chosen: Boolean, sample: List<com.repisa.ap
             Text("${t.emoji}  ${t.label}", color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             if (chosen) Text("✓", color = Color(0xFFFFD27A), fontWeight = FontWeight.Black)
         }
+    }
+}
+
+/** Bandera del idioma, con el mismo ancho para todas. */
+@Composable
+fun LanguageFlag(lang: AppLanguage) {
+    // Mismo ancho para todas: los nombres de los idiomas quedan alineados.
+    Box(Modifier.width(60.dp), contentAlignment = Alignment.CenterStart) {
+        Text(lang.flag, fontSize = 30.sp)
     }
 }

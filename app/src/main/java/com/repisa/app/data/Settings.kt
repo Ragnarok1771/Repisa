@@ -89,6 +89,10 @@ class Settings(context: Context) {
     fun putRawString(key: String, value: String?) = put(key, value)
 
     /** Guía de primera vez terminada, y en qué paso iba. */
+    /** Cuándo se empezó a usar Repisa (para saber si ya toca el resumen del año). */
+    var firstUse: Long
+        get() = prefs.getLong("first_use", 0L)
+        set(v) = prefs.edit { putLong("first_use", v) }
     var onboardingDone: Boolean
         get() = prefs.getBoolean("onboarding_done", false)
         set(v) = prefs.edit { putBoolean("onboarding_done", v) }

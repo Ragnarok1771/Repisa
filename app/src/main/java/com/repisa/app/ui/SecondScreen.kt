@@ -94,7 +94,7 @@ class SecondScreen(private val activity: ComponentActivity, private val vm: Libr
     }
 
     private fun findSecondDisplay(): Display? {
-        val current = activity.display?.displayId ?: Display.DEFAULT_DISPLAY
+        val current = runCatching { activity.display?.displayId }.getOrNull() ?: Display.DEFAULT_DISPLAY
         val candidates = displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION).toList() +
             displayManager.displays.toList()
         return candidates.firstOrNull { it.displayId != current && it.state != Display.STATE_OFF }

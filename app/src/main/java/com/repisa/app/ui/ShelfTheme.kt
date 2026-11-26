@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import com.repisa.app.R
 
 /** Cómo se dibuja la pared del fondo de la vitrina. */
@@ -44,6 +45,11 @@ class ShelfTheme(
     val plaque: List<Color>,
     val plaqueText: Color,
     val plaqueBorder: Color,
+    /** Foto de fondo de la pared (solo el tema personalizado) y cuánto se oscurece (0..1) para que se lea todo. */
+    val background: androidx.compose.ui.graphics.ImageBitmap? = null,
+    val dim: Float = 0f,
+    /** Cuánto se tiñe la foto con el color de la luz (0..1): un filtro de color por encima. */
+    val tint: Float = 0f,
 ) {
 
     val label: String get() = com.repisa.app.i18n.L10n.s(nameRes)
@@ -138,13 +144,21 @@ data class CustomTheme(
     val wall: Long = 0xFF2E3A2A,
     val shelf: Long = 0xFF8C5A30,
     val light: Long = 0xFFFFD9A0,
+    /** Con foto de fondo (la de [ThemeImage]) y cuánto se oscurece, en %. */
+    val image: Boolean = false,
+    val dim: Int = 45,
+    /** Filtro del color de la luz sobre la foto, en %. */
+    val tint: Int = 0,
+    /** Color de las placas («Seguir jugando», «Mi colección»...); 0 = a juego con la luz. */
+    val plaque: Long = 0,
 ) {
-    fun encode() = "${panel.name}|$wall|$shelf|$light"
+    fun encode() = "${panel.name}|$wall|$shelf|$light|$image|$dim|$tint|$plaque"
 
     fun build(): ShelfTheme {
         val w = Color(wall); val sh = Color(shelf); val l = Color(light)
         val glass = panel == PanelStyle.GLASS
-        val plaqueDark = l.luminance() > 0.45f
+        val pl = if (plaque != 0L) Color(plaque) else l
+        val plaqueDark = pl.luminance() > 0.45f
         return ShelfTheme(
             "CUSTOM", R.string.theme_custom, "🖌", panel,
             wall = listOf(w.mix(Color.White, 0.10f), w, w.mix(Color.Black, 0.55f)),
@@ -154,19 +168,57 @@ data class CustomTheme(
             plankGrain = if (panel == PanelStyle.PLANKS) Color(0x1F000000) else Color(0x00000000), plankEdge = Color(0x88FFFFFF),
             ledBase = sh.mix(Color.Black, 0.6f), led = l.copy(alpha = 0.85f), ledGlow = l.copy(alpha = 0.33f),
             sideOuter = sh.mix(Color.Black, 0.35f), sideInner = sh,
-            plaque = listOf(l.mix(Color.White, 0.2f), l.mix(Color.Black, 0.2f)),
+            plaque = listOf(pl.mix(Color.White, 0.2f), pl.mix(Color.Black, 0.2f)),
             plaqueText = if (plaqueDark) Color(0xFF1E140C) else Color.White,
-            plaqueBorder = l.mix(Color.Black, 0.5f),
+            plaqueBorder = pl.mix(Color.Black, 0.5f),
+            background = if (image) ThemeImage.bitmap else null,
+            dim = dim / 100f,
+            tint = tint / 100f,
         )
     }
 
     companion object {
         fun decode(text: String?): CustomTheme = runCatching {
             val p = text!!.split("|")
-            CustomTheme(PanelStyle.valueOf(p[0]), p[1].toLong(), p[2].toLong(), p[3].toLong())
+            CustomTheme(PanelStyle.valueOf(p[0]), p[1].toLong(), p[2].toLong(), p[3].toLong(),
+                p.getOrNull(4)?.toBoolean() ?: false, p.getOrNull(5)?.toIntOrNull() ?: 45, p.getOrNull(6)?.toIntOrNull() ?: 0,
+                p.getOrNull(7)?.toLongOrNull() ?: 0L)
         }.getOrDefault(CustomTheme())
     }
 }
 
 private fun Color.mix(other: Color, t: Float) = androidx.compose.ui.graphics.lerp(this, other, t)
 private fun Color.luminance() = 0.299f * red + 0.587f * green + 0.114f * blue
+
+/**
+ * La foto de fondo del tema personalizado: se copia (reducida) a los archivos de Repisa para no depender de la galería.
+ */
+object ThemeImage {
+    var bitmap by mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
+        private set
+
+    private fun file(ctx: android.content.Context) = java.io.File(ctx.filesDir, "theme_background.jpg")
+
+    /** Carga la foto guardada (si hay). */
+    fun load(ctx: android.content.Context) {
+        val f = file(ctx)
+        bitmap = if (f.exists()) runCatching { android.graphics.BitmapFactory.decodeFile(f.path)?.asImageBitmap() }.getOrNull() else null
+    }
+
+    /** Guarda la imagen elegida, reducida a 1920 px como mucho por lado. Devuelve false si no se pudo leer. */
+    fun save(ctx: android.content.Context, uri: android.net.Uri): Boolean = runCatching {
+        val r = ctx.contentResolver
+        val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        r.openInputStream(uri)!!.use { android.graphics.BitmapFactory.decodeStream(it, null, bounds) }
+        var sample = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= 1920) sample *= 2
+        val bmp = r.openInputStream(uri)!!.use {
+            android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = sample })
+        }!!
+        file(ctx).outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 88, it) }
+        bitmap = bmp.asImageBitmap()
+        true
+    }.getOrDefault(false)
+
+    fun remove(ctx: android.content.Context) { file(ctx).delete(); bitmap = null }
+}

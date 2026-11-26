@@ -2,6 +2,28 @@
 
 Cada versión se publica en la pestaña **Releases** con su APK listo para instalar.
 
+## [0.15.3]
+
+**🧭 Tutorial dentro de la app** — señala cada botón con una explicación corta (la pantalla se oscurece salvo lo
+que se explica), con «Anterior», «Siguiente» y «Saltar tutorial». Recorre la repisa (logros, estadísticas, buscar,
+ruleta, calificaciones, sincronizar, filtros, ordenar, repisas y la barra rápida) y Ajustes (cuentas, emuladores,
+carátulas y datos, tiempo de juego, pantalla, temas, colecciones, copia de seguridad y versiones nuevas). Sale al
+terminar la guía de inicio y con el botón **«?»** de Ajustes, junto a «Sincronizar todo».
+
+**👋 Guía de inicio** — dos pasos nuevos (recomendados y opcionales): **RetroAchievements** para los logros de los
+juegos emulados y **SteamGridDB** para tener muchas más carátulas, con botones para conseguir la clave y pegarla.
+
+**🎨 Tema personalizado mucho más libre**
+- **Foto de fondo**: cualquier imagen de tu galería cubre la pared de la vitrina, con **«Oscurecer»** (para que se
+  vean bien las carátulas) y **«Filtro del color de la luz»** (tiñe la foto con el color de luz elegido).
+- **Rueda de colores 🎨** en cada fila (pared, baldas, luz y placas): cualquier color, con su brillo en una barra
+  vertical; con el mando, ←/→ tono, ↑/↓ intensidad.
+- **Color de las placas** («Seguir jugando», «Mi colección»…).
+
+**✨ Tu año en Repisa, del 8 de octubre al 8 de octubre** — cada 8 de octubre sale el resumen del año que termina y
+se puede ver hasta el 8 de octubre siguiente, cuando lo sustituye el nuevo (la gráfica de meses empieza en octubre).
+El primero sale cuando Repisa lleva al menos medio año en uso; mientras tanto, el botón dice cuándo estará.
+
 ## [0.15.2]
 
 **🏆 Logros de Repisa y platinos**

@@ -65,7 +65,15 @@ fun StatsScreen(vm: LibraryViewModel, onBack: () -> Unit) {
             // Calendario de partidas y resumen del año.
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 androidx.compose.material3.Button(onClick = { vm.calendar.value = false }) { Text("📅 " + stringResource(R.string.cal_title)) }
-                androidx.compose.material3.Button(onClick = { vm.wrapped.value = false }) { Text("✨ " + stringResource(R.string.wrapped_name)) }
+                // Tu año en Repisa: sale cada 8 de octubre; mientras no toca, el botón dice cuándo saldrá.
+                val period = remember { WrappedPeriod.current(vm.firstUse) }
+                if (period != null) androidx.compose.material3.Button(onClick = { vm.wrapped.value = false }) {
+                    Text("✨ " + stringResource(R.string.wrapped_name) + " " + period.year)
+                } else androidx.compose.material3.OutlinedButton(onClick = {}, enabled = false) {
+                    Text("✨ " + stringResource(R.string.wrapped_soon,
+                        java.text.DateFormat.getDateInstance(java.text.DateFormat.LONG).format(java.util.Date(WrappedPeriod.nextDate(vm.firstUse)))),
+                        color = Color(0xFFBFA98A))
+                }
                 androidx.compose.material3.Button(onClick = { vm.consolesRoom.value = true }) { Text("🎮 " + stringResource(R.string.consoles_title)) }
             }
             // Cifras principales

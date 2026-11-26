@@ -836,12 +836,6 @@ s("onb_time_body", "Allow “Usage access” so Repisa can measure exactly how l
   "Consenti l’«Accesso ai dati di utilizzo» così Repisa misura con precisione quanto giochi a ciò che avvii da qui. Android apre l’impostazione: trova Repisa e attivalo.",
   "Permita o \"Acesso ao uso\" para o Repisa medir exatamente quanto você joga o que abre daqui. O Android abre o ajuste: encontre o Repisa e ative.")
 s("onb_done_title", "All set!", "¡Todo listo!", "C’est prêt !", "Alles bereit!", "Tutto pronto!", "Tudo pronto!")
-s("onb_done_body", "Controller: D-pad to move · A details · X play · Y favourite · B back · L1/R1 platform · Select shelves · Start settings.\n🎲 next to the magnifier picks a game for you · tap the totals at the top for statistics · mark each game Backlog / Playing / Finished / 100% / Dropped · 🏆 achievements from Steam, RetroAchievements and Repisa.",
-  "Mando: cruceta para moverte · A ficha · X jugar · Y favorito · B atrás · L1/R1 plataforma · Select repisas · Start ajustes.\n🎲 junto a la lupa elige un juego por ti · toca los totales de arriba para ver estadísticas · marca cada juego como Pendiente / Jugando / Terminado / 100 % / Abandonado · 🏆 logros de Steam, RetroAchievements y Repisa.",
-  "Manette : croix pour bouger · A fiche · X jouer · Y favori · B retour · L1/R1 plateforme · Select étagères · Start réglages.\n🎲 à côté de la loupe choisit un jeu · touchez les totaux en haut pour les statistiques · marquez chaque jeu À faire / En cours / Terminé / 100 % / Abandonné · 🏆 succès Steam, RetroAchievements et Repisa.",
-  "Controller: Steuerkreuz bewegen · A Details · X spielen · Y Favorit · B zurück · L1/R1 Plattform · Select Regale · Start Einstellungen.\n🎲 neben der Lupe wählt ein Spiel · tippe oben auf die Summen für Statistiken · markiere Spiele als Ausstehend / Spiele gerade / Beendet / 100 % / Abgebrochen · 🏆 Erfolge von Steam, RetroAchievements und Repisa.",
-  "Controller: croce per muoverti · A scheda · X gioca · Y preferito · B indietro · L1/R1 piattaforma · Select scaffali · Start impostazioni.\n🎲 accanto alla lente sceglie un gioco · tocca i totali in alto per le statistiche · segna ogni gioco Da giocare / In corso / Finito / 100% / Abbandonato · 🏆 obiettivi Steam, RetroAchievements e Repisa.",
-  "Controle: direcional para mover · A ficha · X jogar · Y favorito · B voltar · L1/R1 plataforma · Select estantes · Start ajustes.\n🎲 ao lado da lupa escolhe um jogo · toque nos totais em cima para estatísticas · marque cada jogo como Pendente / Jogando / Zerado / 100% / Abandonado · 🏆 conquistas do Steam, RetroAchievements e Repisa.")
 s("onb_finish", "Let's play!", "¡A jugar!", "À vous de jouer !", "Los, spielen!", "Si gioca!", "Bora jogar!", ptPT="Vamos jogar!")
 s("onb_skip_all", "Skip the guide", "Saltar la guía", "Passer le guide", "Anleitung überspringen", "Salta la guida", "Pular o guia",
   ptPT="Saltar o guia")
@@ -1688,6 +1682,217 @@ s("msg_genres_retry", "%1$d couldn't be checked now (the service asked to wait):
   "%1$d non sono stati controllati ora (il servizio ha chiesto di attendere): verranno ritentati da soli.",
   "%1$d não puderam ser consultados agora (o serviço pediu para esperar): serão tentados de novo sozinhos.",
   ptPT="%1$d não puderam ser consultados agora (o serviço pediu para esperar): serão tentados de novo automaticamente.")
+
+# ------------------------------------------------------------------ Guía de inicio (0.15.3) y tutorial
+s("onb_done_body",
+  "Now a quick tutorial shows you what each button does (replay it any time with the “?” in Settings).\nController: D-pad to move · A details · X play · Y favourite · B back · L1/R1 platform · Select shelves · Start settings.",
+  "Ahora un tutorial rápido te enseña para qué sirve cada botón (lo puedes repetir cuando quieras con el «?» de Ajustes).\nMando: cruceta para moverte · A ficha · X jugar · Y favorito · B atrás · L1/R1 plataforma · Select repisas · Start ajustes.",
+  "Un petit tutoriel vous montre maintenant à quoi sert chaque bouton (à revoir quand vous voulez avec le « ? » des Réglages).\nManette : croix pour se déplacer · A fiche · X jouer · Y favori · B retour · L1/R1 plateforme · Select étagères · Start réglages.",
+  "Jetzt zeigt dir ein kurzes Tutorial, wofür jeder Knopf ist (jederzeit wieder über das „?“ in den Einstellungen).\nController: Steuerkreuz bewegen · A Details · X spielen · Y Favorit · B zurück · L1/R1 Plattform · Select Regale · Start Einstellungen.",
+  "Ora un breve tutorial ti mostra a cosa serve ogni pulsante (puoi rivederlo quando vuoi con il «?» delle Impostazioni).\nController: croce per muoverti · A scheda · X gioca · Y preferito · B indietro · L1/R1 piattaforma · Select scaffali · Start impostazioni.",
+  "Agora um tutorial rápido mostra para que serve cada botão (repita quando quiser com o “?” das Configurações).\nControle: direcional para mover · A ficha · X jogar · Y favorito · B voltar · L1/R1 plataforma · Select estantes · Start configurações.",
+  ptPT="Agora um tutorial rápido mostra para que serve cada botão (repita quando quiser com o “?” das Definições).\nComando: direcional para mover · A ficha · X jogar · Y favorito · B voltar · L1/R1 plataforma · Select prateleiras · Start definições.")
+s("onb_ra_title", "Achievements for your emulators", "Logros de tus emuladores", "Succès de vos émulateurs", "Erfolge für deine Emulatoren",
+  "Obiettivi dei tuoi emulatori", "Conquistas dos seus emuladores")
+s("onb_ra_body",
+  "Recommended: link RetroAchievements (free) to see the achievements of your emulated games (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). You only need your username and your “Web API Key” (retroachievements.org → Settings → Keys).",
+  "Recomendado: vincula RetroAchievements (gratis) para ver los logros de tus juegos emulados (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Solo hace falta tu usuario y tu clave «Web API Key» (retroachievements.org → Settings → Keys).",
+  "Recommandé : reliez RetroAchievements (gratuit) pour voir les succès de vos jeux émulés (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Il suffit de votre pseudo et de votre « Web API Key » (retroachievements.org → Settings → Keys).",
+  "Empfohlen: Verknüpfe RetroAchievements (kostenlos), um die Erfolge deiner emulierten Spiele zu sehen (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Du brauchst nur deinen Benutzernamen und deinen „Web API Key“ (retroachievements.org → Settings → Keys).",
+  "Consigliato: collega RetroAchievements (gratis) per vedere gli obiettivi dei tuoi giochi emulati (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Servono solo il tuo utente e la tua «Web API Key» (retroachievements.org → Settings → Keys).",
+  "Recomendado: vincule o RetroAchievements (grátis) para ver as conquistas dos seus jogos emulados (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Só precisa do seu usuário e da sua “Web API Key” (retroachievements.org → Settings → Keys).",
+  ptPT="Recomendado: ligue o RetroAchievements (grátis) para ver as conquistas dos seus jogos emulados (GB, GBA, DS, N64, SNES, PS1, PS2, PSP, GameCube…). Só precisa do seu utilizador e da sua “Web API Key” (retroachievements.org → Settings → Keys).")
+s("onb_sgdb_title", "More covers", "Más carátulas", "Plus de jaquettes", "Mehr Cover", "Più copertine", "Mais capas", es419="Más portadas")
+s("onb_sgdb_body",
+  "Recommended: SteamGridDB is a free cover database. With its key, Repisa finds the box art of many more games (especially emulated and lesser-known ones). Create an account, copy your key from Preferences → API and paste it in Settings → Covers and data.",
+  "Recomendado: SteamGridDB es una base de carátulas gratuita. Con su clave, Repisa encuentra la caja de muchos más juegos (sobre todo de emuladores y juegos poco conocidos). Crea una cuenta, copia tu clave en Preferencias → API y pégala en Ajustes → Carátulas y datos.",
+  "Recommandé : SteamGridDB est une base de jaquettes gratuite. Avec sa clé, Repisa trouve la boîte de bien plus de jeux (surtout émulés et peu connus). Créez un compte, copiez votre clé dans Preferences → API et collez-la dans Réglages → Jaquettes et données.",
+  "Empfohlen: SteamGridDB ist eine kostenlose Cover-Datenbank. Mit ihrem Schlüssel findet Repisa die Hülle von viel mehr Spielen (vor allem emulierten und weniger bekannten). Konto erstellen, Schlüssel unter Preferences → API kopieren und in Einstellungen → Cover und Daten einfügen.",
+  "Consigliato: SteamGridDB è un archivio di copertine gratuito. Con la sua chiave, Repisa trova la custodia di molti più giochi (soprattutto emulati e poco noti). Crea un account, copia la chiave in Preferences → API e incollala in Impostazioni → Copertine e dati.",
+  "Recomendado: o SteamGridDB é uma base de capas gratuita. Com a chave dele, o Repisa encontra a caixa de muitos mais jogos (sobretudo emulados e pouco conhecidos). Crie uma conta, copie sua chave em Preferences → API e cole em Configurações → Capas e dados.",
+  es419="Recomendado: SteamGridDB es una base de portadas gratuita. Con su clave, Repisa encuentra la caja de muchos más juegos (sobre todo de emuladores y juegos poco conocidos). Crea una cuenta, copia tu clave en Preferencias → API y pégala en Ajustes → Portadas y datos.",
+  ptPT="Recomendado: o SteamGridDB é uma base de capas gratuita. Com a chave, o Repisa encontra a caixa de muitos mais jogos (sobretudo emulados e pouco conhecidos). Crie uma conta, copie a chave em Preferences → API e cole-a em Definições → Capas e dados.")
+s("onb_sgdb_done", "SteamGridDB key saved", "Clave de SteamGridDB guardada", "Clé SteamGridDB enregistrée", "SteamGridDB-Schlüssel gespeichert",
+  "Chiave SteamGridDB salvata", "Chave do SteamGridDB salva", ptPT="Chave do SteamGridDB guardada")
+s("onb_sgdb_paste", "Paste the key in Settings", "Pegar la clave en Ajustes", "Coller la clé dans les Réglages", "Schlüssel in den Einstellungen einfügen",
+  "Incolla la chiave nelle Impostazioni", "Colar a chave nas Configurações", ptPT="Colar a chave nas Definições")
+s("wrapped_soon", "Your year in Repisa · on %1$s", "Tu año en Repisa · el %1$s", "Votre année sur Repisa · le %1$s", "Dein Jahr in Repisa · am %1$s",
+  "Il tuo anno su Repisa · il %1$s", "Seu ano no Repisa · em %1$s", ptPT="O seu ano no Repisa · a %1$s")
+s("tour_skip", "Skip tutorial", "Saltar tutorial", "Passer le tutoriel", "Tutorial überspringen", "Salta il tutorial", "Pular tutorial", ptPT="Saltar tutorial")
+s("tour_prev", "Previous", "Anterior", "Précédent", "Zurück", "Indietro", "Anterior")
+s("tour_next", "Next", "Siguiente", "Suivant", "Weiter", "Avanti", "Próximo", ptPT="Seguinte")
+s("tour_finish", "Let's play!", "¡A jugar!", "À vous de jouer !", "Los, spielen!", "Si gioca!", "Bora jogar!", ptPT="Vamos jogar!")
+s("tour_hello_t", "A quick tour of Repisa", "Te enseño Repisa", "Petit tour de Repisa", "Kurze Tour durch Repisa", "Un giro in Repisa", "Um tour pelo Repisa")
+s("tour_hello_b",
+  "A quick look at every button. Use Next and Previous, or skip it whenever you want: you can replay it with the “?” button in Settings.",
+  "Un repaso rápido de cada botón. Usa «Siguiente» y «Anterior», o sáltalo cuando quieras: lo puedes repetir con el botón «?» de Ajustes.",
+  "Un aperçu rapide de chaque bouton. Utilisez Suivant et Précédent, ou passez quand vous voulez : vous pouvez le revoir avec le bouton « ? » des Réglages.",
+  "Ein kurzer Blick auf jeden Knopf. Mit Weiter und Zurück, oder jederzeit überspringen: Mit dem „?“ in den Einstellungen siehst du es wieder.",
+  "Uno sguardo veloce a ogni pulsante. Usa Avanti e Indietro, o saltalo quando vuoi: puoi rivederlo con il pulsante «?» delle Impostazioni.",
+  "Uma olhada rápida em cada botão. Use Próximo e Anterior, ou pule quando quiser: dá para repetir com o botão “?” das Configurações.",
+  ptPT="Uma vista rápida de cada botão. Use Seguinte e Anterior, ou salte quando quiser: pode repeti-lo com o botão “?” das Definições.")
+s("tour_ach_t", "Achievements", "Logros", "Succès", "Erfolge", "Obiettivi", "Conquistas")
+s("tour_ach_b",
+  "Your Steam and RetroAchievements achievements and Repisa's own (53 per game), with your 💎 platinums.",
+  "Tus logros de Steam y RetroAchievements, y los de Repisa (53 por juego), con tus platinos 💎.",
+  "Vos succès Steam et RetroAchievements, et ceux de Repisa (53 par jeu), avec vos platines 💎.",
+  "Deine Steam- und RetroAchievements-Erfolge und die von Repisa (53 pro Spiel), mit deinen 💎 Platin.",
+  "I tuoi obiettivi di Steam e RetroAchievements e quelli di Repisa (53 per gioco), con i tuoi platini 💎.",
+  "Suas conquistas da Steam e do RetroAchievements, e as do Repisa (53 por jogo), com suas platinas 💎.")
+s("tour_stats_t", "Statistics", "Estadísticas", "Statistiques", "Statistiken", "Statistiche", "Estatísticas")
+s("tour_stats_b",
+  "Tap the totals for your statistics. Inside: the play calendar (what you played each day and when your wishlist games come out), “My consoles” and, every 8 October, “Your year in Repisa”.",
+  "Toca los totales para ver tus estadísticas. Dentro tienes el calendario de partidas (qué jugaste cada día y cuándo salen los juegos de tu lista de deseos), «Mis consolas» y, cada 8 de octubre, «Tu año en Repisa».",
+  "Touchez les totaux pour vos statistiques. Dedans : le calendrier des parties (ce que vous avez joué chaque jour et la sortie des jeux de votre liste de souhaits), « Mes consoles » et, chaque 8 octobre, « Votre année sur Repisa ».",
+  "Tippe auf die Summen für deine Statistiken. Darin: der Spielkalender (was du an jedem Tag gespielt hast und wann deine Wunschlisten-Spiele erscheinen), „Meine Konsolen“ und jeden 8. Oktober „Dein Jahr in Repisa“.",
+  "Tocca i totali per le statistiche. Dentro: il calendario delle partite (cosa hai giocato ogni giorno e quando escono i giochi della tua lista dei desideri), «Le mie console» e, ogni 8 ottobre, «Il tuo anno su Repisa».",
+  "Toque nos totais para ver suas estatísticas. Dentro: o calendário de partidas (o que jogou cada dia e quando saem os jogos da sua lista de desejos), “Meus consoles” e, todo 8 de outubro, “Seu ano no Repisa”.",
+  ptPT="Toque nos totais para ver as suas estatísticas. Dentro: o calendário de partidas (o que jogou em cada dia e quando saem os jogos da sua lista de desejos), “As minhas consolas” e, a cada 8 de outubro, “O seu ano no Repisa”.")
+s("tour_search_t", "Search", "Buscar", "Rechercher", "Suchen", "Cerca", "Buscar", ptPT="Procurar")
+s("tour_search_b", "Search by title (in any language), genre, studio or console.",
+  "Busca por título (en español, en inglés…), género, estudio o consola.", "Cherchez par titre (dans n'importe quelle langue), genre, studio ou console.",
+  "Suche nach Titel (in jeder Sprache), Genre, Studio oder Konsole.", "Cerca per titolo (in qualsiasi lingua), genere, studio o console.",
+  "Busque por título (em qualquer idioma), gênero, estúdio ou console.", ptPT="Procure por título (em qualquer idioma), género, estúdio ou consola.")
+s("tour_random_t", "Which game?", "¿A qué juego?", "À quel jeu ?", "Welches Spiel?", "A cosa gioco?", "Qual jogo?")
+s("tour_random_b", "A cover roulette picks for you, with filters for your tastes, backlog, platform and length.",
+  "Una ruleta de carátulas elige por ti, con filtros por tus gustos, pendientes, plataforma y duración.",
+  "Une roulette de jaquettes choisit pour vous, avec des filtres par goûts, jeux en attente, plateforme et durée.",
+  "Ein Cover-Roulette wählt für dich, mit Filtern nach Geschmack, Backlog, Plattform und Länge.",
+  "Una roulette di copertine sceglie per te, con filtri per gusti, giochi in attesa, piattaforma e durata.",
+  "Uma roleta de capas escolhe por você, com filtros por gostos, pendentes, plataforma e duração.",
+  ptPT="Uma roleta de capas escolhe por si, com filtros por gostos, pendentes, plataforma e duração.")
+s("tour_ratings_t", "My ratings", "Mis calificaciones", "Mes notes", "Meine Bewertungen", "I miei voti", "Minhas avaliações", ptPT="As minhas avaliações")
+s("tour_ratings_b", "Your rated games. There you can create your own scale and your own template of criteria for rating.",
+  "Tus juegos calificados. Ahí puedes crear tu propia escala y tu propia plantilla de criterios para calificar.",
+  "Vos jeux notés. Vous pouvez y créer votre propre échelle et votre modèle de critères.",
+  "Deine bewerteten Spiele. Dort kannst du deine eigene Skala und Kriterienvorlage erstellen.",
+  "I tuoi giochi votati. Lì puoi creare la tua scala e il tuo modello di criteri.",
+  "Seus jogos avaliados. Ali você cria sua própria escala e seu modelo de critérios.", ptPT="Os seus jogos avaliados. Aí pode criar a sua escala e o seu modelo de critérios.")
+s("tour_sync_t", "Sync", "Sincronizar", "Synchroniser", "Synchronisieren", "Sincronizza", "Sincronizar")
+s("tour_sync_b", "Brings new games and hours from Steam, Epic and your emulators.",
+  "Trae los juegos y las horas nuevas de Steam, Epic y tus emuladores.", "Récupère les nouveaux jeux et heures de Steam, Epic et vos émulateurs.",
+  "Holt neue Spiele und Stunden von Steam, Epic und deinen Emulatoren.", "Porta i nuovi giochi e ore da Steam, Epic e dai tuoi emulatori.",
+  "Traz os jogos e as horas novas da Steam, Epic e dos seus emuladores.")
+s("tour_filters_t", "Platforms", "Plataformas", "Plateformes", "Plattformen", "Piattaforme", "Plataformas")
+s("tour_filters_b", "Show everything or only Steam, Epic or emulators. With the controller, L1 and R1.",
+  "Muestra todo o solo Steam, Epic o emuladores. Con el mando, L1 y R1.", "Tout afficher ou seulement Steam, Epic ou les émulateurs. À la manette, L1 et R1.",
+  "Alles zeigen oder nur Steam, Epic oder Emulatoren. Mit dem Controller L1 und R1.", "Mostra tutto o solo Steam, Epic o emulatori. Con il controller, L1 e R1.",
+  "Mostre tudo ou só Steam, Epic ou emuladores. No controle, L1 e R1.", ptPT="Mostre tudo ou só Steam, Epic ou emuladores. No comando, L1 e R1.")
+s("tour_sort_t", "Sort and shelves", "Ordenar y repisas", "Trier et étagères", "Sortieren und Regale", "Ordina e scaffali", "Ordenar e estantes", ptPT="Ordenar e prateleiras")
+s("tour_sort_b", "Sort by name, hours, last played, year, rating… and group the shelves by status, genre, console and more. With the controller, Select.",
+  "Ordena por nombre, horas, última partida, año, nota… y agrupa las repisas por estado, género, consola y más. Con el mando, Select.",
+  "Triez par nom, heures, dernière partie, année, note… et regroupez les étagères par statut, genre, console et plus. À la manette, Select.",
+  "Sortiere nach Name, Stunden, zuletzt gespielt, Jahr, Bewertung … und gruppiere die Regale nach Status, Genre, Konsole und mehr. Mit dem Controller Select.",
+  "Ordina per nome, ore, ultima partita, anno, voto… e raggruppa gli scaffali per stato, genere, console e altro. Con il controller, Select.",
+  "Ordene por nome, horas, última partida, ano, nota… e agrupe as estantes por status, gênero, console e mais. No controle, Select.",
+  ptPT="Ordene por nome, horas, última partida, ano, nota… e agrupe as prateleiras por estado, género, consola e mais. No comando, Select.")
+s("tour_shelves_t", "Your shelves", "Tus repisas", "Vos étagères", "Deine Regale", "I tuoi scaffali", "Suas estantes", ptPT="As suas prateleiras")
+s("tour_shelves_b",
+  "Tap a box for its details (controller: A details, X play, Y favourite). Long-press one to select several. Tap a shelf's gold plaque to fold it. “Continue playing” has your latest games.",
+  "Toca una caja para ver su ficha (con el mando: A ficha, X jugar, Y favorito). Mantén pulsada una para seleccionar varias. Toca la placa dorada de una repisa para plegarla. «Seguir jugando» tiene los últimos que jugaste.",
+  "Touchez une boîte pour sa fiche (manette : A fiche, X jouer, Y favori). Appui long pour en sélectionner plusieurs. Touchez la plaque dorée d'une étagère pour la replier. « Continuer » contient vos derniers jeux.",
+  "Tippe auf eine Hülle für die Details (Controller: A Details, X spielen, Y Favorit). Lange drücken, um mehrere auszuwählen. Tippe auf das goldene Schild eines Regals, um es einzuklappen. „Weiterspielen“ zeigt deine letzten Spiele.",
+  "Tocca una custodia per la scheda (controller: A scheda, X gioca, Y preferito). Tieni premuto per selezionarne più di una. Tocca la targa dorata di uno scaffale per chiuderlo. «Continua a giocare» ha gli ultimi giochi.",
+  "Toque numa caixa para ver a ficha (controle: A ficha, X jogar, Y favorito). Segure uma para selecionar várias. Toque na placa dourada de uma estante para recolhê-la. “Continuar jogando” tem os últimos que jogou.",
+  ptPT="Toque numa caixa para ver a ficha (comando: A ficha, X jogar, Y favorito). Mantenha premida uma para selecionar várias. Toque na placa dourada de uma prateleira para a recolher. “Continuar a jogar” tem os últimos que jogou.")
+s("tour_scroll_t", "Quick scroll", "Barra rápida", "Défilement rapide", "Schnell scrollen", "Scorrimento rapido", "Rolagem rápida", ptPT="Deslocamento rápido")
+s("tour_scroll_b", "Drag it to move up and down fast; it tells you which shelf you're reaching.",
+  "Arrástrala para subir y bajar rápido; te dice a qué repisa llegas.", "Faites-la glisser pour monter et descendre vite ; elle indique l'étagère atteinte.",
+  "Zieh sie, um schnell hoch und runter zu scrollen; sie zeigt, bei welchem Regal du bist.", "Trascinala per salire e scendere veloce; ti dice a quale scaffale arrivi.",
+  "Arraste para subir e descer rápido; ela mostra a qual estante você chega.", ptPT="Arraste para subir e descer depressa; mostra a que prateleira chega.")
+s("tour_settings_t", "Settings", "Ajustes", "Réglages", "Einstellungen", "Impostazioni", "Configurações", ptPT="Definições")
+s("tour_settings_b", "Everything else lives here. Let's take a look.", "Todo lo demás está aquí. Vamos a verlo.", "Tout le reste est ici. Allons voir.",
+  "Alles andere ist hier. Schauen wir es uns an.", "Tutto il resto è qui. Diamo un'occhiata.", "Todo o resto está aqui. Vamos ver.")
+s("tour_accounts_t", "Your accounts", "Tus cuentas", "Vos comptes", "Deine Konten", "I tuoi account", "Suas contas", ptPT="As suas contas")
+s("tour_accounts_b", "Link Steam (with your Family group), Epic Games and, below, RetroAchievements; sync or unlink them.",
+  "Vincula Steam (con tu grupo familiar), Epic Games y, más abajo, RetroAchievements; sincronízalos o desvincúlalos.",
+  "Reliez Steam (avec votre famille), Epic Games et, plus bas, RetroAchievements ; synchronisez-les ou déliez-les.",
+  "Verknüpfe Steam (mit deiner Familie), Epic Games und weiter unten RetroAchievements; synchronisieren oder trennen.",
+  "Collega Steam (con il gruppo famiglia), Epic Games e, più sotto, RetroAchievements; sincronizzali o scollegali.",
+  "Vincule a Steam (com seu grupo familiar), a Epic Games e, mais abaixo, o RetroAchievements; sincronize ou desvincule.",
+  ptPT="Ligue a Steam (com o seu grupo familiar), a Epic Games e, mais abaixo, o RetroAchievements; sincronize ou desligue.")
+s("tour_emus_t", "Emulators", "Emuladores", "Émulateurs", "Emulatoren", "Emulatori", "Emuladores")
+s("tour_emus_b", "Your ROM folders, ES-DE, RetroArch and Cocoon, and which emulator opens each console.",
+  "Tus carpetas de ROMs, ES-DE, RetroArch y Cocoon, y qué emulador abre cada consola.", "Vos dossiers de ROM, ES-DE, RetroArch et Cocoon, et quel émulateur ouvre chaque console.",
+  "Deine ROM-Ordner, ES-DE, RetroArch und Cocoon, und welcher Emulator welche Konsole öffnet.", "Le tue cartelle di ROM, ES-DE, RetroArch e Cocoon, e quale emulatore apre ogni console.",
+  "Suas pastas de ROMs, ES-DE, RetroArch e Cocoon, e qual emulador abre cada console.", ptPT="As suas pastas de ROMs, ES-DE, RetroArch e Cocoon, e que emulador abre cada consola.")
+s("tour_covers_t", "Covers and data", "Carátulas y datos", "Jaquettes et données", "Cover und Daten", "Copertine e dati", "Capas e dados", es419="Portadas y datos")
+s("tour_covers_b", "Find missing covers and genres, and add your free SteamGridDB key for many more covers.",
+  "Busca las carátulas y los géneros que falten, y pon tu clave gratuita de SteamGridDB para tener muchas más carátulas.",
+  "Cherchez les jaquettes et genres manquants, et ajoutez votre clé SteamGridDB gratuite pour bien plus de jaquettes.",
+  "Fehlende Cover und Genres suchen und deinen kostenlosen SteamGridDB-Schlüssel für viel mehr Cover eintragen.",
+  "Cerca copertine e generi mancanti e aggiungi la tua chiave gratuita di SteamGridDB per molte più copertine.",
+  "Busque capas e gêneros que faltam e coloque sua chave grátis do SteamGridDB para ter muito mais capas.",
+  es419="Busca las portadas y los géneros que falten, y pon tu clave gratuita de SteamGridDB para tener muchas más portadas.",
+  ptPT="Procure capas e géneros em falta e ponha a sua chave grátis do SteamGridDB para ter muitas mais capas.")
+s("tour_time_t", "Playtime", "Tiempo de juego", "Temps de jeu", "Spielzeit", "Tempo di gioco", "Tempo de jogo")
+s("tour_time_b", "Grant “Usage access” so Repisa can time your sessions. In each game's details you can add hours by hand or set the total.",
+  "Da el permiso de «Acceso al uso» para que Repisa mida tus partidas. En la ficha de cada juego puedes sumar horas a mano o poner el total.",
+  "Autorisez « Accès aux données d'utilisation » pour que Repisa mesure vos parties. Dans la fiche de chaque jeu, ajoutez des heures à la main ou fixez le total.",
+  "Erlaube den „Nutzungszugriff“, damit Repisa deine Sitzungen misst. In den Details jedes Spiels kannst du Stunden von Hand hinzufügen oder die Summe setzen.",
+  "Concedi l'«Accesso all'utilizzo» perché Repisa misuri le tue partite. Nella scheda di ogni gioco puoi aggiungere ore a mano o impostare il totale.",
+  "Dê a permissão de “Acesso ao uso” para o Repisa medir suas partidas. Na ficha de cada jogo dá para somar horas à mão ou pôr o total.",
+  ptPT="Dê a permissão de “Acesso à utilização” para o Repisa medir as suas partidas. Na ficha de cada jogo pode somar horas à mão ou pôr o total.")
+s("tour_display_t", "Display", "Pantalla", "Affichage", "Anzeige", "Schermo", "Tela", ptPT="Ecrã")
+s("tour_display_b", "The play animation (always, first time each day or never), the order of status shelves, the screensaver and the games you hid, to show them again.",
+  "La animación al jugar (siempre, la primera vez del día o nunca), el orden de las repisas por estado, el salvapantallas y los juegos que ocultaste, para volver a mostrarlos.",
+  "L'animation au lancement (toujours, la première fois du jour ou jamais), l'ordre des étagères par statut, l'économiseur d'écran et les jeux masqués, pour les réafficher.",
+  "Die Startanimation (immer, beim ersten Mal am Tag oder nie), die Reihenfolge der Status-Regale, der Bildschirmschoner und ausgeblendete Spiele, um sie wieder zu zeigen.",
+  "L'animazione all'avvio (sempre, la prima volta del giorno o mai), l'ordine degli scaffali per stato, il salvaschermo e i giochi nascosti, per mostrarli di nuovo.",
+  "A animação ao jogar (sempre, a primeira vez do dia ou nunca), a ordem das estantes por status, o protetor de tela e os jogos ocultos, para mostrá-los de novo.",
+  ptPT="A animação ao jogar (sempre, a primeira vez do dia ou nunca), a ordem das prateleiras por estado, a proteção de ecrã e os jogos ocultos, para os voltar a mostrar.")
+s("tour_themes_t", "Themes", "Temas", "Thèmes", "Themen", "Temi", "Temas")
+s("tour_themes_b", "Change the cabinet: wood, metal, glass, retro shop… or make your own theme.",
+  "Cambia la vitrina: madera, metal, cristal, tienda retro… o crea tu propio tema.", "Changez la vitrine : bois, métal, verre, boutique rétro… ou créez votre thème.",
+  "Ändere die Vitrine: Holz, Metall, Glas, Retro-Laden … oder erstelle dein eigenes Thema.", "Cambia la vetrina: legno, metallo, vetro, negozio retrò… o crea il tuo tema.",
+  "Mude a vitrine: madeira, metal, vidro, loja retrô… ou crie seu próprio tema.", ptPT="Mude a vitrine: madeira, metal, vidro, loja retro… ou crie o seu tema.")
+s("tour_colls_t", "Collections", "Colecciones", "Collections", "Sammlungen", "Collezioni", "Coleções")
+s("tour_colls_b", "Create your own shelves (“To try”, “With friends”…), rename them, add games or delete them.",
+  "Crea tus propias repisas («Probar», «Con amigos»…), renómbralas, añade juegos o bórralas.", "Créez vos étagères (« À essayer », « Entre amis »…), renommez-les, ajoutez des jeux ou supprimez-les.",
+  "Erstelle eigene Regale („Ausprobieren“, „Mit Freunden“ …), benenne sie um, füge Spiele hinzu oder lösche sie.",
+  "Crea i tuoi scaffali («Da provare», «Con amici»…), rinominali, aggiungi giochi o eliminali.",
+  "Crie suas próprias estantes (“Testar”, “Com amigos”…), renomeie, adicione jogos ou apague.", ptPT="Crie as suas prateleiras (“Experimentar”, “Com amigos”…), mude o nome, junte jogos ou apague-as.")
+s("tour_backup_t", "Backup", "Copia de seguridad", "Sauvegarde", "Sicherung", "Backup", "Backup", ptPT="Cópia de segurança")
+s("tour_backup_b", "Important: save your statuses, notes, ratings, collections and sessions to a file, and restore them on another console or after reinstalling.",
+  "Importante: guarda tus estados, notas, calificaciones, colecciones y partidas en un archivo, y recupéralos en otra consola o tras reinstalar.",
+  "Important : enregistrez statuts, notes, évaluations, collections et parties dans un fichier, et restaurez-les sur une autre console ou après réinstallation.",
+  "Wichtig: Speichere Status, Notizen, Bewertungen, Sammlungen und Sitzungen in einer Datei und stelle sie auf einer anderen Konsole oder nach einer Neuinstallation wieder her.",
+  "Importante: salva stati, note, voti, collezioni e partite in un file e ripristinali su un'altra console o dopo una reinstallazione.",
+  "Importante: salve status, notas, avaliações, coleções e partidas num arquivo e recupere em outro console ou depois de reinstalar.",
+  ptPT="Importante: guarde estados, notas, avaliações, coleções e partidas num ficheiro e recupere-os noutra consola ou depois de reinstalar.")
+s("tour_updates_t", "New versions", "Versiones nuevas", "Nouvelles versions", "Neue Versionen", "Nuove versioni", "Versões novas")
+s("tour_updates_b", "Check whether there's a new version of Repisa (it also tells you by itself when you open it).",
+  "Busca si hay una versión nueva de Repisa (también te avisa sola al abrirla).", "Vérifiez s'il existe une nouvelle version de Repisa (elle vous prévient aussi à l'ouverture).",
+  "Prüfe, ob es eine neue Repisa-Version gibt (sie meldet sich auch beim Öffnen).", "Controlla se c'è una nuova versione di Repisa (ti avvisa anche da sola all'apertura).",
+  "Veja se há uma versão nova do Repisa (ele também avisa sozinho ao abrir).", ptPT="Veja se há uma versão nova do Repisa (também avisa sozinho ao abrir).")
+s("tour_help_t", "Replay the tutorial", "Ver el tutorial", "Revoir le tutoriel", "Tutorial erneut ansehen", "Rivedi il tutorial", "Ver o tutorial")
+s("tour_help_b", "This “?” button shows you all of this again whenever you want.", "Este botón «?» te vuelve a enseñar todo esto cuando quieras.",
+  "Ce bouton « ? » vous remontre tout cela quand vous voulez.", "Dieser „?“-Knopf zeigt dir das alles jederzeit wieder.",
+  "Questo pulsante «?» ti mostra di nuovo tutto quando vuoi.", "Este botão “?” mostra tudo isto de novo quando quiser.")
+s("tour_done_t", "All set!", "¡Todo listo!", "C’est prêt !", "Alles bereit!", "Tutto pronto!", "Tudo pronto!")
+s("tour_done_b", "Now you know Repisa. Enjoy your collection!", "Ya conoces Repisa. ¡Disfruta de tu colección!", "Vous connaissez Repisa. Profitez de votre collection !",
+  "Jetzt kennst du Repisa. Viel Spaß mit deiner Sammlung!", "Ora conosci Repisa. Goditi la tua collezione!", "Agora você conhece o Repisa. Aproveite sua coleção!",
+  ptPT="Já conhece o Repisa. Aproveite a sua coleção!")
+
+s("theme_image", "Background photo", "Foto de fondo", "Photo de fond", "Hintergrundfoto", "Foto di sfondo", "Foto de fundo")
+s("theme_image_hint", "Any image from your gallery covers the back wall of the cabinet (your shelves and covers stay on top).",
+  "Cualquier imagen de tu galería cubre la pared de la vitrina (las baldas y las carátulas quedan encima).",
+  "N'importe quelle image de votre galerie couvre le fond de la vitrine (étagères et jaquettes restent devant).",
+  "Ein beliebiges Bild aus deiner Galerie bedeckt die Rückwand der Vitrine (Regale und Cover bleiben davor).",
+  "Qualsiasi immagine della tua galleria copre il fondo della vetrina (scaffali e copertine restano sopra).",
+  "Qualquer imagem da sua galeria cobre o fundo da vitrine (as estantes e as capas ficam por cima).",
+  ptPT="Qualquer imagem da sua galeria cobre o fundo da vitrine (as prateleiras e as capas ficam por cima).")
+s("theme_image_pick", "Choose image", "Elegir imagen", "Choisir une image", "Bild wählen", "Scegli immagine", "Escolher imagem")
+s("theme_image_change", "Change image", "Cambiar imagen", "Changer d'image", "Bild ändern", "Cambia immagine", "Trocar imagem", ptPT="Mudar imagem")
+s("theme_image_remove", "Remove image", "Quitar imagen", "Retirer l'image", "Bild entfernen", "Rimuovi immagine", "Remover imagem")
+s("theme_image_dim", "Darken: %1$d %%", "Oscurecer: %1$d %%", "Assombrir : %1$d %%", "Abdunkeln: %1$d %%", "Scurisci: %1$d %%", "Escurecer: %1$d %%")
+s("theme_image_tint", "Light color filter: %1$d %%", "Filtro del color de la luz: %1$d %%", "Filtre couleur de la lumière : %1$d %%",
+  "Lichtfarbfilter: %1$d %%", "Filtro colore della luce: %1$d %%", "Filtro da cor da luz: %1$d %%", enGB="Light colour filter: %1$d %%")
+s("theme_color_plaque", "Plaque color", "Color de las placas", "Couleur des plaques", "Farbe der Schilder", "Colore delle targhe",
+  "Cor das placas", enGB="Plaque colour")
+s("color_brightness", "Brightness", "Brillo", "Luminosité", "Helligkeit", "Luminosità", "Brilho")
+s("theme_image_failed", "Couldn't read that image.", "No se pudo leer esa imagen.", "Impossible de lire cette image.", "Das Bild konnte nicht gelesen werden.",
+  "Impossibile leggere l'immagine.", "Não foi possível ler essa imagem.")
 
 # ------------------------------------------------------------------ Géneros (clave interna en español → texto)
 GENRES = [
